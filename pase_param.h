@@ -2,7 +2,7 @@
 #define __PASE_PARAM_H__
 
 
-typedef struct PASE_PARAMETER_ {
+typedef struct PASE_PARAMETER_PRIVATE_ {
   /* amg_parameter */
   /**
    * 列出 amg setup phase 的相关参数, 
@@ -37,7 +37,8 @@ typedef struct PASE_PARAMETER_ {
   PASE_INT eigen_solver;        // 求解.
   PASE_INT eigen_smoother_pre;  // 前光滑. 如无特别指定, 则默认与 eigen_smoother 相同
   PASE_INT eigen_smoother_post; // 后光滑. 如无特别指定, 则默认与 eigen_smoother 相同
-} PASE_PARAMETER;
+} PASE_PARAMETER_PRIVATE;
+typedef PASE_PARAMETER_PRIVATE * PASE_PARAMETER;
 
 /* 参数设置与获取 */
 //void PASE_Param_set_linearSmoother(JPINT linear_smoother);
