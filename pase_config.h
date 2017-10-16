@@ -15,5 +15,7 @@ typedef double PASE_SCALAR;
 typedef enum { CLJP = 1, FALGOUT = 2, PMHIS = 3 } PASE_COARSEN_TYPE;
 typedef enum { HYPRE = 1 } EXTERNAL_PACKAGE;
 
+#define PASE_Malloc malloc
+#define PASE_Free free
 
 #endif

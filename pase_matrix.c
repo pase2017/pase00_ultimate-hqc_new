@@ -1,49 +1,71 @@
 #include "pase_matrix.h"
+#include "pase_vector.h"
+#include <stdio.h>
+#include <stdlib.h>
+
+#include "_hypre_parcsr_mv.h"
 
 /**
  * @brief 通过此函数进行外部矩阵类型到 PASE_MATRIX 的转换.
  *        例如对于 HYPRE 矩阵, 可设置 external_package 为 HYPRE.
  */
-PASE_MATRIX PASE_Create_matrix(void *matrix_data, PASE_PARAMETER param, PASE_MATRIX_OPERATOR ops)
+PASE_MATRIX 
+PASE_Matrix_create_by_operator(void *matrix_data, PASE_MATRIX_OPERATOR ops)
 {
-    PASE_MATRIX A = (PASE_MATRIX)PASE_Malloc(sizeof(PASE_MATRIX));
-
-    if(NULL != ops) {
-        A->ops = ops;
-	A->is_ops_owner = 0;
-    } else if(NULL != param) {
-	A->ops = PASE_Create_matrix_operator_default( param);
-	A->is_ops_owner = 1;
+    if(NULL == matrix_data) {
+        printf("PASE ERROR: Can not create PASE MATRIX without matrix data.\n");
+	exit(-1);
+    }
+    if(NULL == ops) {
+        printf("PASE ERROR: Can not create PASE MATRIX without matrix operator.\n");
+	exit(-1);
     }
 
-    if( NULL != param){
-        if(param.copy_matrix > 0) {
-            A->matrix_data = A->ops->create_matrix_by_matrix(matrix_data);
-            A->ops->copy_matrix(matrix_data, A->matrix_data);
-            A->is_matrix_data_owner = 1;
-        }
-    } else {
-        A->matrix_data = matrix_data;
-        A->is_matrix_data_owner = 0;
+    PASE_MATRIX A = (PASE_MATRIX)PASE_Malloc(sizeof(PASE_MATRIX_PRIVATE));
+
+    A->ops = (PASE_MATRIX_OPERATOR)PASE_Malloc(sizeof(PASE_MATRIX_OPERATOR_PRIVATE));
+    *(A->ops)               = *ops;
+    A->matrix_data          = matrix_data;
+    A->is_matrix_data_owner = 0;
+    A->global_nrow          = A->ops->get_global_nrow(A->matrix_data);
+    A->global_ncol          = A->ops->get_global_ncol(A->matrix_data);
+    return A;
+}
+
+PASE_MATRIX 
+PASE_Matrix_create_default(void *matrix_data, PASE_INT data_struct)
+{
+    if(NULL == matrix_data) {
+        printf("PASE ERROR: Can not create PASE MATRIX without matrix data.\n");
+	exit(-1);
     }
+    //if(NULL == param) {
+    //    printf("PASE ERROR: Can not create PASE MATRIX without parameter.\n");
+    //    exit(-1);
+    //}
+
+    PASE_MATRIX A = (PASE_MATRIX)PASE_Malloc(sizeof(PASE_MATRIX_PRIVATE));
+
+    A->ops = PASE_Matrix_operator_create_default(data_struct);
+    A->matrix_data = matrix_data;
+    A->is_matrix_data_owner = 0;
 
     A->global_nrow = A->ops->get_global_nrow(A->matrix_data);
     A->global_ncol = A->ops->get_global_ncol(A->matrix_data);
     return A;
 }
 
-PASE_MATRIX_OPERATOR PASE_Create_matrix_operator(
-    void *   (*create_matrix_by_matrix) (void *A),
-    void     (*copy_matrix)             (void *A, void *B),
-    void     (*destroy_matrix)          (void *A),
-    void *   (*multiply_matrix_matrix)  (void *A, void *B),
-    void     (*multiply_matrix_vector)  (PASE_SCALAR a, void *A, void *x, PASE_SCALAR b, void *y),
-    PASE_INT (*get_global_nrow)         (void *A),
-    PASE_INT (*get_global_ncol)         (void *A)
-	)
+PASE_MATRIX_OPERATOR 
+PASE_Matrix_operator_create(void *   (*create_matrix_by_matrix) (void *A),
+                            void     (*copy_matrix)             (void *A, void *B),
+                            void     (*destroy_matrix)          (void *A),
+                            void *   (*multiply_matrix_matrix)  (void *A, void *B),
+                            void     (*multiply_matrix_vector)  (void *A, void *x, void *y),
+                            PASE_INT (*get_global_nrow)         (void *A),
+                            PASE_INT (*get_global_ncol)         (void *A))
 {
     PASE_MATRIX_OPERATOR ops;
-    ops = (PASE_MATRIX_OPERATOR)PASE_Malloc(sizeof(PASE_MATRIX_OPERATOR);
+    ops = (PASE_MATRIX_OPERATOR)PASE_Malloc(sizeof(PASE_MATRIX_OPERATOR_PRIVATE));
     ops->create_matrix_by_matrix = create_matrix_by_matrix; 
     ops->copy_matrix             = copy_matrix;
     ops->destroy_matrix          = destroy_matrix;
@@ -55,59 +77,42 @@ PASE_MATRIX_OPERATOR PASE_Create_matrix_operator(
     return ops;
 }
 
-PASE_MATRIX_OPERATOR PASE_Create_matrix_operator_default( PASE_PARAMETER param)
+PASE_MATRIX_OPERATOR 
+PASE_Matrix_operator_create_default(PASE_INT data_struct)
 {
     PASE_MATRIX_OPERATOR ops;
-    if( param.external_package == 1) {
+    if( data_struct == 1) {
 	//填上hypre的函数
-	ops = PASE_Create_matrix_operator(
-            PASE_Create_matrix_by_matrix_hypre,
-	    PASE_Copy_matrix_hypre, 
-	    HYPRE_ParCSRMatrixDestroy,
-	    hypre_ParMatmul,
-	    hypre_ParCSRMatrixMatvec,
-	    PASE_Get_matrix_global_nrow_hypre,
-	    PASE_Get_matrix_global_ncol_hypre
-	    );
+	ops = PASE_Matrix_operator_create
+	    (PASE_Matrix_create_by_matrix_hypre,
+	     PASE_Matrix_copy_hypre, 
+	     PASE_Matrix_destroy_hypre,
+             PASE_Matrix_multiply_matrix_hypre,
+	     PASE_Matrix_multiply_vector_hypre,
+	     PASE_Matrix_get_global_nrow_hypre,
+	     PASE_Matrix_get_global_ncol_hypre);
     }
     return ops;
 }
 
-void PASE_Destroy_matrix_operator(PASE_MATRIX_OPERATOR ops)
+void 
+PASE_Matrix_operator_destroy(PASE_MATRIX_OPERATOR ops)
 {
     PASE_Free(ops);
 }
 
-void* PASE_Hypre_create_matrix_by_matrix(void *A)
-{
 
-}
-
-void PASE_Hypre_copy_matrix(void *A, void *B)
-{
-    hypre_ParCSRMatrixCopy( (hypre_ParCSRMatrix*)A, (hypre_ParCSRMatrix*)B, 1);
-}
-
-PASE_Int PASE_Hypre_get_matrix_global_nrow(void *A)
-{
-    return hypre_ParCSRMatrixGlobalNumRows((hypre_ParCSRMatrix*)A);
-}
-
-PASE_Int PASE_Hypre_get_matrix_global_ncol(void *A)
-{
-    return hypre_ParCSRMatrixGlobalNumCols((hypre_ParCSRMatrix*)A);
-}
-
-void PASE_Destroy_matrix(PASE_MATRIX A)
+void 
+PASE_Matrix_destroy(PASE_MATRIX A)
 {
     if(A->is_matrix_data_owner > 0) {
         A->ops->destroy_matrix(A->matrix_data);
         A->matrix_data = NULL;
     }
-    if(A->is_ops_owner > 0) {
-	PASE_Destroy_matrix_operator(A->ops);
-	A->ops = NULL;
-    }
+	
+    PASE_Matrix_operator_destroy(A->ops);
+    A->ops = NULL;
+
     PASE_Free(A);
     A = NULL;
 }
@@ -115,7 +120,8 @@ void PASE_Destroy_matrix(PASE_MATRIX A)
 /**
  * @brief copies A to B
  */
-void PASE_Copy_matrix(PASE_MATRIX A, PASE_MATRIX B)
+void 
+PASE_Matrix_copy(PASE_MATRIX A, PASE_MATRIX B)
 {
     A->ops->copy_matrix( A->matrix_data, B->matrix_data);
 }
@@ -123,11 +129,13 @@ void PASE_Copy_matrix(PASE_MATRIX A, PASE_MATRIX B)
 /**
  * @brief C = A * B
  */
-PASE_Matrix PASE_Matrix_multiply_matrix(PASE_MATRIX A, PASE_MATRIX B)
+PASE_MATRIX 
+PASE_Matrix_multiply_matrix(PASE_MATRIX A, PASE_MATRIX B)
 {
     if(A->global_ncol == B->global_nrow) {
         void *matrix_data = A->ops->multiply_matrix_matrix(A->matrix_data, B->matrix_data); 
-	PASE_Matrix C = PASE_Create_matrix(matrix_data, NULL, ops); 
+	PASE_MATRIX C = PASE_Matrix_create_by_operator(matrix_data, A->ops); 
+	C->is_matrix_data_owner = 1;
 	return C;
     } else {
         printf("PASE ERROR: Matrix dimensions must be matched.\n");
@@ -137,12 +145,13 @@ PASE_Matrix PASE_Matrix_multiply_matrix(PASE_MATRIX A, PASE_MATRIX B)
 
 
 /**
- * @brief y = a * A * x + b * y
+ * @brief y = A * x 
  */
-void PASE_Matrix_multiply_vector(PASE_SCALAR a, PASE_MATRIX A, PASE_VECTOR x, PASE_SCALAR b, PASE_VECTOR y)
+void 
+PASE_Matrix_multiply_vector(PASE_MATRIX A, PASE_VECTOR x, PASE_VECTOR y)
 {
     if( A->global_ncol == x->global_nrow) {
-	A->ops->multiply_matrix_vector(a, A->matrix_data, x->vector_data, b, y->vector_data);
+	A->ops->multiply_matrix_vector(A->matrix_data, x->vector_data, y->vector_data);
     } else {
         printf("PASE ERROR: Matrix dimension must be matched with vector.\n");
         exit(-1);
@@ -150,3 +159,52 @@ void PASE_Matrix_multiply_vector(PASE_SCALAR a, PASE_MATRIX A, PASE_VECTOR x, PA
 }
 
 //get_global_nrow get_global_ncol 写函数还是宏比较好？
+
+
+
+
+
+
+void* 
+PASE_Matrix_create_by_matrix_hypre(void *A)
+{
+    HYPRE_ParCSRMatrix B = hypre_ParCSRMatrixCompleteClone((HYPRE_ParCSRMatrix)A);
+    return (void*)B;
+}
+
+void 
+PASE_Matrix_copy_hypre(void *A, void *B)
+{
+    hypre_ParCSRMatrixCopy( (HYPRE_ParCSRMatrix)A, (HYPRE_ParCSRMatrix)B, 1);
+}
+
+void 
+PASE_Matrix_destroy_hypre(void *A)
+{
+    HYPRE_ParCSRMatrixDestroy((HYPRE_ParCSRMatrix)A);
+}
+
+void* 
+PASE_Matrix_multiply_matrix_hypre(void *A, void *B)
+{
+    HYPRE_ParCSRMatrix C = hypre_ParMatmul((HYPRE_ParCSRMatrix)A, (HYPRE_ParCSRMatrix)B);
+    return (void*)C;
+}
+
+void 
+PASE_Matrix_multiply_vector_hypre(void *A, void *x, void *y)
+{
+    hypre_ParCSRMatrixMatvec(1.0, (HYPRE_ParCSRMatrix)A, (HYPRE_ParVector)x, 0.0, (HYPRE_ParVector)y);
+}
+
+PASE_INT 
+PASE_Matrix_get_global_nrow_hypre(void *A)
+{
+    return hypre_ParCSRMatrixGlobalNumRows((HYPRE_ParCSRMatrix)A);
+}
+
+PASE_INT 
+PASE_Matrix_get_global_ncol_hypre(void *A)
+{
+    return hypre_ParCSRMatrixGlobalNumCols((HYPRE_ParCSRMatrix)A);
+}
