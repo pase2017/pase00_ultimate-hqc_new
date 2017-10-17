@@ -1,6 +1,7 @@
 #ifndef __PASE_PARAM_H__
 #define __PASE_PARAM_H__
 
+#include "pase_config.h"
 
 typedef struct PASE_PARAMETER_PRIVATE_ {
   /* amg_parameter */

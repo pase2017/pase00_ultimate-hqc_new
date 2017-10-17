@@ -2,7 +2,6 @@
 #define __PASE_MATRIX_H__
 
 #include "stdio.h"
-#include "pase_vector.h"
 #include "pase_param.h"
 #include "pase_config.h"
 
@@ -36,6 +35,7 @@ typedef struct PASE_MATRIX_PRIVATE_ {
 } PASE_MATRIX_PRIVATE;
 typedef PASE_MATRIX_PRIVATE * PASE_MATRIX;
 
+#include "pase_vector.h"
 /**
  * @brief 通过此函数进行外部矩阵类型到 PASE_MATRIX 的转换.
  *        例如对于 HYPRE 矩阵, 可设置 external_package 为 HYPRE.
@@ -66,6 +66,5 @@ void*    PASE_Matrix_multiply_matrix_hypre(void *A, void *B);
 void     PASE_Matrix_multiply_vector_hypre(void *A, void *x, void *y);
 PASE_INT PASE_Matrix_get_global_nrow_hypre(void *A);
 PASE_INT PASE_Matrix_get_global_ncol_hypre(void *A);
-PASE_VECTOR PASE_Vector_create_by_pase_matrix(PASE_MATRIX A);
 
 #endif

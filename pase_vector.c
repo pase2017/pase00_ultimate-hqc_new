@@ -90,7 +90,7 @@ PASE_Vector_operator_create(void*      (*create_by_vector)  (void *x),
                             void       (*set_constant_value)(void *x, PASE_SCALAR a),
                             void       (*set_random_value)  (void *x, PASE_INT seed),
                             void       (*inner_product)     (void *x, void *y, PASE_REAL *prod),
-                            void       (*add_vector) (void *x, void *y),
+                            void       (*add_vector)        (PASE_SCALAR a, void *x, void *y),
                             void       (*scale_vector)      (PASE_SCALAR a, void *x),
                             PASE_INT   (*get_global_nrow)   (void *x))
 {
@@ -182,9 +182,9 @@ PASE_Vector_inner_product(PASE_VECTOR x, PASE_VECTOR y, PASE_REAL *prod)
 }
 
 void 
-PASE_Vector_add_vector(PASE_VECTOR x, PASE_VECTOR y)
+PASE_Vector_add_vector(PASE_SCALAR a, PASE_VECTOR x, PASE_VECTOR y)
 {
-    x->ops->add_vector(x->vector_data, y->vector_data);
+    x->ops->add_vector(a, x->vector_data, y->vector_data);
 }
 
 void 
@@ -253,9 +253,9 @@ PASE_Vector_inner_product_hypre(void *x, void *y, PASE_REAL *prod)
 }
 
 void 
-PASE_Vector_add_vector_hypre(void *x, void *y)
+PASE_Vector_add_vector_hypre(PASE_SCALAR a, void *x, void *y)
 {
-    HYPRE_ParVectorAxpy(1.0, (HYPRE_ParVector)x, (HYPRE_ParVector)y);
+    HYPRE_ParVectorAxpy(a, (HYPRE_ParVector)x, (HYPRE_ParVector)y);
 }
 
 void 
