@@ -3,9 +3,10 @@
 #include "pase_config.h"
 #include "pase_vector.h"
 #include "pase_aux_vector.h"
+#include "pase_aux_matrix.h"
 
 PASE_AUX_VECTOR 
-PASE_Aux_vector_create(PASE_AUX_VECTOR aux_x)
+PASE_Aux_vector_create_by_aux_vector(PASE_AUX_VECTOR aux_x)
 {
     PASE_AUX_VECTOR aux_y = (PASE_AUX_VECTOR)PASE_Malloc(sizeof(PASE_AUX_VECTOR_PRIVATE));
     aux_y->vec = PASE_Vector_create_by_vector(aux_x->vec);
@@ -15,11 +16,22 @@ PASE_Aux_vector_create(PASE_AUX_VECTOR aux_x)
     return aux_y;
 }
 
+PASE_AUX_VECTOR 
+PASE_Aux_vector_create_by_aux_matrix(PASE_AUX_MATRIX aux_A)
+{
+    PASE_AUX_VECTOR aux_y = (PASE_AUX_VECTOR)PASE_Malloc(sizeof(PASE_AUX_VECTOR_PRIVATE));
+    aux_y->vec = PASE_Vector_create_by_matrix(aux_A->mat, aux_A->vec[0]->ops);
+    aux_y->is_vec_owner = 1;
+    aux_y->block_size = aux_A->block_size;
+    aux_y->block = (PASE_SCALAR*)PASE_Malloc(aux_y->block_size*sizeof(PASE_SCALAR));
+    return aux_y;
+}
+
 void 
 PASE_Aux_vector_destroy(PASE_AUX_VECTOR aux_x)
 {
     if(NULL != aux_x) {
-	if(NULL != aux_x->vec) {
+	if(NULL != aux_x->vec && aux_x->is_vec_owner == 1) {
 	    PASE_Vector_destroy(aux_x->vec);
 	    aux_x->vec = NULL;
 	}
@@ -141,7 +153,7 @@ void PASE_Aux_vector_inner_product(PASE_AUX_VECTOR aux_x, PASE_AUX_VECTOR aux_y,
     }
 }
 
-void PASE_Aux_vector_add(PASE_AUX_VECTOR aux_x, PASE_AUX_VECTOR aux_y)
+void PASE_Aux_vector_add(PASE_SCALAR a, PASE_AUX_VECTOR aux_x, PASE_AUX_VECTOR aux_y)
 {
     if(NULL == aux_x) {
 	printf("PASE ERROR: Call PASE_Aux_vector_add with aux_x being NULL!\n");
@@ -151,11 +163,11 @@ void PASE_Aux_vector_add(PASE_AUX_VECTOR aux_x, PASE_AUX_VECTOR aux_y)
 	printf("PASE ERROR: Call PASE_Aux_vector_add with aux_y being NULL!\n");
 	exit(-1);
     }
-    PASE_Vector_add_vector(aux_x->vec, aux_y->vec);
+    PASE_Vector_add_vector(a, aux_x->vec, aux_y->vec);
 
     PASE_INT i = 0;
     for(i=0; i<aux_x->block_size; i++) {
-	aux_y->block[i] += aux_x->block[i];
+	aux_y->block[i] += a * aux_x->block[i];
     }
 }
 

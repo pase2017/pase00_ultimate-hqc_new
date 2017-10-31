@@ -19,23 +19,32 @@
 /**
  * @brief Create PASE_VECTOR
  */
-//PASE_VECTOR
-//PASE_Vector_create_by_pase_vector(PASE_VECTOR x)
-//{
-//    void        *vector_data = x->ops->create_by_vector(x->vector_data);
-//    PAES_VECTOR  y           = PASE_Vector_create_by_operator(vector_data, x->ops);
-//    y->is_vector_data_owner  = 1;
-//    return y;
-//}
+PASE_VECTOR
+PASE_Vector_create_by_vector(PASE_VECTOR x)
+{
+    void        *vector_data = x->ops->create_by_vector(x->vector_data);
+    PASE_VECTOR  y           = PASE_Vector_create_by_operator(vector_data, x->ops);
+    y->is_vector_data_owner  = 1;
+    return y;
+}
 
-//PASE_VECTOR
-//PASE_Vector_create_by_pase_matrix(PASE_MATRIX A)
-//{
-//    void        *vector_data = x->ops->create_by_matrix(A->matrix_data);
-//    PAES_VECTOR  y           = PASE_Vector_create_default(vector_data, A->data_struct);
-//    y->is_vector_data_owner  = 1;
-//    return y;
-//}
+PASE_VECTOR
+PASE_Vector_create_by_matrix(PASE_MATRIX A, PASE_VECTOR_OPERATOR ops_v)
+{
+    void        *vector_data = NULL; 
+    PASE_VECTOR  y           = NULL;
+    if(NULL != ops_v) {
+        vector_data = ops_v->create_by_matrix(A->matrix_data);
+        y           = PASE_Vector_create_by_operator(vector_data, ops_v);
+    } else {
+	PASE_VECTOR_OPERATOR ops = PASE_Vector_operator_create_default(A->data_struct);
+        vector_data = ops->create_by_matrix(A->matrix_data);
+        y           = PASE_Vector_create_by_operator(vector_data, ops);
+	PASE_Vector_operator_destroy(ops);
+    }
+    y->is_vector_data_owner  = 1;
+    return y;
+}
 
 PASE_VECTOR 
 PASE_Vector_create_by_operator(void *vector_data, PASE_VECTOR_OPERATOR ops)
@@ -114,7 +123,7 @@ PASE_Vector_operator_create(void*      (*create_by_vector)  (void *x),
 PASE_VECTOR_OPERATOR 
 PASE_Vector_operator_create_default(PASE_INT data_struct)
 {
-    PASE_VECTOR_OPERATOR ops;
+    PASE_VECTOR_OPERATOR ops = NULL;
     if( data_struct == 1) {
 	//填上hypre的函数
 	ops = PASE_Vector_operator_create

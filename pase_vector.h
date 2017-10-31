@@ -60,7 +60,7 @@ PASE_VECTOR_OPERATOR PASE_Vector_operator_create
 PASE_VECTOR_OPERATOR PASE_Vector_operator_create_default(PASE_INT data_struct);
 void PASE_Vector_operator_destroy(PASE_VECTOR_OPERATOR ops);
 PASE_VECTOR PASE_Vector_create_by_vector(PASE_VECTOR x);
-PASE_VECTOR PASE_Vector_create_by_matrix(PASE_MATRIX A);
+PASE_VECTOR PASE_Vector_create_by_matrix(PASE_MATRIX A, PASE_VECTOR_OPERATOR ops);
 PASE_VECTOR PASE_Vector_create_by_operator(void *vector_data, PASE_VECTOR_OPERATOR ops);
 PASE_VECTOR PASE_Vector_create_default(void *vector_data, PASE_INT data_struct);
 void PASE_Vector_destroy(PASE_VECTOR x);

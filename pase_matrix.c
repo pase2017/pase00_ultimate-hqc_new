@@ -49,6 +49,7 @@ PASE_Matrix_create_default(void *matrix_data, PASE_INT data_struct)
     A->ops = PASE_Matrix_operator_create_default(data_struct);
     A->matrix_data = matrix_data;
     A->is_matrix_data_owner = 0;
+    A->data_struct = data_struct;
 
     A->global_nrow = A->ops->get_global_nrow(A->matrix_data);
     A->global_ncol = A->ops->get_global_ncol(A->matrix_data);
@@ -62,7 +63,8 @@ PASE_Matrix_operator_create(void *   (*create_matrix_by_matrix) (void *A),
                             void *   (*multiply_matrix_matrix)  (void *A, void *B),
                             void     (*multiply_matrix_vector)  (void *A, void *x, void *y),
                             PASE_INT (*get_global_nrow)         (void *A),
-                            PASE_INT (*get_global_ncol)         (void *A))
+                            PASE_INT (*get_global_ncol)         (void *A),
+                            MPI_Comm (*get_comm_info)           (void *A))
 {
     PASE_MATRIX_OPERATOR ops;
     ops = (PASE_MATRIX_OPERATOR)PASE_Malloc(sizeof(PASE_MATRIX_OPERATOR_PRIVATE));
@@ -73,6 +75,7 @@ PASE_Matrix_operator_create(void *   (*create_matrix_by_matrix) (void *A),
     ops->multiply_matrix_vector  = multiply_matrix_vector;  
     ops->get_global_nrow         = get_global_nrow;
     ops->get_global_ncol         = get_global_ncol;
+    ops->get_comm_info           = get_comm_info;
 
     return ops;
 }
@@ -80,7 +83,7 @@ PASE_Matrix_operator_create(void *   (*create_matrix_by_matrix) (void *A),
 PASE_MATRIX_OPERATOR 
 PASE_Matrix_operator_create_default(PASE_INT data_struct)
 {
-    PASE_MATRIX_OPERATOR ops;
+    PASE_MATRIX_OPERATOR ops = NULL;
     if( data_struct == 1) {
 	//填上hypre的函数
 	ops = PASE_Matrix_operator_create
@@ -90,7 +93,8 @@ PASE_Matrix_operator_create_default(PASE_INT data_struct)
              PASE_Matrix_multiply_matrix_hypre,
 	     PASE_Matrix_multiply_vector_hypre,
 	     PASE_Matrix_get_global_nrow_hypre,
-	     PASE_Matrix_get_global_ncol_hypre);
+	     PASE_Matrix_get_global_ncol_hypre,
+	     PASE_Matrix_get_comm_info_hypre);
     }
     return ops;
 }
@@ -105,16 +109,18 @@ PASE_Matrix_operator_destroy(PASE_MATRIX_OPERATOR ops)
 void 
 PASE_Matrix_destroy(PASE_MATRIX A)
 {
-    if(A->is_matrix_data_owner > 0) {
-        A->ops->destroy_matrix(A->matrix_data);
-        A->matrix_data = NULL;
-    }
-	
-    PASE_Matrix_operator_destroy(A->ops);
-    A->ops = NULL;
+    if(A) {
+        if(A->is_matrix_data_owner > 0) {
+            A->ops->destroy_matrix(A->matrix_data);
+            A->matrix_data = NULL;
+        }
+            
+        PASE_Matrix_operator_destroy(A->ops);
+        A->ops = NULL;
 
-    PASE_Free(A);
-    A = NULL;
+        PASE_Free(A);
+        A = NULL;
+    }
 }
 
 /**
@@ -158,6 +164,23 @@ PASE_Matrix_multiply_vector(PASE_MATRIX A, PASE_VECTOR x, PASE_VECTOR y)
     }
 }
 
+void     
+PASE_Matrix_multiply_vector_general(PASE_SCALAR a, PASE_MATRIX A, PASE_VECTOR x, PASE_SCALAR b, PASE_VECTOR y)
+{
+    PASE_VECTOR z = PASE_Vector_create_by_vector(y);
+    PASE_Matrix_multiply_vector(A, x, z);
+    PASE_Vector_scale(b, y);
+    PASE_Vector_add_vector(a, z, y);
+
+    PASE_Vector_destroy(z);
+}
+
+MPI_Comm
+PASE_Matrix_get_comm_info(PASE_MATRIX A)
+{
+    return A->ops->get_comm_info(A->matrix_data);
+}
+
 //get_global_nrow get_global_ncol 写函数还是宏比较好？
 
 
@@ -175,7 +198,7 @@ PASE_Matrix_create_by_matrix_hypre(void *A)
 void 
 PASE_Matrix_copy_hypre(void *A, void *B)
 {
-    hypre_ParCSRMatrixCopy( (HYPRE_ParCSRMatrix)A, (HYPRE_ParCSRMatrix)B, 1);
+    hypre_ParCSRMatrixCopy((HYPRE_ParCSRMatrix)A, (HYPRE_ParCSRMatrix)B, 1);
 }
 
 void 
@@ -188,6 +211,13 @@ void*
 PASE_Matrix_multiply_matrix_hypre(void *A, void *B)
 {
     HYPRE_ParCSRMatrix C = hypre_ParMatmul((HYPRE_ParCSRMatrix)A, (HYPRE_ParCSRMatrix)B);
+    MPI_Comm comm = hypre_ParCSRMatrixComm((HYPRE_ParCSRMatrix)A);
+    PASE_INT num_procs;
+    MPI_Comm_size(comm, &num_procs);
+    if (num_procs > 1) {
+    	hypre_MatvecCommPkgCreate(C);
+    }
+
     return (void*)C;
 }
 
@@ -207,4 +237,10 @@ PASE_INT
 PASE_Matrix_get_global_ncol_hypre(void *A)
 {
     return hypre_ParCSRMatrixGlobalNumCols((HYPRE_ParCSRMatrix)A);
+}
+
+MPI_Comm
+PASE_Matrix_get_comm_info_hypre(void *A)
+{
+    return hypre_ParCSRMatrixComm((HYPRE_ParCSRMatrix)A);
 }

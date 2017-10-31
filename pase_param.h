@@ -13,8 +13,7 @@ typedef struct PASE_PARAMETER_PRIVATE_ {
   
   /* 外部软件包, 用于提供实际的矩阵和向量的数据结构与操作 */
   PASE_INT external_package; // 1: HYPRE
-  PASE_INT copy_matrix;
-  PASE_INT copy_vector;
+  PASE_INT max_level;
   
    
   /* linear smoother/solver */
@@ -41,11 +40,13 @@ typedef struct PASE_PARAMETER_PRIVATE_ {
   PASE_INT eigen_smoother_pre;  // 前光滑. 如无特别指定, 则默认与 eigen_smoother 相同
   PASE_INT eigen_smoother_post; // 后光滑. 如无特别指定, 则默认与 eigen_smoother 相同
 } PASE_PARAMETER_PRIVATE;
+
 typedef PASE_PARAMETER_PRIVATE * PASE_PARAMETER;
 
 /* 参数设置与获取 */
 //void PASE_Param_set_linearSmoother(JPINT linear_smoother);
 //PASE_INT PASE_Paramater_GetLinearSmoother(void);
+
 
 
 #endif

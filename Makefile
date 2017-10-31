@@ -55,7 +55,7 @@ LFLAGS90 =
 # List of all source
 ########################################################################
 LIB = libpase.a
-OBJS = pase_vector.o pase_matrix.o pase_aux_vector.o pase_aux_matrix.o
+OBJS = pase_vector.o pase_matrix.o pase_aux_vector.o pase_aux_matrix.o pase_multigrid.o pase_pcg.o pase_mg_solver.o 
 
 ############################################################
 RM = /bin/rm
@@ -71,8 +71,9 @@ lib:	$(LIB)
 $(LIB): $(OBJS)
 	   @echo ''
 	   @echo 'Creating library $(LIB)'
-	   @$(ARCH) $(ARCHFLAGS) $(LIB)  $(OBJS)
-	   @$(RANLIB) $(LIB)
+	   $(ARCH) $(ARCHFLAGS) $(LIB)  $(OBJS)
+	   $(RANLIB) $(LIB)
+	   $(RM) *.o
 
 
 clean:
