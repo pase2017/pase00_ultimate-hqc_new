@@ -6,8 +6,8 @@
 #include "pase_aux_matrix.h"
 
 typedef struct PASE_MULTIGRID_OPERATOR_PRIVATE_ {
-    void (*get_amg_array) (void *A, PASE_PARAMETER param, void ***A_array, void ***P_array, void ***R_array, PASE_INT *num_level);
-
+    void (*get_amg_array)    (void *A, PASE_PARAMETER param, void ***A_array, void ***P_array, void ***R_array, PASE_INT *num_level, void **amg_data);
+    void (*destroy_amg_data) (void *amg_data);
 } PASE_MULTIGRID_OPERATOR_PRIVATE;
 typedef PASE_MULTIGRID_OPERATOR_PRIVATE * PASE_MULTIGRID_OPERATOR;
 
@@ -28,13 +28,16 @@ typedef struct PASE_MULTIGRID_PRIVATE_ {
   PASE_AUX_MATRIX *aux_B; // 辅助空间矩阵
 
   PASE_MULTIGRID_OPERATOR ops; 
+  void *amg_data;
 
 } PASE_MULTIGRID_PRIVATE;
 typedef PASE_MULTIGRID_PRIVATE * PASE_MULTIGRID;
 
 PASE_MULTIGRID PASE_Multigrid_create(PASE_MATRIX A, PASE_MATRIX B, PASE_PARAMETER param, PASE_MULTIGRID_OPERATOR ops);
 void PASE_Multigrid_destroy(PASE_MULTIGRID multigrid);
-PASE_MULTIGRID_OPERATOR PASE_Multigrid_operator_create();
+PASE_MULTIGRID_OPERATOR PASE_Multigrid_operator_create
+    (void (*get_amg_array)    (void *A, PASE_PARAMETER param, void ***A_array, void ***P_array, void ***R_array, PASE_INT *num_level, void **amg_data),
+     void (*destroy_amg_data) (void *amg_data));
 PASE_MULTIGRID_OPERATOR PASE_Multigrid_operator_create_by_default(PASE_INT data_struct);
 void PASE_Multigrid_operator_destroy(PASE_MULTIGRID_OPERATOR ops);
 
@@ -52,7 +55,8 @@ void PASE_Multigrid_operator_destroy(PASE_MULTIGRID_OPERATOR ops);
 //}
 
 
-void PASE_Multigrid_get_amg_array_hypre(void *A, PASE_PARAMETER param, void ***A_array, void ***P_array, void ***R_array, PASE_INT *num_level);
+void PASE_Multigrid_get_amg_array_hypre(void *A, PASE_PARAMETER param, void ***A_array, void ***P_array, void ***R_array, PASE_INT *num_level, void **amg_data);
+void PASE_Multigrid_destroy_amg_data_hypre(void *amg_data);
 
 void PASE_EigenSolver(PASE_MATRIX *A, PASE_MATRIX *B, PASE_SCALAR *eval, PASE_VECTOR **evec, PASE_INT block_size, PASE_PARAMETER param);
 
