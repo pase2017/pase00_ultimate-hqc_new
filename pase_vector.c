@@ -58,7 +58,7 @@ PASE_Vector_create_by_operator(void *vector_data, PASE_VECTOR_OPERATOR ops)
 	exit(-1);
     }
 
-    PASE_VECTOR x = (PASE_VECTOR) PASE_Malloc(sizeof(PASE_VECTOR));
+    PASE_VECTOR x = (PASE_VECTOR) PASE_Malloc(sizeof(PASE_VECTOR_PRIVATE));
 
     x->ops = (PASE_VECTOR_OPERATOR)PASE_Malloc(sizeof(PASE_VECTOR_OPERATOR_PRIVATE));
     *(x->ops)               = *ops;

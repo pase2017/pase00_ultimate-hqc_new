@@ -46,18 +46,15 @@ int main (int argc, char *argv[])
 {
    int i, k;
    int myid, num_procs;
-   int N, N_H, n;
+   int N, n;
    int block_size, max_levels;
 
    int ilower, iupper;
    int local_size, extra;
 
    double h, h2;
-   int level, num_levels;
 //   int time_index; 
    int global_time_index;
-
-
 
    /* -------------------------矩阵向量声明---------------------- */ 
    /* 最细矩阵 */
@@ -72,21 +69,6 @@ int main (int argc, char *argv[])
 
    HYPRE_Real *eigenvalues;
    HYPRE_Real *exact_eigenvalues;
-
-   /* -------------------------求解器声明---------------------- */ 
-   HYPRE_Solver amg_solver;
-
-   /* Using AMG to get multilevel matrix */
-   hypre_ParAMGData   *amg_data;
-
-   hypre_ParCSRMatrix **A_array;
-   hypre_ParCSRMatrix **B_array;
-   hypre_ParCSRMatrix **P_array;
-   /* P0P1P2  P1P2  P2 */
-   hypre_ParCSRMatrix **Q_array;
-   /* rhs and x */
-   //hypre_ParVector    **F_array;
-   //hypre_ParVector    **U_array;
 
    /* Initialize MPI */
    MPI_Init(&argc, &argv);
@@ -105,7 +87,6 @@ int main (int argc, char *argv[])
    /* Default problem parameters */
    n = 200;
    max_levels = 5;
-   /* AMG第一层矩阵是原来的1/2, 之后都是1/4, 我们要求H空间的维数是所求特征值个数的8倍 */
    block_size = (int) n*n/pow(4, max_levels);
    printf ( "block_size = n*n/pow(4, max_levels)\n" );
 
@@ -309,59 +290,6 @@ int main (int argc, char *argv[])
    HYPRE_IJVectorAssemble(x);
    HYPRE_IJVectorGetObject(x, (void **) &par_x);
 
-   /* -------------------------- 利用AMG生成各个层的矩阵------------------ */
-
-   /* Create solver */
-   HYPRE_BoomerAMGCreate(&amg_solver);
-
-   /* Set some parameters (See Reference Manual for more parameters) */
-   HYPRE_BoomerAMGSetPrintLevel(amg_solver, 0);         /* print solve info + parameters */
-   HYPRE_BoomerAMGSetInterpType(amg_solver, 0 );
-   HYPRE_BoomerAMGSetPMaxElmts(amg_solver, 0 );
-   HYPRE_BoomerAMGSetCoarsenType(amg_solver, 6);
-   HYPRE_BoomerAMGSetMaxLevels(amg_solver, max_levels);  /* maximum number of levels */
-//   HYPRE_BoomerAMGSetRelaxType(amg_solver, 3);          /* G-S/Jacobi hybrid relaxation */
-//   HYPRE_BoomerAMGSetRelaxOrder(amg_solver, 1);         /* uses C/F relaxation */
-//   HYPRE_BoomerAMGSetNumSweeps(amg_solver, 1);          /* Sweeeps on each level */
-//   HYPRE_BoomerAMGSetTol(amg_solver, 1e-7);             /* conv. tolerance */
-
-   /* Now setup */
-   HYPRE_BoomerAMGSetup(amg_solver, parcsr_A, par_b, par_x);
-
-   /* Get A_array, P_array, F_array and U_array of AMG */
-   amg_data = (hypre_ParAMGData*) amg_solver;
-
-   A_array = hypre_ParAMGDataAArray(amg_data);
-   P_array = hypre_ParAMGDataPArray(amg_data);
-   //F_array = hypre_ParAMGDataFArray(amg_data); 
-   //U_array = hypre_ParAMGDataUArray(amg_data);
-
-   num_levels = hypre_ParAMGDataNumLevels(amg_data);
-   printf ( "The number of levels = %d\n", num_levels );
-
-   B_array = hypre_CTAlloc(hypre_ParCSRMatrix*,  num_levels);
-   Q_array = hypre_CTAlloc(hypre_ParCSRMatrix*,  num_levels);
-
-   /* B0  P0^T B0 P0  P1^T B1 P1   P2^T B2 P2 */
-   B_array[0] = parcsr_B;
-   for ( level = 1; level < num_levels; ++level )
-   {
-      hypre_ParCSRMatrix  *tmp_parcsr_mat;
-      tmp_parcsr_mat = hypre_ParMatmul(B_array[level-1], P_array[level-1] ); 
-      B_array[level] = hypre_ParTMatmul (P_array[level-1], tmp_parcsr_mat ); 
-
-      /* 参考AMGSetup中分层矩阵的计算, 需要Owns的作用是释放空间时不要重复释放 */
-      hypre_ParCSRMatrixRowStarts(B_array[level]) = hypre_ParCSRMatrixColStarts(B_array[level]);
-      hypre_ParCSRMatrixOwnsRowStarts(B_array[level]) = 0;
-      hypre_ParCSRMatrixOwnsColStarts(B_array[level]) = 0;
-      if (num_procs > 1) hypre_MatvecCommPkgCreate(B_array[level]); 
-
-      hypre_ParCSRMatrixDestroy(tmp_parcsr_mat);
-   }
-
-   N_H = hypre_ParCSRMatrixGlobalNumRows(A_array[num_levels-1]);
-   printf ( "The dim of the coarsest space is %d.\n", N_H );
-
    /*求解特征值问题的MG方法*/
    {
        PASE_MATRIX pase_A = PASE_Matrix_create_default((void*)parcsr_A, 1);
@@ -370,6 +298,10 @@ int main (int argc, char *argv[])
        PASE_PARAMETER param = (PASE_PARAMETER) PASE_Malloc(sizeof(PASE_PARAMETER_PRIVATE));
        param->max_level = 3;
        PASE_MULTIGRID multigrid = PASE_Multigrid_create(pase_A, pase_B, param, NULL);
+       PASE_MG_SOLVER solver = PASE_Mg_solver_create_by_multigrid(multigrid);
+       PASE_Mg_set_up(solver);
+       PASE_Mg_solve(solver);
+       PASE_Mg_solver_destroy(solver);
        PASE_Free(param);
        PASE_Multigrid_destroy(multigrid);
        PASE_Matrix_destroy(pase_A);
@@ -378,17 +310,6 @@ int main (int argc, char *argv[])
    }
 
    /* Clean up */
-   for ( level = 1; level < num_levels; ++level )
-   {
-      hypre_ParCSRMatrixDestroy(B_array[level]);
-   }
-   for ( level = 0; level < num_levels-2; ++level )
-   {
-      hypre_ParCSRMatrixDestroy(Q_array[level]);
-   }
-   hypre_TFree(B_array);
-   hypre_TFree(Q_array);
-
    hypre_TFree(eigenvalues);
    hypre_TFree(exact_eigenvalues);
 
@@ -398,9 +319,6 @@ int main (int argc, char *argv[])
    HYPRE_IJVectorDestroy(b);
    HYPRE_IJVectorDestroy(x);
 
-   /* Destroy amg_solver */
-   HYPRE_BoomerAMGDestroy(amg_solver);
-   
    hypre_EndTiming(global_time_index);
    hypre_PrintTiming("Solve phase times", MPI_COMM_WORLD);
    hypre_FinalizeTiming(global_time_index);

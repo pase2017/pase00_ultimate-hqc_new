@@ -26,36 +26,36 @@ PASE_Multigrid_create(PASE_MATRIX A, PASE_MATRIX B, PASE_PARAMETER param, PASE_M
 				  &(R_array),
 				  &(multigrid->actual_level),
 				  &(multigrid->amg_data));
-    printf("111111111111111111111111\n");
-    multigrid->A     = (PASE_MATRIX*)PASE_Malloc(multigrid->actual_level*sizeof(PASE_MATRIX));
-    multigrid->B     = (PASE_MATRIX*)PASE_Malloc(multigrid->actual_level*sizeof(PASE_MATRIX));
-    multigrid->P     = (PASE_MATRIX*)PASE_Malloc((multigrid->actual_level-1)*sizeof(PASE_MATRIX));
-    multigrid->R     = (PASE_MATRIX*)PASE_Malloc((multigrid->actual_level-1)*sizeof(PASE_MATRIX));
-    multigrid->aux_A = (PASE_AUX_MATRIX*)PASE_Malloc(multigrid->actual_level*sizeof(PASE_AUX_MATRIX));
-    multigrid->aux_B = (PASE_AUX_MATRIX*)PASE_Malloc(multigrid->actual_level*sizeof(PASE_AUX_MATRIX));
-    PASE_INT i =0;
-    multigrid->A[0] = A;
-    multigrid->B[0] = B;
+    multigrid->A        = (PASE_MATRIX*)PASE_Malloc(multigrid->actual_level*sizeof(PASE_MATRIX));
+    multigrid->B        = (PASE_MATRIX*)PASE_Malloc(multigrid->actual_level*sizeof(PASE_MATRIX));
+    multigrid->P        = (PASE_MATRIX*)PASE_Malloc((multigrid->actual_level-1)*sizeof(PASE_MATRIX));
+    multigrid->R        = (PASE_MATRIX*)PASE_Malloc((multigrid->actual_level-1)*sizeof(PASE_MATRIX));
+    multigrid->aux_A    = (PASE_AUX_MATRIX*)PASE_Malloc(multigrid->actual_level*sizeof(PASE_AUX_MATRIX));
+    multigrid->aux_B    = (PASE_AUX_MATRIX*)PASE_Malloc(multigrid->actual_level*sizeof(PASE_AUX_MATRIX));
+    PASE_INT level      = 0;
+    multigrid->A[0]     = A;
+    multigrid->B[0]     = B;
     multigrid->aux_A[0] = NULL;
     multigrid->aux_B[0] = NULL;
-    printf("2222222222222222222jj111\n");
-    for(i=1; i<multigrid->actual_level; i++) {
-        multigrid->A[i]   = PASE_Matrix_create_by_operator(A_array[i], A->ops);
-	//multigrid->A[i]->is_matrix_data_owner = 1;
-        multigrid->P[i-1] = PASE_Matrix_create_by_operator(P_array[i-1], A->ops);
-	//multigrid->P[i-1]->is_matrix_data_owner = 1;
-        multigrid->R[i-1] = PASE_Matrix_create_by_operator(R_array[i-1], A->ops);
-	multigrid->R[i-1]->is_matrix_data_owner = 1;
+    for(level=1; level<multigrid->actual_level; level++) {
+        multigrid->A[level]                = PASE_Matrix_create_by_operator(A_array[level], A->ops);
+	multigrid->A[level]->data_struct   = A->data_struct;
+	//multigrid->A[level]->is_matrix_data_owner = 1;
+        multigrid->P[level-1]              = PASE_Matrix_create_by_operator(P_array[level-1], A->ops);
+	multigrid->P[level-1]->data_struct = A->data_struct;
+	//multigrid->P[level-1]->is_matrix_data_owner = 1;
+        multigrid->R[level-1]              = PASE_Matrix_create_by_operator(R_array[level-1], A->ops);
+	multigrid->R[level-1]->is_matrix_data_owner = 1;
+	multigrid->R[level-1]->data_struct = A->data_struct;
 
         /* B1 = R0 * B0 * P0 */
-        tmp               = PASE_Matrix_multiply_matrix(multigrid->B[i-1], multigrid->P[i-1]); 
-        multigrid->B[i]   = PASE_Matrix_multiply_matrix(multigrid->R[i-1], tmp); 
+        tmp               = PASE_Matrix_multiply_matrix(multigrid->B[level-1], multigrid->P[level-1]); 
+        multigrid->B[level]   = PASE_Matrix_multiply_matrix(multigrid->R[level-1], tmp); 
 	PASE_Matrix_destroy(tmp);
 
-	multigrid->aux_A[i] = NULL;
-	multigrid->aux_B[i] = NULL;
+	multigrid->aux_A[level] = NULL;
+	multigrid->aux_B[level] = NULL;
     }
-    printf("333333333333333333333111\n");
     //PASE_Free(A_array);
     //PASE_Free(P_array);
     PASE_Free(R_array);

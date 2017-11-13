@@ -31,29 +31,26 @@
 extern "C" {
 #endif
 
-PASE_INT
-pase_ParKrylovCommInfo( void   *A, PASE_INT *my_id, PASE_INT *num_procs);
-void *
-pase_ParKrylovCreateVector( void *vvector );
-PASE_INT
-pase_ParKrylovDestroyVector( void *vvector );
-PASE_INT
-pase_ParKrylovMatvec( void *matvec_data, PASE_SCALAR alpha, void *A, void *x, PASE_SCALAR  beta, void *y );
-PASE_REAL
-pase_ParKrylovInnerProd( void *x, void *y );
-PASE_INT
-pase_ParKrylovCopyVector( void *x, void *y );
-PASE_INT
-pase_ParKrylovClearVector( void *x );
-PASE_INT
-pase_ParKrylovScaleVector( PASE_SCALAR  alpha, void *x );
-PASE_INT
-pase_ParKrylovAxpy( PASE_SCALAR alpha, void *x, void *y );
-PASE_INT
-pase_ParKrylovIdentity( void *vdata, void *A, void *b, void *x );
+PASE_INT PASE_Pcg_comm_info( void   *A, PASE_INT *my_id, PASE_INT *num_procs);
+void *PASE_Pcg_create_vector( void *vvector );
+PASE_INT PASE_Pcg_destroy_vector( void *vvector );
+PASE_INT PASE_Pcg_matvec(void *matvec_data, 
+	                 PASE_SCALAR alpha, 
+			 void *A, 
+			 void *x, 
+			 PASE_SCALAR  beta, 
+			 void *y );
+PASE_REAL PASE_Pcg_inner_product( void *x, void *y );
+PASE_INT PASE_Pcg_copy_vector( void *x, void *y );
+PASE_INT PASE_Pcg_clear_vector( void *x );
+PASE_INT PASE_Pcg_scale_vector( PASE_SCALAR  alpha, void *x );
+PASE_INT PASE_Pcg_add_vector( PASE_SCALAR alpha, void *x, void *y );
+PASE_INT PASE_Pcg_identity( void *vdata, void *A, void *b, void *x );
+PASE_INT PASE_Pcg_set_random_value( void* v, PASE_INT seed );
 
-PASE_INT
-PASE_Pcg_create( MPI_Comm comm, HYPRE_Solver *solver );
+PASE_INT PASE_Pcg_create( MPI_Comm comm, HYPRE_Solver *solver );
+PASE_INT PASE_Lobpcg_setup_interpreter( mv_InterfaceInterpreter* i);
+PASE_INT PASE_Lobpcg_setup_matvec(HYPRE_MatvecFunctions* mv);
 
 
 PASE_INT PASE_Pcg_comm_info_aux(void *A, PASE_INT *my_id, PASE_INT *num_procs);
@@ -72,10 +69,10 @@ PASE_INT PASE_Pcg_scale_vector_aux(PASE_SCALAR alpha, void *x);
 PASE_INT PASE_Pcg_add_vector_aux(PASE_SCALAR alpha, void *x, void *y );
 PASE_INT PASE_Pcg_identity_aux(void *vdata, void *A, void *b, void *x );
 PASE_INT PASE_Pcg_set_random_value_aux( void* v, PASE_INT seed);
-PASE_INT PASE_Pcg_create_aux(MPI_Comm comm, HYPRE_Solver *solver);
 
-PASE_INT PASE_Lobpcg_setup_interpreter( mv_InterfaceInterpreter* i);
-PASE_INT PASE_Lobpcg_setup_matvec(HYPRE_MatvecFunctions* mv);
+PASE_INT PASE_Pcg_create_aux(MPI_Comm comm, HYPRE_Solver *solver);
+PASE_INT PASE_Lobpcg_setup_interpreter_aux( mv_InterfaceInterpreter* i);
+PASE_INT PASE_Lobpcg_setup_matvec_aux(HYPRE_MatvecFunctions* mv);
 
 PASE_INT hypre_LOBPCGSetup( void *pcg_vdata, void *A, void *b, void *x );
 PASE_INT hypre_LOBPCGSetupB( void *pcg_vdata, void *B, void *x );

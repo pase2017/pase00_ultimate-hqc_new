@@ -15,6 +15,8 @@ PASE_Aux_matrix_create(PASE_MATRIX A_H, PASE_MATRIX R_hH, PASE_MATRIX A_h, PASE_
     aux_A->mat            = A_H;
     aux_A->is_mat_owner   = 0;
     aux_A->block_size     = block_size;
+    aux_A->vec            = NULL;
+    aux_A->block          = NULL;
     PASE_Aux_matrix_set_aux_space(aux_A, R_hH, A_h, u_h);
     return aux_A;
 }
@@ -64,6 +66,8 @@ PASE_Aux_matrix_create_by_aux_matrix(PASE_MATRIX A_H, PASE_MATRIX R_hH, PASE_AUX
     aux_A->mat            = A_H;
     aux_A->is_mat_owner   = 0;
     aux_A->block_size     = block_size;
+    aux_A->vec            = NULL;
+    aux_A->block          = NULL;
     PASE_Aux_matrix_set_aux_space_by_aux_matrix(aux_A, R_hH, aux_A_h, aux_u_h);
     return aux_A;
 }
@@ -75,7 +79,7 @@ PASE_Aux_matrix_set_aux_space_some_by_aux_matrix(PASE_AUX_MATRIX aux_A, PASE_INT
     if(NULL == aux_A->vec) {
 	aux_A->vec = (PASE_VECTOR*)PASE_Malloc(aux_A->block_size*sizeof(PASE_VECTOR));
 	for(k=0; k<aux_A->block_size; k++) {
-	    aux_A->vec[k] = PASE_Vector_create_by_matrix(aux_A->mat, aux_A->vec[0]->ops);
+	    aux_A->vec[k] = PASE_Vector_create_by_matrix(aux_A->mat, aux_A_h->vec[0]->ops);
 	}
     }
     if(NULL == aux_A->block) {
@@ -111,7 +115,7 @@ PASE_Aux_matrix_destroy(PASE_AUX_MATRIX aux_A)
 {
     PASE_INT i;
     if(NULL != aux_A) {
-	if(NULL != aux_A->mat) {
+	if(NULL != aux_A->mat && 1 == aux_A->is_mat_owner) {
 	    PASE_Matrix_destroy(aux_A->mat);
 	    aux_A->mat = NULL;
 	}

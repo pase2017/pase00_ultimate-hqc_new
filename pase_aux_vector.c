@@ -13,6 +13,10 @@ PASE_Aux_vector_create_by_aux_vector(PASE_AUX_VECTOR aux_x)
     aux_y->is_vec_owner = 1;
     aux_y->block_size = aux_x->block_size;
     aux_y->block = (PASE_SCALAR*)PASE_Malloc(aux_y->block_size*sizeof(PASE_SCALAR));
+    PASE_INT i;
+    for(i=0; i<aux_y->block_size; i++) {
+        aux_y->block[i] = 0.0;	    
+    }
     return aux_y;
 }
 
@@ -24,6 +28,10 @@ PASE_Aux_vector_create_by_aux_matrix(PASE_AUX_MATRIX aux_A)
     aux_y->is_vec_owner = 1;
     aux_y->block_size = aux_A->block_size;
     aux_y->block = (PASE_SCALAR*)PASE_Malloc(aux_y->block_size*sizeof(PASE_SCALAR));
+    PASE_INT i;
+    for(i=0; i<aux_y->block_size; i++) {
+        aux_y->block[i] = 0.0;	    
+    }
     return aux_y;
 }
 
@@ -133,16 +141,12 @@ PASE_Aux_vector_set_block_random(PASE_AUX_VECTOR aux_x, PASE_INT seed)
 
 void PASE_Aux_vector_inner_product(PASE_AUX_VECTOR aux_x, PASE_AUX_VECTOR aux_y, PASE_REAL *prod)
 {
-    if(NULL == aux_x) {
+    if(NULL == aux_x || NULL == aux_x->vec || NULL == aux_x->block) {
 	printf("PASE ERROR: Call PASE_Aux_vector_inner_product with aux_x being NULL!\n");
 	exit(-1);
     }
-    if(NULL == aux_x) {
+    if(NULL == aux_y || NULL == aux_y->vec || NULL == aux_y->block) {
 	printf("PASE ERROR: Call PASE_Aux_vector_inner_product with aux_y being NULL!\n");
-	exit(-1);
-    }
-    if(NULL == aux_x) {
-	printf("PASE ERROR: Call PASE_Aux_vector_inner_product with prod being NULL!\n");
 	exit(-1);
     }
     PASE_Vector_inner_product(aux_x->vec, aux_y->vec, prod);

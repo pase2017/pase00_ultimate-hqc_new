@@ -27,7 +27,7 @@ typedef struct PASE_MG_SOLVER_PRIVATE_ {
    PASE_INT     num_iter;
    PASE_INT     print_level; 
 
-   PASE_SCALAR **eigenvalues;
+   PASE_SCALAR *eigenvalues;
    PASE_SCALAR *exact_eigenvalues;
    PASE_VECTOR *u;
    PASE_AUX_VECTOR    	**aux_u;
@@ -37,6 +37,9 @@ typedef struct PASE_MG_SOLVER_PRIVATE_ {
 } PASE_MG_SOLVER_PRIVATE; 
 typedef PASE_MG_SOLVER_PRIVATE * PASE_MG_SOLVER;
 
+PASE_MG_SOLVER PASE_Mg_solver_create_by_multigrid(PASE_MULTIGRID multigrid);
+PASE_INT PASE_Mg_solver_destroy(PASE_MG_SOLVER solver);
+PASE_INT PASE_Mg_set_up(PASE_MG_SOLVER solver);
 PASE_INT PASE_Mg_solve(PASE_MG_SOLVER solver);
 PASE_INT PASE_Mg_iteration(PASE_MG_SOLVER solver);
 PASE_INT PASE_Mg_error_estimate(PASE_MG_SOLVER solver);
@@ -46,6 +49,7 @@ PASE_INT PASE_Mg_pre_set_up(PASE_MG_SOLVER solver);
 PASE_INT PASE_Mg_postsmoothing(PASE_MG_SOLVER solver);
 PASE_INT PASE_Mg_post_correction(PASE_MG_SOLVER solver);
 PASE_INT PASE_Mg_set_aux_matrix(PASE_MG_SOLVER solver);
+PASE_INT PASE_Get_initial_vector(PASE_MG_SOLVER solver);
 PASE_INT PASE_Mg_presmoothing_by_pcg_hypre(PASE_MG_SOLVER solver);
 PASE_INT PASE_Mg_presmoothing_by_pcg_aux_hypre(PASE_MG_SOLVER solver);
 PASE_INT PASE_Mg_solve_directly_by_lobpcg_aux_hypre(PASE_MG_SOLVER solver);

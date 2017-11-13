@@ -27,6 +27,7 @@ PASE_Matrix_create_by_operator(void *matrix_data, PASE_MATRIX_OPERATOR ops)
     *(A->ops)               = *ops;
     A->matrix_data          = matrix_data;
     A->is_matrix_data_owner = 0;
+    A->data_struct          = 0;
     A->global_nrow          = A->ops->get_global_nrow(A->matrix_data);
     A->global_ncol          = A->ops->get_global_ncol(A->matrix_data);
     return A;
@@ -142,6 +143,7 @@ PASE_Matrix_multiply_matrix(PASE_MATRIX A, PASE_MATRIX B)
         void *matrix_data = A->ops->multiply_matrix_matrix(A->matrix_data, B->matrix_data); 
 	PASE_MATRIX C = PASE_Matrix_create_by_operator(matrix_data, A->ops); 
 	C->is_matrix_data_owner = 1;
+	C->data_struct = A->data_struct;
 	return C;
     } else {
         printf("PASE ERROR: Matrix dimensions must be matched.\n");

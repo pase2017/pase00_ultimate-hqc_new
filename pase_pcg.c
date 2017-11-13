@@ -24,7 +24,7 @@
 #include "pase_aux_matrix.h"
 
 PASE_INT
-pase_ParKrylovCommInfo(void *A, PASE_INT *my_id, PASE_INT *num_procs)
+PASE_Pcg_comm_info(void *A, PASE_INT *my_id, PASE_INT *num_procs)
 {
    MPI_Comm comm = PASE_Matrix_get_comm_info((PASE_MATRIX)A);
    hypre_MPI_Comm_size(comm, num_procs);
@@ -33,32 +33,32 @@ pase_ParKrylovCommInfo(void *A, PASE_INT *my_id, PASE_INT *num_procs)
 }
 
 void*
-pase_ParKrylovCreateVector(void *x )
+PASE_Pcg_create_vector(void *x )
 {
    return (void*)PASE_Vector_create_by_vector((PASE_VECTOR)x);
 }
 
 PASE_INT
-pase_ParKrylovDestroyVector(void *x)
+PASE_Pcg_destroy_vector(void *x)
 {
    PASE_Vector_destroy((PASE_VECTOR)x);
    return 0;
 }
 
 PASE_INT
-pase_ParKrylovMatvec(void        *matvec_data,
-                     PASE_SCALAR  alpha,
-                     void        *A,
-                     void        *x,
-                     PASE_SCALAR beta,
-                     void        *y)
+PASE_Pcg_matvec(void        *matvec_data,
+                PASE_SCALAR  alpha,
+                void        *A,
+                void        *x,
+                PASE_SCALAR beta,
+                void        *y)
 {
     PASE_Matrix_multiply_vector_general(alpha, (PASE_MATRIX)A, (PASE_VECTOR)x, beta, (PASE_VECTOR)y);
     return 0;
 }
 
 PASE_REAL
-pase_ParKrylovInnerProd(void *x, void *y)
+PASE_Pcg_inner_product(void *x, void *y)
 {
    PASE_REAL prod;
    PASE_Vector_inner_product((PASE_VECTOR)x, (PASE_VECTOR)y, &prod); 
@@ -66,41 +66,41 @@ pase_ParKrylovInnerProd(void *x, void *y)
 }
 
 PASE_INT
-pase_ParKrylovCopyVector(void *x, void *y)
+PASE_Pcg_copy_vector(void *x, void *y)
 {
     PASE_Vector_copy((PASE_VECTOR)x, (PASE_VECTOR)y);
     return 0;
 }
 
 PASE_INT
-pase_ParKrylovClearVector(void *x)
+PASE_Pcg_clear_vector(void *x)
 {
     PASE_Vector_set_constant_value((PASE_VECTOR)x, 0.0);
     return 0;
 }
 
 PASE_INT
-pase_ParKrylovScaleVector(PASE_SCALAR alpha, void *x)
+PASE_Pcg_scale_vector(PASE_SCALAR alpha, void *x)
 {
     PASE_Vector_scale(alpha, (PASE_VECTOR)x);
     return 0;
 }
 
 PASE_INT
-pase_ParKrylovAxpy(PASE_SCALAR alpha, void *x, void *y )
+PASE_Pcg_add_vector(PASE_SCALAR alpha, void *x, void *y )
 {
     PASE_Vector_add_vector(alpha, (PASE_VECTOR)x, (PASE_VECTOR)y);
     return 0;
 }
 
 PASE_INT
-pase_ParKrylovIdentity( void *vdata, void *A, void *b, void *x )
+PASE_Pcg_identity( void *vdata, void *A, void *b, void *x )
 {
-   return pase_ParKrylovCopyVector(b, x);
+   return PASE_Pcg_copy_vector(b, x);
 }
 
 PASE_INT
-pase_ParSetRandomValues( void* v, PASE_INT seed ) 
+PASE_Pcg_set_random_value( void* v, PASE_INT seed ) 
 {
     PASE_Vector_set_random_value((PASE_VECTOR)v, seed);
     return 0;
@@ -119,17 +119,68 @@ PASE_Pcg_create(MPI_Comm comm, HYPRE_Solver *solver)
    }
    pcg_functions =
       hypre_PCGFunctionsCreate(
-         hypre_CAlloc, hypre_ParKrylovFree, pase_ParKrylovCommInfo,
-         pase_ParKrylovCreateVector, pase_ParKrylovDestroyVector, 
+         hypre_CAlloc, hypre_ParKrylovFree, PASE_Pcg_comm_info,
+         PASE_Pcg_create_vector, PASE_Pcg_destroy_vector, 
 	 hypre_ParKrylovMatvecCreate,
-         pase_ParKrylovMatvec, hypre_ParKrylovMatvecDestroy,
-         pase_ParKrylovInnerProd, pase_ParKrylovCopyVector,
-         pase_ParKrylovClearVector,
-         pase_ParKrylovScaleVector, pase_ParKrylovAxpy,
-         hypre_ParKrylovIdentitySetup, pase_ParKrylovIdentity );
+         PASE_Pcg_matvec, hypre_ParKrylovMatvecDestroy,
+         PASE_Pcg_inner_product, PASE_Pcg_copy_vector,
+         PASE_Pcg_clear_vector,
+         PASE_Pcg_scale_vector, PASE_Pcg_add_vector,
+         hypre_ParKrylovIdentitySetup, PASE_Pcg_identity);
    *solver = ( (HYPRE_Solver) hypre_PCGCreate( pcg_functions ) );
 
    return hypre_error_flag;
+}
+
+PASE_INT 
+PASE_Lobpcg_setup_interpreter( mv_InterfaceInterpreter* i)
+{
+  /* Vector part */
+
+  i->CreateVector    = PASE_Pcg_create_vector;
+  i->DestroyVector   = PASE_Pcg_destroy_vector; 
+  i->InnerProd       = PASE_Pcg_inner_product; 
+  i->CopyVector      = PASE_Pcg_copy_vector;
+  i->ClearVector     = PASE_Pcg_clear_vector;
+  i->SetRandomValues = PASE_Pcg_set_random_value;
+  i->ScaleVector     = PASE_Pcg_scale_vector;
+  i->Axpy            = PASE_Pcg_add_vector;
+
+  /* Multivector part */
+
+  i->CreateMultiVector = mv_TempMultiVectorCreateFromSampleVector;
+  i->CopyCreateMultiVector = mv_TempMultiVectorCreateCopy;
+  i->DestroyMultiVector = mv_TempMultiVectorDestroy;
+
+  i->Width = mv_TempMultiVectorWidth;
+  i->Height = mv_TempMultiVectorHeight;
+  i->SetMask = mv_TempMultiVectorSetMask;
+  i->CopyMultiVector = mv_TempMultiVectorCopy;
+  i->ClearMultiVector = mv_TempMultiVectorClear;
+  i->SetRandomVectors = mv_TempMultiVectorSetRandom;
+  i->MultiInnerProd = mv_TempMultiVectorByMultiVector;
+  i->MultiInnerProdDiag = mv_TempMultiVectorByMultiVectorDiag;
+  i->MultiVecMat = mv_TempMultiVectorByMatrix;
+  i->MultiVecMatDiag = mv_TempMultiVectorByDiagonal;
+  i->MultiAxpy = mv_TempMultiVectorAxpy;
+  i->MultiXapy = mv_TempMultiVectorXapy;
+  i->Eval = mv_TempMultiVectorEval;
+
+  return 0;
+}
+
+PASE_INT 
+PASE_Lobpcg_setup_matvec(HYPRE_MatvecFunctions* mv)
+{
+  mv->MatvecCreate       = hypre_ParKrylovMatvecCreate;
+  mv->Matvec             = PASE_Pcg_matvec;
+  mv->MatvecDestroy      = hypre_ParKrylovMatvecDestroy;
+
+  mv->MatMultiVecCreate  = NULL;
+  mv->MatMultiVec        = NULL;
+  mv->MatMultiVecDestroy = NULL;
+
+  return 0;
 }
 
 
@@ -251,10 +302,8 @@ PASE_Pcg_create_aux(MPI_Comm comm, HYPRE_Solver *solver)
    return hypre_error_flag;
 }
 
-
-
 PASE_INT 
-PASE_Lobpcg_setup_interpreter( mv_InterfaceInterpreter* i)
+PASE_Lobpcg_setup_interpreter_aux( mv_InterfaceInterpreter* i)
 {
   /* Vector part */
 
@@ -291,7 +340,7 @@ PASE_Lobpcg_setup_interpreter( mv_InterfaceInterpreter* i)
 }
 
 PASE_INT 
-PASE_Lobpcg_setup_matvec(HYPRE_MatvecFunctions* mv)
+PASE_Lobpcg_setup_matvec_aux(HYPRE_MatvecFunctions* mv)
 {
   mv->MatvecCreate       = hypre_ParKrylovMatvecCreate;
   mv->Matvec             = PASE_Pcg_matvec_aux;
