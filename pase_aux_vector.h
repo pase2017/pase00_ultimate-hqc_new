@@ -34,7 +34,10 @@ void PASE_Aux_vector_set_block_constant(PASE_AUX_VECTOR aux_x, PASE_SCALAR val);
 void PASE_Aux_vector_set_block_random(PASE_AUX_VECTOR aux_x, PASE_INT seed);  
 //void PASE_Aux_vector_set_block_value(PASE_AUX_VECTOR aux_x, PASE_INT idx, PASE_SCALAR val);  
 void PASE_Aux_vector_inner_product(PASE_AUX_VECTOR aux_x, PASE_AUX_VECTOR aux_y, PASE_REAL *prod);
+void PASE_Aux_vector_inner_product_general(PASE_AUX_VECTOR aux_x, PASE_AUX_VECTOR aux_y, PASE_AUX_MATRIX aux_A, PASE_REAL *prod);
 void PASE_Aux_vector_add(PASE_SCALAR a, PASE_AUX_VECTOR aux_x, PASE_AUX_VECTOR aux_y);
 void PASE_Aux_vector_scale(PASE_SCALAR a, PASE_AUX_VECTOR aux_x);
+void PASE_Aux_vector_orth(PASE_AUX_VECTOR *aux_x, PASE_INT num);
+void PASE_Aux_vector_orth_general(PASE_AUX_VECTOR *aux_x, PASE_INT start, PASE_INT end, PASE_AUX_MATRIX aux_A);
 
 #endif

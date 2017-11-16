@@ -12,6 +12,7 @@ typedef struct PASE_MATRIX_OPERATOR_PRIVATE_ {
     void *   (*create_matrix_by_matrix) (void *A);
     void     (*copy_matrix)             (void *A, void *B);
     void     (*destroy_matrix)          (void *A);
+    void *   (*transpose_matrix)        (void *A);
     /**
      * @brief 矩阵矩阵相乘 C = A * B
      */
@@ -21,7 +22,9 @@ typedef struct PASE_MATRIX_OPERATOR_PRIVATE_ {
      * @brief 矩阵向量相乘 y = A * x 
      */
     void     (*multiply_matrix_vector)  (void *A, void *x, void *y);
+    void     (*multiply_matrix_vector_general)  (PASE_SCALAR a, void *A, void *x, PASE_SCALAR b, void *y);
     void     (*multiply_matrixT_vector) (void *A, void *x, void *y);
+    void     (*multiply_matrixT_vector_general)  (PASE_SCALAR a, void *A, void *x, PASE_SCALAR b, void *y);
     PASE_INT (*get_global_nrow)         (void *A);
     PASE_INT (*get_global_ncol)         (void *A);
     MPI_Comm (*get_comm_info)           (void *A);
@@ -51,8 +54,13 @@ PASE_MATRIX_OPERATOR PASE_Matrix_operator_create
     (void *   (*create_matrix_by_matrix) (void *A),
      void     (*copy_matrix)             (void *A, void *B),
      void     (*destroy_matrix)          (void *A),
+     void *   (*transpose_matrix)        (void *A),
      void *   (*multiply_matrix_matrix)  (void *A, void *B),
+     void *   (*multiply_matrixT_matrix) (void *A, void *B),
      void     (*multiply_matrix_vector)  (void *A, void *x, void *y),
+     void     (*multiply_matrix_vector_general)  (PASE_SCALAR a, void *A, void *x, PASE_SCALAR b, void *y),
+     void     (*multiply_matrixT_vector) (void *A, void *x, void *y),
+     void     (*multiply_matrixT_vector_general) (PASE_SCALAR a, void *A, void *x, PASE_SCALAR b, void *y),
      PASE_INT (*get_global_nrow)         (void *A),
      PASE_INT (*get_global_ncol)         (void *A),
      MPI_Comm (*get_comm_info)           (void *A));
@@ -61,16 +69,25 @@ void PASE_Matrix_operator_destroy(PASE_MATRIX_OPERATOR ops);
 
 void     PASE_Matrix_destroy(PASE_MATRIX A);
 void     PASE_Matrix_copy(PASE_MATRIX A, PASE_MATRIX B);
+PASE_MATRIX PASE_Matrix_transpose(PASE_MATRIX A);
 PASE_MATRIX PASE_Matrix_multiply_matrix(PASE_MATRIX A, PASE_MATRIX B);
+PASE_MATRIX PASE_Matrix_transposition_multiply_matrix(PASE_MATRIX A, PASE_MATRIX B);
 void     PASE_Matrix_multiply_vector(PASE_MATRIX A, PASE_VECTOR x, PASE_VECTOR y);
 void     PASE_Matrix_multiply_vector_general(PASE_SCALAR a, PASE_MATRIX A, PASE_VECTOR x, PASE_SCALAR b, PASE_VECTOR y);
+void     PASE_Matrix_transposition_multiply_vector(PASE_MATRIX A, PASE_VECTOR x, PASE_VECTOR y);
+void    PASE_Matrix_transposition_multiply_vector_general(PASE_SCALAR a, PASE_MATRIX A, PASE_VECTOR x, PASE_SCALAR b, PASE_VECTOR y);
 MPI_Comm PASE_Matrix_get_comm_info(PASE_MATRIX A);
 
 void*    PASE_Matrix_create_by_matrix_hypre(void *A);
 void     PASE_Matrix_copy_hypre(void *A, void *B);
 void     PASE_Matrix_destroy_hypre(void *A);
+void*    PASE_Matrix_transpose_hypre(void *A);
 void*    PASE_Matrix_multiply_matrix_hypre(void *A, void *B);
+void*    PASE_Matrix_transposition_multiply_matrix_hypre(void *A, void *B);
 void     PASE_Matrix_multiply_vector_hypre(void *A, void *x, void *y);
+void     PASE_Matrix_multiply_vector_general_hypre(PASE_SCALAR a, void *A, void *x, PASE_SCALAR b, void *y);
+void     PASE_Matrix_transposition_multiply_vector_hypre(void *A, void *x, void *y);
+void    PASE_Matrix_transposition_multiply_vector_general_hypre(PASE_SCALAR a, void *A, void *x, PASE_SCALAR b, void *y);
 PASE_INT PASE_Matrix_get_global_nrow_hypre(void *A);
 PASE_INT PASE_Matrix_get_global_ncol_hypre(void *A);
 MPI_Comm PASE_Matrix_get_comm_info_hypre(void *A);

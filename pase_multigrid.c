@@ -199,6 +199,9 @@ PASE_Multigrid_get_amg_array_hypre(void *A, PASE_PARAMETER param, void ***A_arra
     P_hypre = hypre_ParAMGDataPArray(amg_data_hypre);
     HYPRE_ParCSRMatrix *R_hypre = hypre_CTAlloc(HYPRE_ParCSRMatrix, *num_level-1);
 
+    PASE_INT N_H = hypre_ParCSRMatrixGlobalNumRows(A_hypre[*num_level-1]);
+    printf("The dim of the coarsest space is %d.\n", N_H );
+
     PASE_INT i;
     for(i=0; i<*num_level-1; i++) {
         hypre_ParCSRMatrixTranspose(P_hypre[i], &(R_hypre[i]), 1);

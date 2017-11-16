@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 //#include "pase_matrix.h"
 #include "pase_vector.h"
 #include "pase_config.h"
@@ -190,6 +191,15 @@ PASE_Vector_inner_product(PASE_VECTOR x, PASE_VECTOR y, PASE_REAL *prod)
     x->ops->inner_product(x->vector_data, y->vector_data, prod);
 }
 
+void
+PASE_Vector_inner_product_general(PASE_VECTOR x, PASE_VECTOR y, PASE_MATRIX A, PASE_REAL *prod)
+{
+    PASE_VECTOR workspace = PASE_Vector_create_by_vector(x);
+    PASE_Matrix_multiply_vector(A, y, workspace);
+    PASE_Vector_inner_product(x, workspace, prod);
+    PASE_Vector_destroy(workspace);
+}
+
 void 
 PASE_Vector_add_vector(PASE_SCALAR a, PASE_VECTOR x, PASE_VECTOR y)
 {
@@ -200,6 +210,38 @@ void
 PASE_Vector_scale(PASE_SCALAR a, PASE_VECTOR x)
 {
     x->ops->scale_vector(a, x->vector_data);
+}
+
+void
+PASE_Vector_orth(PASE_VECTOR *x, PASE_INT num)
+{
+    PASE_INT cur, above;
+    PASE_REAL inner, norm;
+    for(cur=0; cur<num; cur++) {
+       for(above=0; above<cur; above++) {
+           PASE_Vector_inner_product(x[above], x[cur], &inner); 
+           PASE_Vector_add_vector(-inner, x[above], x[cur]);
+       } 
+       PASE_Vector_inner_product(x[cur], x[cur], &norm);
+       norm = sqrt(norm);
+       PASE_Vector_scale( 1.0/norm, x[cur]);
+    }
+}
+
+void
+PASE_Vector_orth_general(PASE_VECTOR *x, PASE_INT start, PASE_INT end, PASE_MATRIX A)
+{
+    PASE_INT cur, above;
+    PASE_REAL inner, norm;
+    for(cur=start; cur<end; cur++) {
+       for(above=0; above<cur; above++) {
+           PASE_Vector_inner_product_general(x[above], x[cur], A, &inner); 
+           PASE_Vector_add_vector(-inner, x[above], x[cur]);
+       } 
+       PASE_Vector_inner_product_general(x[cur], x[cur], A, &norm);
+       norm = sqrt(norm);
+       PASE_Vector_scale( 1.0/norm, x[cur]);
+    }
 }
 
 void*

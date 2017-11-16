@@ -68,8 +68,11 @@ void PASE_Vector_copy(PASE_VECTOR x, PASE_VECTOR y);
 void PASE_Vector_set_constant_value(PASE_VECTOR x, PASE_SCALAR a);
 void PASE_Vector_set_random_value(PASE_VECTOR x, PASE_INT seed);
 void PASE_Vector_inner_product(PASE_VECTOR x, PASE_VECTOR y, PASE_REAL *prod);
+void PASE_Vector_inner_product_general(PASE_VECTOR x, PASE_VECTOR y, PASE_MATRIX A, PASE_REAL *prod);
 void PASE_Vector_add_vector(PASE_SCALAR a, PASE_VECTOR x, PASE_VECTOR y);
 void PASE_Vector_scale(PASE_SCALAR a, PASE_VECTOR x);
+void PASE_Vector_orth(PASE_VECTOR *x, PASE_INT num);
+void PASE_Vector_orth_general(PASE_VECTOR *x, PASE_INT start, PASE_INT end, PASE_MATRIX A);
 
 void* PASE_Vector_create_by_vector_hypre(void *x);
 void* PASE_Vector_create_by_matrix_hypre(void *A);

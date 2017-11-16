@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "pase_matrix.h"
 #include "pase_vector.h"
 #include "pase_aux_matrix.h"
@@ -143,14 +144,15 @@ PASE_Aux_matrix_destroy(PASE_AUX_MATRIX aux_A)
 void 
 PASE_Aux_matrix_copy(PASE_AUX_MATRIX aux_A, PASE_AUX_MATRIX aux_B)
 {
-    PASE_INT i, j;
     PASE_Matrix_copy(aux_A->mat, aux_B->mat);
-    for(i=0; i<aux_A->block_size; i++) {
-	PASE_Vector_copy(aux_A->vec[i], aux_B->vec[i]);
-	for(j=0; j<aux_A->block_size; j++) {
-	    aux_B->block[i][j] = aux_A->block[i][j];
-	}
-    }
+    memcpy(aux_B->block, aux_A->block, aux_A->block_size*aux_A->block_size*sizeof(double));
+    //PASE_INT i, j;
+    //for(i=0; i<aux_A->block_size; i++) {
+    //    PASE_Vector_copy(aux_A->vec[i], aux_B->vec[i]);
+    //    for(j=0; j<aux_A->block_size; j++) {
+    //        aux_B->block[i][j] = aux_A->block[i][j];
+    //    }
+    //}
 }
 
 void 
@@ -168,7 +170,7 @@ PASE_Aux_matrix_multiply_aux_vector(PASE_AUX_MATRIX aux_A, PASE_AUX_VECTOR aux_x
 	PASE_Vector_add_vector(aux_x->block[i], aux_A->vec[i], aux_y->vec);
 	PASE_Vector_inner_product(aux_A->vec[i], aux_x->vec, &(aux_y->block[i]));
 	for(j=0; j<aux_A->block_size; j++) {
-	    aux_y->block[i] += aux_A->block[j][i] * aux_x->block[j];
+	    aux_y->block[i] += aux_A->block[i][j] * aux_x->block[j];
 	}
     }
 }

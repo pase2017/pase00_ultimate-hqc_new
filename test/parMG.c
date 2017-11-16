@@ -81,7 +81,6 @@ int main (int argc, char *argv[])
    printf("=============================================================\n" );
 
    global_time_index = hypre_InitializeTiming("PASE Solve");
-   hypre_BeginTiming(global_time_index);
 
 
    /* Default problem parameters */
@@ -292,15 +291,36 @@ int main (int argc, char *argv[])
 
    /*求解特征值问题的MG方法*/
    {
+       PASE_INT  block_size  = 20;
+       PASE_INT  max_iter    = 40;
+       PASE_INT  pre_iter    = 1;
+       PASE_INT  post_iter   = 1;
+       PASE_REAL atol        = 1e-6;
+       PASE_REAL rtol        = 1e-6;
+       PASE_INT  print_level = 1;
+       PASE_INT  max_level   = 5;
+
        PASE_MATRIX pase_A = PASE_Matrix_create_default((void*)parcsr_A, 1);
        PASE_MATRIX pase_B = PASE_Matrix_create_default((void*)parcsr_B, 1);
        PASE_VECTOR pase_x = PASE_Vector_create_default((void*)par_x, 1);
        PASE_PARAMETER param = (PASE_PARAMETER) PASE_Malloc(sizeof(PASE_PARAMETER_PRIVATE));
-       param->max_level = 3;
+       param->max_level = max_level;
        PASE_MULTIGRID multigrid = PASE_Multigrid_create(pase_A, pase_B, param, NULL);
        PASE_MG_SOLVER solver = PASE_Mg_solver_create_by_multigrid(multigrid);
+
+       PASE_Mg_set_block_size(solver, block_size);
+       PASE_Mg_set_max_iteration(solver, max_iter);
+       PASE_Mg_set_max_pre_iteration(solver, pre_iter);
+       PASE_Mg_set_max_post_iteration(solver, post_iter);
+       PASE_Mg_set_atol(solver, atol);
+       PASE_Mg_set_rtol(solver, rtol);
+       PASE_Mg_set_print_level(solver, print_level);
+       PASE_Mg_set_exact_eigenvalues(solver, exact_eigenvalues);
+
+   hypre_BeginTiming(global_time_index);
        PASE_Mg_set_up(solver);
        PASE_Mg_solve(solver);
+   hypre_EndTiming(global_time_index);
        PASE_Mg_solver_destroy(solver);
        PASE_Free(param);
        PASE_Multigrid_destroy(multigrid);
@@ -319,7 +339,6 @@ int main (int argc, char *argv[])
    HYPRE_IJVectorDestroy(b);
    HYPRE_IJVectorDestroy(x);
 
-   hypre_EndTiming(global_time_index);
    hypre_PrintTiming("Solve phase times", MPI_COMM_WORLD);
    hypre_FinalizeTiming(global_time_index);
    hypre_ClearTiming();

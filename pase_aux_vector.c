@@ -1,5 +1,7 @@
 #include "stdio.h"
 #include "stdlib.h"
+#include <string.h>
+#include "math.h"
 #include "pase_config.h"
 #include "pase_vector.h"
 #include "pase_aux_vector.h"
@@ -64,10 +66,11 @@ PASE_Aux_vector_copy(PASE_AUX_VECTOR aux_x, PASE_AUX_VECTOR aux_y)
 	exit(-1);
     }
     PASE_Vector_copy(aux_x->vec, aux_y->vec);
-    PASE_INT i = 0;
-    for(i=0; i<aux_x->block_size; i++) {
-	aux_y->block[i] = aux_x->block[i];
-    }
+    memcpy(aux_y->block, aux_x->block, aux_x->block_size*sizeof(double));
+    //PASE_INT i = 0;
+    //for(i=0; i<aux_x->block_size; i++) {
+    //    aux_y->block[i] = aux_x->block[i];
+    //}
 }
 
 void 
@@ -139,7 +142,8 @@ PASE_Aux_vector_set_block_random(PASE_AUX_VECTOR aux_x, PASE_INT seed)
     }
 } 
 
-void PASE_Aux_vector_inner_product(PASE_AUX_VECTOR aux_x, PASE_AUX_VECTOR aux_y, PASE_REAL *prod)
+void 
+PASE_Aux_vector_inner_product(PASE_AUX_VECTOR aux_x, PASE_AUX_VECTOR aux_y, PASE_REAL *prod)
 {
     if(NULL == aux_x || NULL == aux_x->vec || NULL == aux_x->block) {
 	printf("PASE ERROR: Call PASE_Aux_vector_inner_product with aux_x being NULL!\n");
@@ -157,7 +161,17 @@ void PASE_Aux_vector_inner_product(PASE_AUX_VECTOR aux_x, PASE_AUX_VECTOR aux_y,
     }
 }
 
-void PASE_Aux_vector_add(PASE_SCALAR a, PASE_AUX_VECTOR aux_x, PASE_AUX_VECTOR aux_y)
+void
+PASE_Aux_vector_inner_product_general(PASE_AUX_VECTOR aux_x, PASE_AUX_VECTOR aux_y, PASE_AUX_MATRIX aux_A, PASE_REAL *prod)
+{
+    PASE_AUX_VECTOR aux_workspace = PASE_Aux_vector_create_by_aux_vector(aux_x);
+    PASE_Aux_matrix_multiply_aux_vector(aux_A, aux_y, aux_workspace);
+    PASE_Aux_vector_inner_product(aux_x, aux_workspace, prod);
+    PASE_Aux_vector_destroy(aux_workspace);
+}
+
+void 
+PASE_Aux_vector_add(PASE_SCALAR a, PASE_AUX_VECTOR aux_x, PASE_AUX_VECTOR aux_y)
 {
     if(NULL == aux_x) {
 	printf("PASE ERROR: Call PASE_Aux_vector_add with aux_x being NULL!\n");
@@ -175,7 +189,8 @@ void PASE_Aux_vector_add(PASE_SCALAR a, PASE_AUX_VECTOR aux_x, PASE_AUX_VECTOR a
     }
 }
 
-void PASE_Aux_vector_scale(PASE_SCALAR a, PASE_AUX_VECTOR aux_x)
+void 
+PASE_Aux_vector_scale(PASE_SCALAR a, PASE_AUX_VECTOR aux_x)
 {
     if(NULL == aux_x) {
 	printf("PASE ERROR: Call PASE_Aux_vector_scale with aux_x being NULL!\n");
@@ -186,5 +201,37 @@ void PASE_Aux_vector_scale(PASE_SCALAR a, PASE_AUX_VECTOR aux_x)
     PASE_INT i = 0;
     for(i=0; i<aux_x->block_size; i++) {
 	aux_x->block[i] *= a;
+    }
+}
+
+void
+PASE_Aux_vector_orth(PASE_AUX_VECTOR *aux_x, PASE_INT num)
+{
+    PASE_INT cur, above;
+    PASE_REAL inner, norm;
+    for(cur=0; cur<num; cur++) {
+       for(above=0; above<cur; above++) {
+           PASE_Aux_vector_inner_product(aux_x[above], aux_x[cur], &inner); 
+           PASE_Aux_vector_add(-inner, aux_x[above], aux_x[cur]);
+       } 
+       PASE_Aux_vector_inner_product(aux_x[cur], aux_x[cur], &norm);
+       norm = sqrt(norm);
+       PASE_Aux_vector_scale( 1.0/norm, aux_x[cur]);
+    }
+}
+
+void
+PASE_Aux_vector_orth_general(PASE_AUX_VECTOR *aux_x, PASE_INT start, PASE_INT end, PASE_AUX_MATRIX aux_A)
+{
+    PASE_INT cur, above;
+    PASE_REAL inner, norm;
+    for(cur=start; cur<end; cur++) {
+       for(above=0; above<cur; above++) {
+           PASE_Aux_vector_inner_product_general(aux_x[above], aux_x[cur], aux_A, &inner); 
+           PASE_Aux_vector_add(-inner, aux_x[above], aux_x[cur]);
+       } 
+       PASE_Aux_vector_inner_product_general(aux_x[cur], aux_x[cur], aux_A, &norm);
+       norm = sqrt(norm);
+       PASE_Aux_vector_scale( 1.0/norm, aux_x[cur]);
     }
 }
