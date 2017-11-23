@@ -66,7 +66,7 @@ PASE_Aux_vector_copy(PASE_AUX_VECTOR aux_x, PASE_AUX_VECTOR aux_y)
 	exit(-1);
     }
     PASE_Vector_copy(aux_x->vec, aux_y->vec);
-    memcpy(aux_y->block, aux_x->block, aux_x->block_size*sizeof(double));
+    memcpy(aux_y->block, aux_x->block, aux_x->block_size*sizeof(PASE_SCALAR));
     //PASE_INT i = 0;
     //for(i=0; i<aux_x->block_size; i++) {
     //    aux_y->block[i] = aux_x->block[i];

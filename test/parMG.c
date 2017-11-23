@@ -38,7 +38,6 @@
 #include "lobpcg.h"
 
 
-
 static int cmp( const void *a ,  const void *b )
 {   return *(double *)a > *(double *)b ? 1 : -1; }
 
@@ -75,10 +74,12 @@ int main (int argc, char *argv[])
    MPI_Comm_rank(MPI_COMM_WORLD, &myid);
    MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
 
-   printf("=============================================================\n" );
-   printf("PASE (Parallel Auxiliary Space Eigen-solver), parallel version\n"); 
-   printf("Please contact liyu@lsec.cc.ac.cn, if there is any bugs.\n"); 
-   printf("=============================================================\n" );
+   if(myid ==0) {
+       printf("=============================================================\n" );
+       printf("PASE (Parallel Auxiliary Space Eigen-solver), parallel version\n"); 
+       printf("Please contact liyu@lsec.cc.ac.cn, if there is any bugs.\n"); 
+       printf("=============================================================\n" );
+   }
 
    global_time_index = hypre_InitializeTiming("PASE Solve");
 
@@ -87,7 +88,7 @@ int main (int argc, char *argv[])
    n = 200;
    max_levels = 5;
    block_size = (int) n*n/pow(4, max_levels);
-   printf ( "block_size = n*n/pow(4, max_levels)\n" );
+   //printf ( "block_size = n*n/pow(4, max_levels)\n" );
 
    /* Parse command line */
    {
@@ -291,9 +292,9 @@ int main (int argc, char *argv[])
 
    /*求解特征值问题的MG方法*/
    {
-       PASE_INT  block_size  = 20;
-       PASE_INT  max_iter    = 40;
-       PASE_INT  pre_iter    = 1;
+       PASE_INT  block_size  = 10;
+       PASE_INT  max_iter    = 20;
+       PASE_INT  pre_iter    = 2;
        PASE_INT  post_iter   = 1;
        PASE_REAL atol        = 1e-6;
        PASE_REAL rtol        = 1e-6;
@@ -317,10 +318,11 @@ int main (int argc, char *argv[])
        PASE_Mg_set_print_level(solver, print_level);
        PASE_Mg_set_exact_eigenvalues(solver, exact_eigenvalues);
 
-   hypre_BeginTiming(global_time_index);
+       hypre_BeginTiming(global_time_index);
        PASE_Mg_set_up(solver);
        PASE_Mg_solve(solver);
-   hypre_EndTiming(global_time_index);
+       hypre_EndTiming(global_time_index);
+
        PASE_Mg_solver_destroy(solver);
        PASE_Free(param);
        PASE_Multigrid_destroy(multigrid);

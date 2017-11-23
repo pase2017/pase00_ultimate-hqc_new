@@ -9,6 +9,9 @@
 #include "pase_param.h"
 
 
+/**
+ * @brief 依据粗空间 A_H, 限制矩阵 R_hH, 细空间 A_h, 以及细空间的向量 u_h, 创建一个辅助矩阵.
+ */
 PASE_AUX_MATRIX 
 PASE_Aux_matrix_create(PASE_MATRIX A_H, PASE_MATRIX R_hH, PASE_MATRIX A_h, PASE_VECTOR *u_h, PASE_INT block_size)
 {
@@ -22,6 +25,9 @@ PASE_Aux_matrix_create(PASE_MATRIX A_H, PASE_MATRIX R_hH, PASE_MATRIX A_h, PASE_
     return aux_A;
 }
 
+/**
+ * @brief 依据细空间 A_h 和细空间上的向量组 u_h 的第 i 个到第 j 个向量, 设置辅助矩阵 aux_A 第 i 维到第 j 维的辅助空间.
+ */
 void 
 PASE_Aux_matrix_set_aux_space_some(PASE_AUX_MATRIX aux_A, PASE_INT i, PASE_INT j, PASE_MATRIX R_hH, PASE_MATRIX A_h, PASE_VECTOR *u_h)
 {
@@ -54,6 +60,9 @@ PASE_Aux_matrix_set_aux_space_some(PASE_AUX_MATRIX aux_A, PASE_INT i, PASE_INT j
     PASE_Vector_destroy(workspace_h);
 }
 
+/**
+ * @brief 依据细空间 A_h 和细空间上的向量组 u_h, 设置辅助矩阵 aux_A 的辅助空间.
+ */
 void 
 PASE_Aux_matrix_set_aux_space(PASE_AUX_MATRIX aux_A, PASE_MATRIX R_hH, PASE_MATRIX A_h, PASE_VECTOR *u_h)
 {
@@ -145,7 +154,7 @@ void
 PASE_Aux_matrix_copy(PASE_AUX_MATRIX aux_A, PASE_AUX_MATRIX aux_B)
 {
     PASE_Matrix_copy(aux_A->mat, aux_B->mat);
-    memcpy(aux_B->block, aux_A->block, aux_A->block_size*aux_A->block_size*sizeof(double));
+    memcpy(aux_B->block, aux_A->block, aux_A->block_size*aux_A->block_size*sizeof(PASE_SCALAR));
     //PASE_INT i, j;
     //for(i=0; i<aux_A->block_size; i++) {
     //    PASE_Vector_copy(aux_A->vec[i], aux_B->vec[i]);

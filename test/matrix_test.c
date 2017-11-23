@@ -210,9 +210,9 @@ int main (int argc, char *argv[])
        PASE_VECTOR pase_x = PASE_Vector_create_default((void*)par_x, 1);
        PASE_VECTOR pase_b = PASE_Vector_create_default((void*)par_b, 1);
        //HYPRE_ParCSRMatrixPrint(parcsr_A, "A");
-   printf("=============================================================\n" );
+       printf("=============================================================\n" );
        printf("This is a test program for PASE_MATRIX\n");
-   printf("=============================================================\n" );
+       printf("=============================================================\n" );
        printf("\n");
        printf("Initial\n");
        printf("A = [%f, %f], B = [%f, %f]\n", parcsr_A->diag->data[0], parcsr_A->diag->data[1], parcsr_B->diag->data[0], parcsr_B->diag->data[1]);

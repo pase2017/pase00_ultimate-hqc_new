@@ -35,7 +35,7 @@ PASE_Matrix_create_by_operator(void *matrix_data, PASE_MATRIX_OPERATOR ops)
 
 /**
  * @brief 通过此函数进行缺省类型的外部矩阵到 PASE_MATRIX 的转换.
- *        需输入矩阵数据与缺省类型参数data_struct, 如HYPRE的类型参数为 1.
+ *        需输入向量数据与缺省类型参数data_struct, 如HYPRE的类型参数为 1.
  */
 PASE_MATRIX 
 PASE_Matrix_create_default(void *matrix_data, PASE_INT data_struct)
@@ -131,7 +131,7 @@ PASE_Matrix_operator_destroy(PASE_MATRIX_OPERATOR ops)
 }
 
 /**
- * @brief Destroy A and free memory. 
+ * @brief Destroy matrix A and free memory. 
  */
 void 
 PASE_Matrix_destroy(PASE_MATRIX A)
