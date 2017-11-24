@@ -27,7 +27,7 @@ F90FLAGS = $(FFLAGS) $(IF90FLAGS)
 
 
 LINKOPTS  = $(COPTS)
-LIBS      = ../libpase.a -L$(HYPRE_DIR)/lib -lHYPRE -lm 
+LIBS      = ../libpase.a -L$(HYPRE_DIR)/lib -lHYPRE ../lapack-3.4.2/liblapacke.a ../lapack-3.4.2/liblapack.a ../lapack-3.4.2/BLAS/blas_LINUX.a -lm -lgfortran
 LFLAGS    = $(LINKOPTS) $(LIBS) -lstdc++
 LFLAGS_B =\
  -L${HYPRE_DIR}/lib\

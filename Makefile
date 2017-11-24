@@ -11,7 +11,7 @@ HYPRE_DIR = ../../hypre
 # Compiling and linking options
 ########################################################################
 COPTS     = -g -Wall
-CINCLUDES = -I$(HYPRE_DIR)/include
+CINCLUDES = -I$(HYPRE_DIR)/include -I lapack-3.4.2/lapacke/include
 CDEFS     = -DHAVE_CONFIG_H -DHYPRE_TIMING
 CFLAGS    = $(COPTS) $(CINCLUDES) $(CDEFS)
 FOPTS     = -g
@@ -55,7 +55,7 @@ LFLAGS90 =
 # List of all source
 ########################################################################
 LIB = libpase.a
-OBJS = pase_vector.o pase_matrix.o pase_aux_vector.o pase_aux_matrix.o pase_multigrid.o pase_pcg.o pase_mg_solver.o 
+OBJS = pase_vector.o pase_matrix.o pase_aux_vector.o pase_aux_matrix.o pase_multigrid.o pase_pcg.o pase_mg_solver.o pase_arnoldi.o
 
 ############################################################
 RM = /bin/rm

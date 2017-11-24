@@ -75,6 +75,8 @@ PASE_INT PASE_Mg_presmoothing_by_pcg_aux_hypre(void *mg_solver);
 PASE_INT PASE_Mg_solve_directly_by_lobpcg_aux_hypre(void *mg_solver);
 PASE_INT PASE_Mg_presmoothing_by_cg(void *mg_solver);
 PASE_INT PASE_Mg_presmoothing_by_cg_aux(void *mg_solver);
+PASE_INT PASE_Linear_solve_by_cg_aux(PASE_AUX_MATRIX aux_A, PASE_AUX_VECTOR aux_b, PASE_AUX_VECTOR aux_x, PASE_REAL tol, PASE_INT max_iter);
+PASE_INT PASE_Mg_solve_directly_by_IRA(void *mg_solver);
 
 
 

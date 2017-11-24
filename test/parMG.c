@@ -292,14 +292,14 @@ int main (int argc, char *argv[])
 
    /*求解特征值问题的MG方法*/
    {
-       PASE_INT  block_size  = 10;
-       PASE_INT  max_iter    = 20;
+       PASE_INT  block_size  = 100;
+       PASE_INT  max_iter    = 30;
        PASE_INT  pre_iter    = 2;
        PASE_INT  post_iter   = 1;
        PASE_REAL atol        = 1e-6;
        PASE_REAL rtol        = 1e-6;
        PASE_INT  print_level = 1;
-       PASE_INT  max_level   = 5;
+       PASE_INT  max_level   = 7;
 
        PASE_MATRIX pase_A = PASE_Matrix_create_default((void*)parcsr_A, 1);
        PASE_MATRIX pase_B = PASE_Matrix_create_default((void*)parcsr_B, 1);

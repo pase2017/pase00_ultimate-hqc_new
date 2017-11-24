@@ -1,7 +1,7 @@
 #include "stdio.h"
 #include "stdlib.h"
 #include <string.h>
-#include "math.h"
+#include <math.h>
 #include "pase_config.h"
 #include "pase_vector.h"
 #include "pase_aux_vector.h"
@@ -170,6 +170,13 @@ PASE_Aux_vector_inner_product_general(PASE_AUX_VECTOR aux_x, PASE_AUX_VECTOR aux
     PASE_Aux_vector_destroy(aux_workspace);
 }
 
+void
+PASE_Aux_vector_norm(PASE_AUX_VECTOR aux_x, PASE_REAL *norm)
+{
+    PASE_Aux_vector_inner_product(aux_x, aux_x, norm);
+    *norm = sqrt(*norm);
+}
+
 void 
 PASE_Aux_vector_add(PASE_SCALAR a, PASE_AUX_VECTOR aux_x, PASE_AUX_VECTOR aux_y)
 {
@@ -233,5 +240,24 @@ PASE_Aux_vector_orth_general(PASE_AUX_VECTOR *aux_x, PASE_INT start, PASE_INT en
        PASE_Aux_vector_inner_product_general(aux_x[cur], aux_x[cur], aux_A, &norm);
        norm = sqrt(norm);
        PASE_Aux_vector_scale( 1.0/norm, aux_x[cur]);
+    }
+}
+
+void
+PASE_Multi_aux_vector_by_matrix(PASE_AUX_VECTOR *aux_x, PASE_INT num_vec, PASE_SCALAR **mat, PASE_INT num_mat, PASE_AUX_VECTOR *aux_y)
+{
+    PASE_INT i;
+    for(i=0; i<num_mat; i++) {
+        PASE_Multi_aux_vector_combination(aux_x, num_vec, mat[i], aux_y[i]);
+    }
+}
+
+void
+PASE_Multi_aux_vector_combination(PASE_AUX_VECTOR *aux_x, PASE_INT num_vec, PASE_SCALAR *coef, PASE_AUX_VECTOR aux_y)
+{
+    PASE_INT j = 0;
+    PASE_Aux_vector_set_constant_value(aux_y, 0.0);
+    for(j=0; j<num_vec; j++) {
+        PASE_Aux_vector_add(coef[j], aux_x[j], aux_y);
     }
 }
