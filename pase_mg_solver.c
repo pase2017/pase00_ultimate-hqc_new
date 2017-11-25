@@ -45,8 +45,8 @@ PASE_Mg_solver_create_by_multigrid(PASE_MULTIGRID multigrid)
 
     solver->multigrid          = multigrid;
     solver->function           = PASE_Mg_function_create(PASE_Mg_get_initial_vector_by_coarse_grid,
-	                                                 PASE_Mg_solve_directly_by_IRA,
-							 //PASE_Mg_solve_directly_by_lobpcg_aux_hypre,
+	                                                 //PASE_Mg_solve_directly_by_IRA,
+							 PASE_Mg_solve_directly_by_lobpcg_aux_hypre,
                                                          PASE_Mg_presmoothing_by_cg,
                                                          PASE_Mg_presmoothing_by_cg,
 			                                 PASE_Mg_presmoothing_by_cg_aux,
@@ -1080,14 +1080,15 @@ PASE_Mg_solve_directly_by_IRA(void *mg_solver)
     PASE_SCALAR     *eigenvalues = solver->eigenvalues;
 
     PASE_INT         ncv         = ((2*block_size) > 10)? (2*block_size) : 10;
-    PASE_INT         max_iter    = 2;
+    PASE_INT         max_iter    = 10;
     PASE_INT         i           = 0;
-    PASE_REAL        tol         = solver->atol;
+    PASE_REAL        tol         = solver->atol * 1e-0;
 
     PASE_AUX_VECTOR *krylovspace = (PASE_AUX_VECTOR*)PASE_Malloc((ncv+1)*sizeof(PASE_AUX_VECTOR));
     for(i=0; i<ncv+1; i++) {
         krylovspace[i] = PASE_Aux_vector_create_by_aux_vector(aux_u[0]);
     }
+    printf("solve directly by arpack\n");
     IRA_RestartArnoldi(eigenvalues, aux_u, aux_A, aux_B, krylovspace, ncv, block_size, max_iter, tol); 
 
     for(i=0; i<ncv+1; i++) {

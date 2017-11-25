@@ -173,6 +173,7 @@ PASE_Multigrid_get_amg_array_hypre(void *A, PASE_PARAMETER param, void ***A_arra
 //   HYPRE_BoomerAMGSetRelaxOrder(amg_solver, 1);         /* uses C/F relaxation */
 //   HYPRE_BoomerAMGSetNumSweeps(amg_solver, 1);          /* Sweeeps on each level */
 //   HYPRE_BoomerAMGSetTol(amg_solver, 1e-7);             /* conv. tolerance */
+    HYPRE_BoomerAMGSetMinCoarseSize(amg_solver, param->min_coarse_size);
 
    /* Now setup */
     HYPRE_ParCSRMatrix parcsr_A     = (HYPRE_ParCSRMatrix)A;
