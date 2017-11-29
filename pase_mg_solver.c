@@ -447,23 +447,21 @@ PASE_Mg_prolong(PASE_MG_SOLVER solver)
 {
     clock_t start, end;
     start = clock();
-    PASE_INT i, j;
+    PASE_INT i;
     PASE_INT cur_level  = solver->cur_level;
     PASE_INT block_size = solver->block_size;
     PASE_MATRIX P_Hh    = solver->multigrid->P[cur_level];
 #if 1
     PASE_INT num_converged = solver->num_converged;
 
-    /* u_new->b_H += P*u0->b_H */
     /* u_new += u1*u_0->aux_h */
+    /* u_new->b_H += P*u0->b_H */
     if(cur_level == 0) {
 	PASE_VECTOR *u_new = (PASE_VECTOR*)PASE_Malloc((block_size-num_converged)*sizeof(PASE_VECTOR));
         for(i=num_converged; i<block_size; i++) {
 	    u_new[i-num_converged] = PASE_Vector_create_by_vector(solver->u[0]);
-            PASE_Matrix_multiply_vector(P_Hh , solver->aux_u[1][i]->vec, u_new[i-num_converged]);
-            for(j=0; j<block_size; j++) {
-                PASE_Vector_add_vector(solver->aux_u[1][i]->block[j], solver->u[j], u_new[i-num_converged]);
-            }
+	    PASE_Multi_vector_combination(solver->u, block_size, solver->aux_u[1][i]->block, u_new[i-num_converged]);
+            PASE_Matrix_multiply_vector_general(1.0, P_Hh , solver->aux_u[1][i]->vec, 1.0, u_new[i-num_converged]);
         }
         for( i=num_converged; i<block_size; i++) {
 	    PASE_Vector_copy(u_new[i-num_converged], solver->u[i]);
@@ -474,10 +472,8 @@ PASE_Mg_prolong(PASE_MG_SOLVER solver)
 	PASE_AUX_VECTOR *u_new = (PASE_AUX_VECTOR*)PASE_Malloc((block_size-num_converged)*sizeof(PASE_AUX_VECTOR));
         for(i=num_converged; i<block_size; i++) {
 	    u_new[i-num_converged] = PASE_Aux_vector_create_by_aux_vector(solver->aux_u[cur_level][0]);
-            PASE_Matrix_multiply_vector(P_Hh , solver->aux_u[cur_level+1][i]->vec, u_new[i-num_converged]->vec);
-            for(j=0; j<block_size; j++) {
-                PASE_Aux_vector_add(solver->aux_u[cur_level+1][i]->block[j], solver->aux_u[cur_level][j], u_new[i-num_converged]);
-            }
+	    PASE_Multi_aux_vector_combination(solver->aux_u[cur_level], block_size, solver->aux_u[cur_level+1][i]->block, u_new[i-num_converged]);
+            PASE_Matrix_multiply_vector_general(1.0, P_Hh , solver->aux_u[cur_level+1][i]->vec, 1.0, u_new[i-num_converged]->vec);
         }
         for(i=num_converged; i<block_size; i++) {
 	    PASE_Aux_vector_copy(u_new[i-num_converged], solver->aux_u[cur_level][i]);
@@ -582,7 +578,7 @@ PASE_Mg_get_initial_vector_by_coarse_grid(void *mg_solver)
 {
     PASE_MG_SOLVER solver = (PASE_MG_SOLVER)mg_solver;
     HYPRE_Solver lobpcg_solver 	= NULL; 
-    PASE_INT  maxIterations 	= 500; 	/* maximum number of iterations */
+    PASE_INT  maxIterations 	= 100; 	/* maximum number of iterations */
     PASE_INT  pcgMode 		= 1;    	/* use rhs as initial guess for inner pcg iterations */
     PASE_INT  verbosity 	= 0;    	/* print iterations info */
     PASE_REAL atol 		= solver->atol;	/* absolute tolerance (all eigenvalues) */
@@ -819,7 +815,7 @@ PASE_Mg_solve_directly_by_lobpcg_aux_hypre(void *mg_solver)
 {
     PASE_MG_SOLVER solver = (PASE_MG_SOLVER)mg_solver;
     HYPRE_Solver lobpcg_solver 	= NULL; 
-    PASE_INT     maxIterations 	= 100; 	/* maximum number of iterations */
+    PASE_INT     maxIterations 	= 10; 	/* maximum number of iterations */
     PASE_INT     pcgMode 	= 1;    	/* use rhs as initial guess for inner pcg iterations */
     PASE_INT     verbosity 	= 0;    	/* print iterations info */
     PASE_REAL    atol 		= solver->atol;	/* absolute tolerance (all eigenvalues) */
@@ -896,56 +892,21 @@ PASE_Mg_presmoothing_by_cg(void *mg_solver)
     PASE_MG_SOLVER solver = (PASE_MG_SOLVER)mg_solver;
     PASE_INT     cur_level  = solver->cur_level;
     PASE_INT     block_size = solver->block_size;
-    PASE_INT     max_iter   = solver->pre_iter + cur_level * 1;
+    PASE_INT     max_iter   = solver->pre_iter;
     PASE_SCALAR *eigenvalues = solver->eigenvalues;
 
-    PASE_INT idx_eigen, iter;
-    PASE_REAL bnorm, rnorm, rho, rho_1, alpha, beta;
-    PASE_REAL tmp;
+    PASE_INT idx_eigen;
     PASE_REAL tol = 1e-10;
     PASE_REAL inner_A, inner_B;
-    PASE_VECTOR r = PASE_Vector_create_by_vector(solver->u[0]);
-    PASE_VECTOR p = PASE_Vector_create_by_vector(solver->u[0]);
-    PASE_VECTOR q = PASE_Vector_create_by_vector(solver->u[0]);
+    PASE_VECTOR b = PASE_Vector_create_by_vector(solver->u[0]);
     //clock_t start, end;
 	//printf("\n");
 	//printf("cur_level = %d\n", cur_level);
     for(idx_eigen=solver->num_converged; idx_eigen<block_size; idx_eigen++) {
 	//start = clock();
-        PASE_Matrix_multiply_vector_general(eigenvalues[idx_eigen], solver->multigrid->B[0], solver->u[idx_eigen], 0.0, r);
-        PASE_Vector_inner_product(r, r, &bnorm);
-        bnorm = sqrt(bnorm);
-        PASE_Matrix_multiply_vector_general(-1.0, solver->multigrid->A[0], solver->u[idx_eigen], 1.0, r);
-        PASE_Vector_inner_product(r, r, &rho);
-        rnorm = sqrt(rho);
-        //printf("before Cg, rnorm = %.12e, bnorm = %.12e, rnorm/bnorm = %.12e\n", rnorm, bnorm, rnorm/bnorm);
-	iter = -1;
-        if(rnorm/bnorm < tol) {
-            continue;
-        }
-        for(iter=0; iter<max_iter; iter++) {
-    	    if(iter>0) {
-    	        beta = rho / rho_1; 
-    	        PASE_Vector_scale(beta, p);
-    	        PASE_Vector_add_vector(1.0, r, p);
-    	    } else {
-    	        PASE_Vector_copy(r, p);
-    	    }
-    	    PASE_Matrix_multiply_vector(solver->multigrid->A[0], p, q);
-    	    PASE_Vector_inner_product(p, q, &tmp);
-    	    alpha = rho / tmp;
-    	    PASE_Vector_add_vector(alpha, p, solver->u[idx_eigen]);
-    	    PASE_Vector_add_vector(-1.0*alpha, q, r);
-    
-    	    rho_1 = rho;
-    	    PASE_Vector_inner_product(r, r, &rho);
-    	    rnorm = sqrt(rho);
-    
-            //printf("after Cg, rnorm = %.12e, bnorm = %.12e, rnorm/bnorm = %.12e\n", rnorm, bnorm, rnorm/bnorm);
-            if(rnorm/bnorm < tol) {
-                break;
-            }
-        }
+        PASE_Matrix_multiply_vector_general(eigenvalues[idx_eigen], solver->multigrid->B[0], solver->u[idx_eigen], 0.0, b);
+        PASE_Linear_solve_by_cg(solver->multigrid->A[0], b, solver->u[idx_eigen], tol, max_iter);
+
         PASE_Vector_inner_product_general(solver->u[idx_eigen], solver->u[idx_eigen], solver->multigrid->A[0], &inner_A);
         PASE_Vector_inner_product_general(solver->u[idx_eigen], solver->u[idx_eigen], solver->multigrid->B[0], &inner_B);
         eigenvalues[idx_eigen] = inner_A / inner_B;
@@ -953,13 +914,10 @@ PASE_Mg_presmoothing_by_cg(void *mg_solver)
 	//end = clock();
 	//printf("the %dth eigenvalue, cg time = %.4e, iter = %d\n", idx_eigen, ((double)(end-start))/CLK_TCK, iter);
     }
-    PASE_Vector_destroy(r);
-    PASE_Vector_destroy(p);
-    PASE_Vector_destroy(q);
+    PASE_Vector_destroy(b);
 
 #if 1
-    if( solver->print_level > 1)
-    {
+    if( solver->print_level > 1) {
         printf("Cur_level %d", cur_level);
         for(idx_eigen=0; idx_eigen<block_size; idx_eigen++)
         {
@@ -1013,6 +971,57 @@ PASE_Mg_presmoothing_by_cg_aux(void *mg_solver)
     }
 #endif
     
+    return 0;
+}
+
+PASE_INT
+PASE_Linear_solve_by_cg(PASE_MATRIX A, PASE_VECTOR b, PASE_VECTOR x, PASE_REAL tol, PASE_INT max_iter)
+{
+    PASE_INT iter = 0;
+    PASE_REAL bnorm = 1.0, rnorm = 1.0, rho = 1.0, rho_1 = 1.0, alpha = 1.0, beta = 1.0, tmp = 1.0;
+    PASE_VECTOR r = PASE_Vector_create_by_vector(x);
+    PASE_VECTOR p = PASE_Vector_create_by_vector(x);
+    PASE_VECTOR q = PASE_Vector_create_by_vector(x);
+
+    //start = clock();
+    PASE_Vector_inner_product(b, b, &bnorm);
+    bnorm = sqrt(bnorm);
+    PASE_Vector_copy(b, r);
+    PASE_Matrix_multiply_vector_general(-1.0, A, x, 1.0, r);
+    PASE_Vector_inner_product(r, r, &rho);
+    rnorm = sqrt(rho);
+    //printf("before Cg, rnorm = %.12e, bnorm = %.12e, rnorm/bnorm = %.12e\n", rnorm, bnorm, rnorm/bnorm);
+    if(rnorm/bnorm < tol) {
+        return 0;
+    }
+    for(iter=0; iter<max_iter; iter++) {
+        if(iter>0) {
+            beta = rho / rho_1; 
+            PASE_Vector_scale(beta, p);
+            PASE_Vector_add_vector(1.0, r, p);
+        } else {
+            PASE_Vector_copy(r, p);
+        }
+        PASE_Matrix_multiply_vector(A, p, q);
+        PASE_Vector_inner_product(p, q, &tmp);
+        alpha = rho / tmp;
+        PASE_Vector_add_vector(alpha, p, x);
+        PASE_Vector_add_vector(-1.0*alpha, q, r);
+    
+        rho_1 = rho;
+        PASE_Vector_inner_product(r, r, &rho);
+        rnorm = sqrt(rho);
+    
+        //printf("after Cg, rnorm = %.12e, bnorm = %.12e, rnorm/bnorm = %.12e\n", rnorm, bnorm, rnorm/bnorm);
+        if(rnorm/bnorm < tol) {
+            break;
+        }
+    }
+    //end = clock();
+    //printf("the %dth eigenvalue, cg time = %.4e, iter = %d\n", idx_eigen, ((double)(end-start))/CLK_TCK, iter);
+    PASE_Vector_destroy(r);
+    PASE_Vector_destroy(p);
+    PASE_Vector_destroy(q);
     return 0;
 }
 
@@ -1080,9 +1089,9 @@ PASE_Mg_solve_directly_by_IRA(void *mg_solver)
     PASE_SCALAR     *eigenvalues = solver->eigenvalues;
 
     PASE_INT         ncv         = ((2*block_size) > 10)? (2*block_size) : 10;
-    PASE_INT         max_iter    = 10;
+    PASE_INT         max_iter    = 1000;
     PASE_INT         i           = 0;
-    PASE_REAL        tol         = solver->atol * 1e-0;
+    PASE_REAL        tol         = solver->atol * 1e-40;
 
     PASE_AUX_VECTOR *krylovspace = (PASE_AUX_VECTOR*)PASE_Malloc((ncv+1)*sizeof(PASE_AUX_VECTOR));
     for(i=0; i<ncv+1; i++) {
@@ -1090,6 +1099,17 @@ PASE_Mg_solve_directly_by_IRA(void *mg_solver)
     }
     printf("solve directly by arpack\n");
     IRA_RestartArnoldi(eigenvalues, aux_u, aux_A, aux_B, krylovspace, ncv, block_size, max_iter, tol); 
+#if 1
+    PASE_REAL r_norm = 0;
+    for(i=0; i<block_size; i++) {
+	PASE_Aux_matrix_multiply_aux_vector(aux_A, aux_u[i], krylovspace[0]);
+	PASE_Aux_matrix_multiply_aux_vector_general(-eigenvalues[i], aux_B, aux_u[i], 1.0, krylovspace[0]); 
+	PASE_Aux_vector_inner_product(krylovspace[0], krylovspace[0], &r_norm);
+	r_norm	= sqrt(r_norm);
+        printf("eigenvalues[%d] = %.8e, residual[%d] = %.6e\n", i, eigenvalues[i], i, r_norm);
+    }
+    printf("\n");
+#endif
 
     for(i=0; i<ncv+1; i++) {
         PASE_Aux_vector_destroy(krylovspace[i]);
@@ -1097,3 +1117,4 @@ PASE_Mg_solve_directly_by_IRA(void *mg_solver)
     PASE_Free(krylovspace);
     return 0;
 }
+

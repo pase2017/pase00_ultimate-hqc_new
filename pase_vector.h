@@ -73,6 +73,8 @@ void PASE_Vector_add_vector(PASE_SCALAR a, PASE_VECTOR x, PASE_VECTOR y);
 void PASE_Vector_scale(PASE_SCALAR a, PASE_VECTOR x);
 void PASE_Vector_orth(PASE_VECTOR *x, PASE_INT num);
 void PASE_Vector_orth_general(PASE_VECTOR *x, PASE_INT start, PASE_INT end, PASE_MATRIX A);
+void PASE_Multi_vector_by_matrix(PASE_VECTOR *x, PASE_INT num_vec, PASE_SCALAR **mat, PASE_INT num_mat, PASE_VECTOR *y);
+void PASE_Multi_vector_combination(PASE_VECTOR *x, PASE_INT num_vec, PASE_SCALAR *coef, PASE_VECTOR y);
 
 void* PASE_Vector_create_by_vector_hypre(void *x);
 void* PASE_Vector_create_by_matrix_hypre(void *A);

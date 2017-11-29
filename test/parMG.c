@@ -38,248 +38,122 @@
 #include "lobpcg.h"
 
 
-static int cmp( const void *a ,  const void *b );
-void GetEigenProblem(HYPRE_ParCSRMatrix *A, HYPRE_ParCSRMatrix *B, HYPRE_ParVector *x, PASE_INT dim);
+static PASE_INT cmp( const void *a ,  const void *b );
+void GetEigenProblem(HYPRE_IJMatrix *A, HYPRE_IJMatrix *B, HYPRE_IJVector *x, PASE_INT n);
+void GetCommandLineInfo(PASE_INT argc, char **argv, PASE_INT *n, PASE_INT *block_size, PASE_REAL *atol, PASE_INT *nsmooth);
+void GetExactEigenvalues(PASE_REAL **exact_eigenvalues, PASE_INT n, PASE_INT block_size);
 
-int main (int argc, char *argv[])
+PASE_INT main(PASE_INT argc, char *argv[])
 {
-   int i, k;
-   int myid, num_procs;
-   int N, n;
-   int block_size, max_levels;
+   PASE_INT  myid;
+   MPI_Init(&argc, &argv);
+   MPI_Comm_rank(MPI_COMM_WORLD, &myid);
 
-   int ilower, iupper;
-   int local_size, extra;
+   PASE_INT  n           = 400;
+   PASE_INT  block_size  = 30;
+   PASE_INT  max_iter    = 50;
+   PASE_INT  pre_iter    = 5;
+   PASE_INT  post_iter   = 1;
+   PASE_REAL atol        = 1e-12;
+   PASE_REAL rtol        = 1e-6;
+   PASE_INT  print_level = 1;
+   PASE_INT  max_level   = 40;
 
-   double h, h2;
-//   int time_index; 
-   int global_time_index;
-
-   /* -------------------------矩阵向量声明---------------------- */ 
-   /* 最细矩阵 */
-   HYPRE_IJMatrix A;
-   HYPRE_ParCSRMatrix parcsr_A;
-   HYPRE_IJMatrix B;
-   HYPRE_ParCSRMatrix parcsr_B;
-   HYPRE_IJVector b;
-   HYPRE_ParVector par_b;
+   HYPRE_IJMatrix A, B;
+   HYPRE_ParCSRMatrix parcsr_A, parcsr_B;
    HYPRE_IJVector x;
    HYPRE_ParVector par_x;
 
-   HYPRE_Real *eigenvalues;
-   HYPRE_Real *exact_eigenvalues;
+   GetCommandLineInfo(argc, argv, &n, &block_size, &atol, &pre_iter);
+   PASE_INT  min_coarse_size = block_size * 30;
+   GetEigenProblem(&A, &B, &x, n);
+   HYPRE_IJMatrixGetObject(A, (void**) &parcsr_A);
+   HYPRE_IJMatrixGetObject(B, (void**) &parcsr_B);
+   HYPRE_IJVectorGetObject(x, (void**) &par_x);
 
-   /* Initialize MPI */
-   MPI_Init(&argc, &argv);
-   MPI_Comm_rank(MPI_COMM_WORLD, &myid);
-   MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
+   HYPRE_Real *eigenvalues, *exact_eigenvalues;
+   eigenvalues = hypre_CTAlloc (HYPRE_Real, block_size);
+   GetExactEigenvalues(&exact_eigenvalues, n, block_size);
 
+   PASE_INT global_time_index = hypre_InitializeTiming("PASE Solve");
    if(myid ==0) {
-       printf("=============================================================\n" );
        printf("PASE (Parallel Auxiliary Space Eigen-solver), parallel version\n"); 
        printf("Please contact liyu@lsec.cc.ac.cn, if there is any bugs.\n"); 
        printf("=============================================================\n" );
-   }
+       printf("\n");
+       printf("Set parameters:\n");
+       printf("dimension       = %d\n", n*n);
+       printf("block size      = %d\n", block_size);
+       printf("pre iter        = %d\n", pre_iter);
+       printf("atol            = %e\n", atol);
+       printf("max level       = %d\n", max_level);
+       printf("min coarse size = %d\n", min_coarse_size);
+       printf("\n");
+    }
 
-   global_time_index = hypre_InitializeTiming("PASE Solve");
+   PASE_MATRIX pase_A       = PASE_Matrix_create_default((void*)parcsr_A, 1);
+   PASE_MATRIX pase_B       = PASE_Matrix_create_default((void*)parcsr_B, 1);
+   PASE_VECTOR pase_x       = PASE_Vector_create_default((void*)par_x, 1);
 
+   PASE_PARAMETER param     = (PASE_PARAMETER) PASE_Malloc(sizeof(PASE_PARAMETER_PRIVATE));
+   param->max_level         = max_level;
+   param->min_coarse_size   = min_coarse_size;;
+   PASE_MULTIGRID multigrid = PASE_Multigrid_create(pase_A, pase_B, param, NULL);
+   PASE_MG_SOLVER solver    = PASE_Mg_solver_create_by_multigrid(multigrid);
 
-   /* Default problem parameters */
-   n = 200;
-   max_levels = 5;
-   block_size = (int) n*n/pow(4, max_levels);
-   //printf ( "block_size = n*n/pow(4, max_levels)\n" );
+   PASE_Mg_set_block_size(solver, block_size);
+   PASE_Mg_set_max_iteration(solver, max_iter);
+   PASE_Mg_set_max_pre_iteration(solver, pre_iter);
+   PASE_Mg_set_max_post_iteration(solver, post_iter);
+   PASE_Mg_set_atol(solver, atol);
+   PASE_Mg_set_rtol(solver, rtol);
+   PASE_Mg_set_print_level(solver, print_level);
+   PASE_Mg_set_exact_eigenvalues(solver, exact_eigenvalues);
 
-   /* Parse command line */
-   {
-      int arg_index = 0;
-      int print_usage = 0;
+   hypre_BeginTiming(global_time_index);
+   PASE_Mg_set_up(solver);
+   PASE_Mg_solve(solver);
+   hypre_EndTiming(global_time_index);
 
-      while (arg_index < argc)
-      {
-	 if ( strcmp(argv[arg_index], "-n") == 0 )
-	 {
-	    arg_index++;
-	    n = atoi(argv[arg_index++]);
-	 }
-	 else if ( strcmp(argv[arg_index], "-block_size") == 0 )
-	 {
-	    arg_index++;
-	    block_size = atoi(argv[arg_index++]);
-	 }
-	 else if ( strcmp(argv[arg_index], "-max_levels") == 0 )
-	 {
-	    arg_index++;
-	    max_levels = atoi(argv[arg_index++]);
-	 }
-	 else if ( strcmp(argv[arg_index], "-help") == 0 )
-	 {
-	    print_usage = 1;
-	    break;
-	 }
-	 else
-	 {
-	    arg_index++;
-	 }
-      }
-
-      if ((print_usage) && (myid == 0))
-      {
-	 printf("\n");
-	 printf("Usage: %s [<options>]\n", argv[0]);
-	 printf("\n");
-	 printf("  -n <n>              : problem size in each direction (default: 33)\n");
-	 printf("  -block_size <n>      : eigenproblem block size (default: 3)\n");
-	 printf("  -max_levels <n>      : max levels of AMG (default: 5)\n");
-	 printf("\n");
-      }
-
-      if (print_usage)
-      {
-	 MPI_Finalize();
-	 return (0);
-      }
-   }
-   /* Preliminaries: want at least one processor per row */
-   if (n*n < num_procs) n = sqrt(num_procs) + 1;
-   N = n*n; /* global number of rows */
-   h = 1.0/(n+1); /* mesh size*/
-   h2 = h*h;
-
-   /*----------------------- Laplace精确特征值 ---------------------*/
-   /* eigenvalues - allocate space */
-   eigenvalues = hypre_CTAlloc (HYPRE_Real, block_size);
-   {
-      int tmp_nn = (int) sqrt(block_size) + 2;
-      exact_eigenvalues = hypre_CTAlloc (HYPRE_Real, tmp_nn*tmp_nn);
-      for (i = 0; i < tmp_nn; ++i) 
-      {
-	 for (k = 0; k < tmp_nn; ++k) 
-	 {
-	    exact_eigenvalues[i*tmp_nn+k] = h2*M_PI*M_PI*(pow(i+1, 2)+pow(k+1, 2));
-	 }
-      }
-      qsort(exact_eigenvalues, tmp_nn*tmp_nn, sizeof(double), cmp);
-   }
-
-   /*求解特征值问题的MG方法*/
-   {
-       //PASE_INT  block_size  = 20;
-       PASE_INT  max_iter    = 40;
-       PASE_INT  pre_iter    = 2;
-       PASE_INT  post_iter   = 1;
-       PASE_REAL atol        = 1e-10;
-       PASE_REAL rtol        = 1e-6;
-       PASE_INT  print_level = 1;
-       PASE_INT  max_level   = 20;
-       if(myid == 0) {
-           printf("\n");
-           printf("Set parameters:\n");
-           printf("dimension       = %d\n", n*n);
-           printf("block size      = %d\n", block_size);
-           printf("pre iter        = %d\n", pre_iter);
-           printf("atol            = %e\n", atol);
-       }
-
-       PASE_MATRIX pase_A = PASE_Matrix_create_default((void*)parcsr_A, 1);
-       PASE_MATRIX pase_B = PASE_Matrix_create_default((void*)parcsr_B, 1);
-       PASE_VECTOR pase_x = PASE_Vector_create_default((void*)par_x, 1);
-       PASE_PARAMETER param = (PASE_PARAMETER) PASE_Malloc(sizeof(PASE_PARAMETER_PRIVATE));
-       param->max_level = max_level;
-       param->min_coarse_size = block_size * 50;
-       if(myid == 0) {
-           printf("max level       = %d\n", param->max_level);
-           printf("min coarse size = %d\n", param->min_coarse_size);
-           printf("\n");
-       }
-       PASE_MULTIGRID multigrid = PASE_Multigrid_create(pase_A, pase_B, param, NULL);
-       PASE_MG_SOLVER solver = PASE_Mg_solver_create_by_multigrid(multigrid);
-
-       PASE_Mg_set_block_size(solver, block_size);
-       PASE_Mg_set_max_iteration(solver, max_iter);
-       PASE_Mg_set_max_pre_iteration(solver, pre_iter);
-       PASE_Mg_set_max_post_iteration(solver, post_iter);
-       PASE_Mg_set_atol(solver, atol);
-       PASE_Mg_set_rtol(solver, rtol);
-       PASE_Mg_set_print_level(solver, print_level);
-       PASE_Mg_set_exact_eigenvalues(solver, exact_eigenvalues);
-
-       hypre_BeginTiming(global_time_index);
-       PASE_Mg_set_up(solver);
-       PASE_Mg_solve(solver);
-       hypre_EndTiming(global_time_index);
-
-       PASE_Mg_solver_destroy(solver);
-       PASE_Free(param);
-       PASE_Multigrid_destroy(multigrid);
-       PASE_Matrix_destroy(pase_A);
-       PASE_Matrix_destroy(pase_B);
-       PASE_Vector_destroy(pase_x);
-   }
-
-   /* Clean up */
-   hypre_TFree(eigenvalues);
-   hypre_TFree(exact_eigenvalues);
-
-
+   PASE_Mg_solver_destroy(solver);
+   PASE_Free(param);
+   PASE_Multigrid_destroy(multigrid);
+   PASE_Matrix_destroy(pase_A);
+   PASE_Matrix_destroy(pase_B);
+   PASE_Vector_destroy(pase_x);
+   PASE_Free(eigenvalues);
+   PASE_Free(exact_eigenvalues);
    HYPRE_IJMatrixDestroy(A);
    HYPRE_IJMatrixDestroy(B);
-   HYPRE_IJVectorDestroy(b);
    HYPRE_IJVectorDestroy(x);
 
    hypre_PrintTiming("Solve phase times", MPI_COMM_WORLD);
    hypre_FinalizeTiming(global_time_index);
    hypre_ClearTiming();
-
-   /* Finalize MPI*/
    MPI_Finalize();
-
    return(0);
 }
 
-static int cmp( const void *a ,  const void *b )
+static PASE_INT cmp( const void *a ,  const void *b )
 {   
-    return *(double *)a > *(double *)b ? 1 : -1; 
+    return *(PASE_REAL *)a > *(PASE_REAL *)b ? 1 : -1; 
 }
 
-void GetMatrix(HYPRE_ParCSRMatrix *A, HYPRE_ParCSRMatrix *B, HYPRE_ParVector x, PASE_INT dim)
+void GetEigenProblem(HYPRE_IJMatrix *A, HYPRE_IJMatrix *B, HYPRE_IJVector *x, PASE_INT n)
 {
-   int i, k;
-   int myid, num_procs;
-   int N, n;
-   int block_size, max_levels;
+   PASE_INT i;
+   PASE_INT ilower, iupper;
+   PASE_INT local_size, extra;
+   PASE_INT myid, num_procs;
 
-   int ilower, iupper;
-   int local_size, extra;
-
-   double h, h2;
-//   int time_index; 
-   int global_time_index;
-
-   /* -------------------------矩阵向量声明---------------------- */ 
-   /* 最细矩阵 */
-   HYPRE_IJMatrix A;
-   HYPRE_ParCSRMatrix parcsr_A;
-   HYPRE_IJMatrix B;
-   HYPRE_ParCSRMatrix parcsr_B;
-   HYPRE_IJVector b;
-   HYPRE_ParVector par_b;
-   HYPRE_IJVector x;
-   HYPRE_ParVector par_x;
-
-   HYPRE_Real *eigenvalues;
-   HYPRE_Real *exact_eigenvalues;
-
-   /* Initialize MPI */
-   MPI_Init(&argc, &argv);
    MPI_Comm_rank(MPI_COMM_WORLD, &myid);
    MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
-
    /* Each processor knows only of its own rows - the range is denoted by ilower
       and iupper.  Here we partition the rows. We account for the fact that
       N may not divide evenly by the number of processors. */
-   local_size = N/num_procs;
-   extra = N - local_size*num_procs;
+   PASE_INT dim = n*n;
+   local_size = dim/num_procs;
+   extra = dim - local_size*num_procs;
 
    ilower = local_size*myid;
    ilower += hypre_min(myid, extra);
@@ -291,20 +165,19 @@ void GetMatrix(HYPRE_ParCSRMatrix *A, HYPRE_ParCSRMatrix *B, HYPRE_ParVector x, 
    /* How many rows do I have? */
    local_size = iupper - ilower + 1;
 
-
    /* Create the matrix.
       Note that this is a square matrix, so we indicate the row partition
       size twice (since number of rows = number of cols) */
-   HYPRE_IJMatrixCreate(MPI_COMM_WORLD, ilower, iupper, ilower, iupper, &A);
-   HYPRE_IJMatrixCreate(MPI_COMM_WORLD, ilower, iupper, ilower, iupper, &B);
+   HYPRE_IJMatrixCreate(MPI_COMM_WORLD, ilower, iupper, ilower, iupper, A);
+   HYPRE_IJMatrixCreate(MPI_COMM_WORLD, ilower, iupper, ilower, iupper, B);
 
    /* Choose a parallel csr format storage (see the User's Manual) */
-   HYPRE_IJMatrixSetObjectType(A, HYPRE_PARCSR);
-   HYPRE_IJMatrixSetObjectType(B, HYPRE_PARCSR);
+   HYPRE_IJMatrixSetObjectType(*A, HYPRE_PARCSR);
+   HYPRE_IJMatrixSetObjectType(*B, HYPRE_PARCSR);
 
    /* Initialize before setting coefficients */
-   HYPRE_IJMatrixInitialize(A);
-   HYPRE_IJMatrixInitialize(B);
+   HYPRE_IJMatrixInitialize(*A);
+   HYPRE_IJMatrixInitialize(*B);
 
    /* Now go through my local rows and set the matrix entries.
       Each row has at most 5 entries. For example, if n=3:
@@ -316,9 +189,9 @@ void GetMatrix(HYPRE_ParCSRMatrix *A, HYPRE_ParCSRMatrix *B, HYPRE_ParVector x, 
       one could set all the rows together (see the User's Manual).
       */
    {
-      int nnz;
-      double values[5];
-      int cols[5];
+      PASE_INT nnz;
+      PASE_REAL values[5];
+      PASE_INT cols[5];
 
       for (i = ilower; i <= iupper; i++)
       {
@@ -354,7 +227,7 @@ void GetMatrix(HYPRE_ParCSRMatrix *A, HYPRE_ParCSRMatrix *B, HYPRE_ParVector x, 
 	 }
 
 	 /* The right identity block:position i+n */
-	 if ((i+n)< N)
+	 if ((i+n)< dim)
 	 {
 	    cols[nnz] = i+n;
 	    values[nnz] = -1.0;
@@ -362,37 +235,106 @@ void GetMatrix(HYPRE_ParCSRMatrix *A, HYPRE_ParCSRMatrix *B, HYPRE_ParVector x, 
 	 }
 
 	 /* Set the values for row i */
-	 HYPRE_IJMatrixSetValues(A, 1, &nnz, &i, cols, values);
+	 HYPRE_IJMatrixSetValues(*A, 1, &nnz, &i, cols, values);
       }
    }
    {
-      int nnz;
-      double values[5];
-      int cols[5];
+      PASE_INT nnz;
+      PASE_REAL values[5];
+      PASE_INT cols[5];
       for (i = ilower; i <= iupper; i++)
       {
 	 nnz = 1;
 	 cols[0] = i;
 	 values[0] = 1.0;
 	 /* Set the values for row i */
-	 HYPRE_IJMatrixSetValues(B, 1, &nnz, &i, cols, values);
+	 HYPRE_IJMatrixSetValues(*B, 1, &nnz, &i, cols, values);
       }
    }
+
    /* Assemble after setting the coefficients */
-   HYPRE_IJMatrixAssemble(A);
-   HYPRE_IJMatrixAssemble(B);
-   /* Get the parcsr matrix object to use */
-   HYPRE_IJMatrixGetObject(A, (void**) &parcsr_A);
-   HYPRE_IJMatrixGetObject(B, (void**) &parcsr_B);
+   HYPRE_IJMatrixAssemble(*A);
+   HYPRE_IJMatrixAssemble(*B);
 
    /* Create sample solution vectors */
-   HYPRE_IJVectorCreate(MPI_COMM_WORLD, ilower, iupper,&x);
-   HYPRE_IJVectorSetObjectType(x, HYPRE_PARCSR);
-   HYPRE_IJVectorInitialize(x);
-   HYPRE_IJVectorAssemble(x);
-   HYPRE_IJVectorGetObject(x, (void **) &par_x);
-
-   return 0;
+   HYPRE_IJVectorCreate(MPI_COMM_WORLD, ilower, iupper,x);
+   HYPRE_IJVectorSetObjectType(*x, HYPRE_PARCSR);
+   HYPRE_IJVectorInitialize(*x);
+   HYPRE_IJVectorAssemble(*x);
 }
 
+void GetCommandLineInfo(PASE_INT argc, char **argv, PASE_INT *n, PASE_INT *block_size, PASE_REAL *atol, PASE_INT *nsmooth)
+{
+  PASE_INT arg_index = 0;
+  PASE_INT print_usage = 0;
+   PASE_INT myid;
+  
+   MPI_Comm_rank(MPI_COMM_WORLD, &myid);
+  while (arg_index < argc)
+  {
+     if ( strcmp(argv[arg_index], "-n") == 0 )
+     {
+        arg_index++;
+        *n = atoi(argv[arg_index++]);
+     }
+     else if ( strcmp(argv[arg_index], "-block_size") == 0 )
+     {
+        arg_index++;
+        *block_size = atoi(argv[arg_index++]);
+     }
+     else if ( strcmp(argv[arg_index], "-atol") == 0 )
+     {
+        arg_index++;
+        *atol= atoi(argv[arg_index++]);
+     }
+     else if ( strcmp(argv[arg_index], "-nsmooth") == 0 )
+     {
+        arg_index++;
+        *nsmooth= atoi(argv[arg_index++]);
+     }
+     else if ( strcmp(argv[arg_index], "-help") == 0 )
+     {
+        print_usage = 1;
+        break;
+     }
+     else
+     {
+        arg_index++;
+     }
+  }
+  
+  if ((print_usage) && (myid == 0))
+  {
+     printf("\n");
+     printf("Usage: %s [<options>]\n", argv[0]);
+     printf("\n");
+     printf("  -n <n>              : problem size in each direction (default: 33)\n");
+     printf("  -block_size <n>      : eigenproblem block size (default: 3)\n");
+     printf("  -max_levels <n>      : max levels of AMG (default: 5)\n");
+     printf("\n");
+  }
+  
+  if (print_usage)
+  {
+      exit(-1);
+  }
+}
+
+void GetExactEigenvalues(PASE_REAL **exact_eigenvalues, PASE_INT n, PASE_INT block_size)
+{
+    PASE_INT i, k;
+    PASE_REAL h, h2;
+    h = 1.0/(n+1); /* mesh size*/
+    h2 = h*h;
+    PASE_INT tmp_nn = (PASE_INT) sqrt(block_size) + 2;
+    *exact_eigenvalues = hypre_CTAlloc (HYPRE_Real, tmp_nn*tmp_nn);
+    for (i = 0; i < tmp_nn; ++i) 
+    {
+       for (k = 0; k < tmp_nn; ++k) 
+       {
+         (*exact_eigenvalues)[i*tmp_nn+k] = h2*M_PI*M_PI*(pow(i+1, 2)+pow(k+1, 2));
+       }
+    }
+    qsort(*exact_eigenvalues, tmp_nn*tmp_nn, sizeof(PASE_REAL), cmp);
+}
 

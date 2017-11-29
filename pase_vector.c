@@ -291,6 +291,24 @@ PASE_Vector_orth_general(PASE_VECTOR *x, PASE_INT start, PASE_INT end, PASE_MATR
     }
 }
 
+void
+PASE_Multi_vector_by_matrix(PASE_VECTOR *x, PASE_INT num_vec, PASE_SCALAR **mat, PASE_INT num_mat, PASE_VECTOR *y)
+{
+    PASE_INT i;
+    for(i=0; i<num_mat; i++) {
+        PASE_Multi_vector_combination(x, num_vec, mat[i], y[i]);
+    }
+}
+
+void
+PASE_Multi_vector_combination(PASE_VECTOR *x, PASE_INT num_vec, PASE_SCALAR *coef, PASE_VECTOR y)
+{
+    PASE_INT j = 0;
+    PASE_Vector_set_constant_value(y, 0.0);
+    for(j=0; j<num_vec; j++) {
+        PASE_Vector_add_vector(coef[j], x[j], y);
+    }
+}
 
 
 

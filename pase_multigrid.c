@@ -164,7 +164,7 @@ PASE_Multigrid_get_amg_array_hypre(void *A, PASE_PARAMETER param, void ***A_arra
     HYPRE_BoomerAMGCreate(&amg_solver);
 
     /* Set some parameters (See Reference Manual for more parameters) */
-    HYPRE_BoomerAMGSetPrintLevel(amg_solver, 0);         /* print solve info + parameters */
+    HYPRE_BoomerAMGSetPrintLevel(amg_solver, 1);         /* print solve info + parameters */
     HYPRE_BoomerAMGSetInterpType(amg_solver, 0 );
     HYPRE_BoomerAMGSetPMaxElmts(amg_solver, 0 );
     HYPRE_BoomerAMGSetCoarsenType(amg_solver, 6);

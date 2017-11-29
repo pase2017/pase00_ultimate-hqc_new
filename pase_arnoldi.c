@@ -397,15 +397,8 @@ void QR_Givens_C( PASE_SCALAR **R, int nrows, PASE_SCALAR *cs )
 //这里只针对QR分解的Givens变换，即k=i+1
 void GetGivens( PASE_SCALAR *x, PASE_SCALAR *cs )
 {
-	PASE_SCALAR tol = 1e-10;
 	PASE_SCALAR t   = 0.0;
 	//printf("x[1] = %lf, abs_fem(x[1]) = %lf\n", x[1], abs_fem(x[1]));
-	if(fabs(x[1]) < tol)
-	{
-		cs[0] = 1.0;
-		cs[1] = 0.0;
-	}
-	else
 	{
 		if(fabs(x[0]) < fabs(x[1]))
 		{
