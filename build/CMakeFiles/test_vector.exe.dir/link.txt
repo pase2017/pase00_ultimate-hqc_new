@@ -1,0 +1,1 @@
+mpicc  -g -Wall -O3    CMakeFiles/test_vector.exe.dir/test/source/test_pase_vector.c.o  -o test_vector.exe -rdynamic libpase.a /home/hongqichen/software/hypre-2.11.2/src/hypre/lib/libHYPRE.a -lm 

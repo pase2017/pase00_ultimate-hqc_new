@@ -1,0 +1,1 @@
+mpicc  -g -Wall -O3    CMakeFiles/test_matrix.exe.dir/test/source/test_pase_matrix.c.o  -o test_matrix.exe -rdynamic libpase.a /home/hongqichen/software/hypre-2.11.2/src/hypre/lib/libHYPRE.a -lm 

@@ -1,0 +1,8 @@
+1. cd build
+2. cmake ../
+3. make
+
+注: 请在 vimrc 文件中添加如下设置
+set expandtab    " 将 tab 转换为空格
+set shiftwidth=2 " tab 占 2 个字符宽
+

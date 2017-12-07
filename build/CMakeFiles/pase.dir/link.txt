@@ -1,0 +1,2 @@
+/usr/bin/ar cr libpase.a  CMakeFiles/pase.dir/source/pase_config.c.o CMakeFiles/pase.dir/source/pase_matrix.c.o CMakeFiles/pase.dir/source/pase_matrix_hypre.c.o CMakeFiles/pase.dir/source/pase_vector.c.o CMakeFiles/pase.dir/source/pase_vector_hypre.c.o
+/usr/bin/ranlib libpase.a
