@@ -586,7 +586,7 @@ PASE_Vector_create_by_matrix_and_vector_data_operator(PASE_MATRIX A, PASE_VECTOR
 #undef  __FUNCT__
 #define __FUNCT__ "PASE_Vector_inner_product_general"
 /**
- * @brief 广义向量内积 *prod = (Ax, y)
+ * @brief 广义向量内积 *prod = x^T * A * y
  */
 void 
 PASE_Vector_inner_product_general(PASE_VECTOR x, PASE_VECTOR y, PASE_MATRIX A, PASE_REAL *prod)
@@ -626,16 +626,11 @@ PASE_Vector_inner_product_general_some(PASE_VECTOR *x, PASE_INT start, PASE_INT 
     PASE_Matrix_multiply_vector(A, x[i], tmp_Axi);
     for(j = start; j <= i; ++j) {
       PASE_Vector_inner_product(x[j], tmp_Axi, &prod[i-start][j-start]);
+      prod[j-start][i-start] = prod[i-start][j-start];
     }
   }
 
   PASE_Vector_destroy(tmp_Axi);
-
-  for(i = start; i <= end; ++i) {
-    for(j = i + 1; j <= end; ++j) {
-      prod[i-start][j-start] = prod[j-start][i-start];
-    }
-  }
 }
 
 #undef  __FUNCT__
@@ -679,6 +674,12 @@ void PASE_Vector_orthogonalize_general(PASE_VECTOR *x,
 void 
 PASE_Vector_orthogonalize_general_all(PASE_VECTOR *x, PASE_INT num, PASE_MATRIX A)
 {
+#if DEBUG_PASE_MATRIX
+  if((NULL == A) || (NULL == x)) {
+    PASE_Error(__FUNCT__": Matrix and vectors cannot be empty.\n");
+  }
+#endif
+
   PASE_INT j = 0;
   for(j = 0; j < num; ++j) {
     PASE_Vector_orthogonalize_general(x, j, 0, j-1, A);

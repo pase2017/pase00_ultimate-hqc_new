@@ -283,9 +283,11 @@ PASE_Vector_inner_product_some(PASE_VECTOR *x, PASE_INT start, PASE_INT end, PAS
  */
 void PASE_Vector_orthogonalize(PASE_VECTOR *x, PASE_INT i, PASE_INT start, PASE_INT end)
 {
+#if DEBUG_PASE_VECTOR
   if((i >= start) && (i <= end)) {
     PASE_Error(__FUNCT__": index cannot locate in [%d, %d].\n", start, end);
   }
+#endif
 
   PASE_INT  j    = 0;
   PASE_REAL prod = 0.0;

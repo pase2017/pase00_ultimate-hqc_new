@@ -476,7 +476,7 @@ PASE_Aux_matrix_multiply_aux_vector_general(PASE_SCALAR a, PASE_AUX_MATRIX aux_A
 void
 PASE_Aux_matrix_get_comm_info(PASE_AUX_MATRIX aux_A, MPI_Comm *comm)
 {
-#if DEBUG_PASE_MATRIX
+#if DEBUG_PASE_AUX_MATRIX
   if(NULL == A) {
     PASE_Error(__FUNCT__": Matrix cannot be empty.\n");
   }
@@ -484,3 +484,148 @@ PASE_Aux_matrix_get_comm_info(PASE_AUX_MATRIX aux_A, MPI_Comm *comm)
 
   *comm = PASE_Matrix_get_mpi_comm(aux_A->mat);
 }
+
+#undef  __FUNCT__
+#define __FUNCT__ "PASE_Aux_vector_create_by_aux_matrix"
+/**
+ * @brief 依据给定的辅助矩阵 aux_A, 创建一个新的辅助向量 
+ *
+ * @param aux_A 输入参数
+ *
+ * @return PASE_AUX_VECTOR
+ */
+PASE_AUX_VECTOR 
+PASE_Aux_vector_create_by_aux_matrix(PASE_AUX_MATRIX aux_A)
+{
+#if DEBUG_PASE_AUX_MATRIX
+  if(NULL == axu_A) {
+    PASE_Error(__FUNCT__": Cannot create a new PASE AUX VECTOR without PASE AUX MATRIX.\n");
+  }
+#endif
+
+  PASE_VECTOR  vec        = PASE_Vector_create_by_matrix_and_vector_data_operator(aux_A->mat, aux_A->vec[0]->ops);
+  PASE_INT     block_size = aux_A->block_size;
+  PASE_SCALAR *block      = (PASE_SCALAR*)PASE_Malloc(block_size*sizeof(PASE_SCALAR));
+  memset(block, 0, block_size*sizeof(PASE_SCALAR));
+
+  PASE_AUX_VECTOR aux_y   = PASE_Aux_vector_create(vec, block, block_size);
+  aux_y->is_vec_owner     = PASE_YES;
+  return aux_y;
+}
+
+#undef  __FUNCT__
+#define __FUNCT__ "PASE_Aux_vector_inner_product_general"
+/**
+ * @brief 广义向量内积 *prod = aux_x^T *aux_A * aux_y
+ *
+ * @param aux_x  输入参数
+ * @param aux_y  输入参数
+ * @param aux_A  输入参数
+ * @param prod   输出参数
+ */
+void
+PASE_Aux_vector_inner_product_general(PASE_AUX_VECTOR aux_x, PASE_AUX_VECTOR aux_y, PASE_AUX_MATRIX aux_A, PASE_REAL *prod)
+{
+  PASE_AUX_VECTOR aux_workspace = PASE_Aux_vector_create_by_aux_vector(aux_x);
+  PASE_Aux_matrix_multiply_aux_vector(aux_A, aux_y, aux_workspace);
+  PASE_Aux_vector_inner_product(aux_x, aux_workspace, prod);
+  PASE_Aux_vector_destroy(aux_workspace);
+}
+
+#undef  __FUNCT__
+#define __FUNCT__ "PASE_Aux_vector_inner_product_general_some"
+/**
+ * @brief 向量 aux_x[start], ..., aux_x[end] 全体计算 aux_A 内积
+ *
+ * @param aux_x  输入参数
+ * @param start  输入参数
+ * @param end    输入参数
+ * @param aux_A  输入参数
+ * @param prod   输出参数
+ */
+void
+PASE_Aux_vector_inner_product_general_some(PASE_AUX_VECTOR *aux_x, PASE_INT start, PASE_INT end, PASE_AUX_MATRIX aux_A, PASE_REAL **prod)
+{
+#if DEBUG_PASE_AUX_MATRIX
+  if((NULL == aux_A) || (NULL == aux_x) || (NULL == prod)) {
+    PASE_Error(__FUNCT__": Matrix and vectors and products cannot be empty.\n");
+  }
+#endif
+
+  PASE_AUX_VECTOR tmp_aux_Axi = PASE_Aux_vector_create_by_aux_vector(aux_x[start]);
+
+  PASE_INT i = 0;
+  PASE_INT j = 0;
+  for(i = start; i <= end; ++i) {
+    PASE_Aux_matrix_multiply_aux_vector(aux_A, aux_x[i], tmp_aux_Axi);
+    for(j = start; j <= i; ++j) {
+      PASE_Aux_vector_inner_product(aux_x[j], tmp_aux_Axi, &(prod[i-start][j-start]));
+      prod[j-start][i-start] = prod[i-start][j-start];
+    }
+  }
+
+  PASE_Aux_vector_destroy(tmp_aux_Axi);
+}
+
+#undef  __FUNCT__
+#define __FUNCT__ "PASE_Aux_vector_orthogonalize_general"
+/**
+ * @brief 向量 aux_x[i] 与 aux_x[start], ..., aux_x[end] 在 aux_A 内积下正交化
+ *
+ * @param aux_x  输入/输出参数
+ * @param i      输入参数
+ * @param start  输入参数
+ * @param end    输入参数
+ * @parma aux_A  输入参数
+ */
+void
+PASE_Aux_vector_orthogonalize_general(PASE_AUX_VECTOR *aux_x, PASE_INT i, PASE_INT start, PASE_INT end, PASE_AUX_MATRIX aux_A)
+{
+#if DEBUG_PASE_AUX_MATRIX
+  if((NULL == aux_A) || (NULL == aux_x)) {
+    PASE_Error(__FUNCT__": Matrix and vectors cannot be empty.\n");
+  }
+  if((i >= start) && (i <= end)) {
+    PASE_Error(__FUNCT__": index %d cannot locate in [%d, %d].\n", i, start, end);
+  }
+#endif
+
+  PASE_AUX_VECTOR tmp_aux_Axi = PASE_Aux_vector_create_by_aux_vector(aux_x[i]);
+  PASE_Aux_matrix_multiply_aux_vector(aux_A, aux_x[i], tmp_aux_Axi);
+  
+  PASE_INT  j   = 0;
+  PASE_INT prod = 0.0;
+  for(j = start; j < end; ++j) {
+    PASE_Aux_vector_inner_product(aux_x[j], tmp_aux_Axi, &prod);
+    PASE_Aux_vector_axpy(-prod, aux_x[j], aux_x[i]);
+  }
+  PASE_Aux_vector_inner_product(aux_x[i], tmp_aux_Axi, &prod);
+  PASE_Aux_vector_scale(1.0/sqrt(prod), aux_x[i]);
+
+  PASE_Aux_vector_destroy(tmp_aux_Axi);
+}
+
+#undef  __FUNCT__
+#define __FUNCT__ "PASE_Aux_vector_orthogonalize_general_all"
+/**
+ * @brief 向量 aux_x[0], ..., aux_x[num-1] 全体在 aux_A 内积下正交化
+ * 
+ * @param aux_x  输入/输出参数
+ * @param num    输入参数
+ * @param aux_A  输入参数
+ */
+void
+PASE_Aux_vector_orthogonalize_general_all(PASE_AUX_VECTOR *aux_x, PASE_INT num, PASE_AUX_MATRIX aux_A)
+{
+#if DEBUG_PASE_AUX_MATRIX
+  if((NULL == aux_A) || (NULL == aux_x)) {
+    PASE_Error(__FUNCT__": Matrix and vectors cannot be empty.\n");
+  }
+#endif
+
+  PASE_INT j = 0;
+  for(j = 0; j < num; ++j) {
+    PASE_Aux_vector_orthogonalize_general(aux_x, j, 0, j-1, aux_A);
+  }
+}
+

@@ -19,7 +19,7 @@ typedef struct PASE_AUX_MATRIX_PRIVATE_ {
   PASE_VECTOR  *vec;
   PASE_SCALAR **block;
   PASE_INT      block_size;   //辅助空间的维数
-  PASE_INT      is_mat_owner; //是否为矩阵属主
+  PASE_INT      is_mat_owner; //是否为 mat 属主
 } PASE_AUX_MATRIX_PRIVATE;
 typedef PASE_AUX_MATRIX_PRIVATE * PASE_AUX_MATRIX;
 
@@ -186,5 +186,55 @@ void PASE_Aux_matrix_multiply_aux_vector_general(PASE_SCALAR a, PASE_AUX_MATRIX 
  * @param comm   输出参数
  */
 void PASE_Aux_matrix_get_mpi_comm(PASE_AUX_MATRIX aux_A, MPI_Comm *comm);
+
+/**
+ * @brief 依据给定的辅助矩阵 aux_A, 创建一个新的辅助向量 
+ *
+ * @param aux_A 输入参数
+ *
+ * @return PASE_AUX_VECTOR
+ */
+PASE_AUX_VECTOR PASE_Aux_vector_create_by_aux_matrix(PASE_AUX_MATRIX aux_A);
+
+/**
+ * @brief 广义向量内积 *prod = aux_x^T *aux_A * aux_y
+ *
+ * @param aux_x  输入参数
+ * @param aux_y  输入参数
+ * @param aux_A  输入参数
+ * @param prod   输出参数
+ */
+void PASE_Aux_vector_inner_product_general(PASE_AUX_VECTOR aux_x, PASE_AUX_VECTOR aux_y, PASE_AUX_MATRIX aux_A, PASE_REAL *prod);
+
+/**
+ * @brief 向量 aux_x[start], ..., aux_x[end] 全体计算 aux_A 内积
+ *
+ * @param aux_x  输入参数
+ * @param start  输入参数
+ * @param end    输入参数
+ * @param aux_A  输入参数
+ * @param prod   输出参数
+ */
+void PASE_Aux_vector_inner_product_general_some(PASE_AUX_VECTOR *aux_x, PASE_INT i, PASE_INT start, PASE_INT end, PASE_AUX_MATRIX aux_A, PASE_REAL **prod);
+
+/**
+ * @brief 向量 aux_x[i] 与 aux_x[start], ..., aux_x[end] 在 aux_A 内积下正交化
+ *
+ * @param aux_x  输入/输出参数
+ * @param i      输入参数
+ * @param start  输入参数
+ * @param end    输入参数
+ * @parma aux_A  输入参数
+ */
+void PASE_Aux_vector_orthogonalize_general(PASE_AUX_VECTOR *aux_x, PASE_INT i, PASE_INT start, PASE_INT end, PASE_AUX_MATRIX aux_A);
+
+/**
+ * @brief 向量 aux_x[0], ..., aux_x[num-1] 全体在 aux_A 内积下正交化
+ * 
+ * @param aux_x  输入/输出参数
+ * @param num    输入参数
+ * @param aux_A  输入参数
+ */
+void PASE_Aux_vector_orthogonalize_general_all(PASE_AUX_VECTOR *aux_x, PASE_INT num, PASE_AUX_MATRIX aux_A);
 
 #endif
