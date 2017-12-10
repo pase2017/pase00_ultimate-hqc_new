@@ -96,7 +96,6 @@ void
 PASE_Matrix_data_operator_destroy(PASE_MATRIX_DATA_OPERATOR ops)
 {
   PASE_Free(ops);
-  //ops = NULL;
 }
 
 #undef  __FUNCT__
