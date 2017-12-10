@@ -220,6 +220,4 @@ void PASE_Vector_orthogonalize(PASE_VECTOR *x, PASE_INT i, PASE_INT start, PASE_
  */
 void PASE_Vector_orthogonalize_all(PASE_VECTOR *x, PASE_INT num);
 
-//void PASE_Vector_orth_general(PASE_VECTOR *x, PASE_INT start, PASE_INT end, PASE_MATRIX A);
-
 #endif

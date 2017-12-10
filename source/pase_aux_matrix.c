@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 #include "pase_matrix.h"
 #include "pase_vector.h"
 #include "pase_aux_matrix.h"
@@ -477,7 +478,7 @@ void
 PASE_Aux_matrix_get_comm_info(PASE_AUX_MATRIX aux_A, MPI_Comm *comm)
 {
 #if DEBUG_PASE_AUX_MATRIX
-  if(NULL == A) {
+  if(NULL == aux_A) {
     PASE_Error(__FUNCT__": Matrix cannot be empty.\n");
   }
 #endif
@@ -498,7 +499,7 @@ PASE_AUX_VECTOR
 PASE_Aux_vector_create_by_aux_matrix(PASE_AUX_MATRIX aux_A)
 {
 #if DEBUG_PASE_AUX_MATRIX
-  if(NULL == axu_A) {
+  if(NULL == aux_A) {
     PASE_Error(__FUNCT__": Cannot create a new PASE AUX VECTOR without PASE AUX MATRIX.\n");
   }
 #endif
@@ -593,9 +594,9 @@ PASE_Aux_vector_orthogonalize_general(PASE_AUX_VECTOR *aux_x, PASE_INT i, PASE_I
   PASE_AUX_VECTOR tmp_aux_Axi = PASE_Aux_vector_create_by_aux_vector(aux_x[i]);
   PASE_Aux_matrix_multiply_aux_vector(aux_A, aux_x[i], tmp_aux_Axi);
   
-  PASE_INT  j   = 0;
-  PASE_INT prod = 0.0;
-  for(j = start; j < end; ++j) {
+  PASE_INT  j    = 0;
+  PASE_REAL prod = 0.0;
+  for(j = start; j <= end; ++j) {
     PASE_Aux_vector_inner_product(aux_x[j], tmp_aux_Axi, &prod);
     PASE_Aux_vector_axpy(-prod, aux_x[j], aux_x[i]);
   }

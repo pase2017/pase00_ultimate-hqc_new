@@ -215,7 +215,7 @@ void PASE_Aux_vector_inner_product_general(PASE_AUX_VECTOR aux_x, PASE_AUX_VECTO
  * @param aux_A  输入参数
  * @param prod   输出参数
  */
-void PASE_Aux_vector_inner_product_general_some(PASE_AUX_VECTOR *aux_x, PASE_INT i, PASE_INT start, PASE_INT end, PASE_AUX_MATRIX aux_A, PASE_REAL **prod);
+void PASE_Aux_vector_inner_product_general_some(PASE_AUX_VECTOR *aux_x, PASE_INT start, PASE_INT end, PASE_AUX_MATRIX aux_A, PASE_REAL **prod);
 
 /**
  * @brief 向量 aux_x[i] 与 aux_x[start], ..., aux_x[end] 在 aux_A 内积下正交化

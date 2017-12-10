@@ -1,3 +1,0 @@
-/home/hongqichen/software/hypre-2.11.2/src/examples/pase1130/build/CMakeFiles/pase.dir
-/home/hongqichen/software/hypre-2.11.2/src/examples/pase1130/build/CMakeFiles/test_matrix.exe.dir
-/home/hongqichen/software/hypre-2.11.2/src/examples/pase1130/build/CMakeFiles/test_vector.exe.dir

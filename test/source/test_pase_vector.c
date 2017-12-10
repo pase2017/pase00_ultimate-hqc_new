@@ -35,9 +35,9 @@
 #include "temp_multivector.h"
 #include "HYPRE_utilities.h"
 
-void GetTwoTestVector(HYPRE_IJVector *x, HYPRE_IJVector *y, PASE_INT n); //默认设置两个测试 HYPRE_IJVector x = [1,...,1] 和 y = [2,...,2].
+void GetTwoTestHypreParVector(HYPRE_IJVector *x, HYPRE_IJVector *y, PASE_INT n); //默认设置两个测试 HYPRE_IJVector x = [1,...,1] 和 y = [2,...,2].
 void GetCommandLineInfo(PASE_INT argc, char **argv, PASE_INT *n);          //可以从命令行中, 得到向量长度 n
-void PrintHypreParVector(HYPRE_ParVector par_x, char *vector_name);     //打印 HYPRE_ParVector
+void PrintPaseVector(PASE_VECTOR pase_x, char *vector_name);     //打印 HYPRE_ParVector
 
 PASE_INT main(PASE_INT argc, char *argv[])
 {
@@ -51,7 +51,7 @@ PASE_INT main(PASE_INT argc, char *argv[])
 
   HYPRE_IJVector x, y;
   HYPRE_ParVector par_x, par_y;
-  GetTwoTestVector(&x, &y, n);
+  GetTwoTestHypreParVector(&x, &y, n);
   HYPRE_IJVectorGetObject(x, (void **) &par_x);
   HYPRE_IJVectorGetObject(y, (void **) &par_y);
   
@@ -65,46 +65,45 @@ PASE_INT main(PASE_INT argc, char *argv[])
     PASE_VECTOR pase_x = PASE_Vector_create((void*)par_x, PACKAGE_HYPRE);
     PASE_VECTOR pase_y = PASE_Vector_create((void*)par_y, PACKAGE_HYPRE);
     PASE_VECTOR pase_z = PASE_Vector_create_by_vector(pase_x);
-    HYPRE_ParVector par_z = (HYPRE_ParVector)(pase_z->vector_data);
 
     // initial value
     PASE_Printf(PASE_COMM_WORLD, "Initial value\n\n");
-    PrintHypreParVector(par_x, "x");
-    PrintHypreParVector(par_y, "y");
+    PrintPaseVector(pase_x, "x");
+    PrintPaseVector(pase_y, "y");
     PASE_Printf(PASE_COMM_WORLD, "-------------------------------------------------------------\n\n");
     
     // copy
     PASE_Printf(PASE_COMM_WORLD, "Copy x to z\n\n");
     PASE_Vector_copy(pase_x, pase_z);
-    PrintHypreParVector(par_z, "z");
+    PrintPaseVector(pase_z, "z");
     PASE_Printf(PASE_COMM_WORLD, "-------------------------------------------------------------\n\n");
     
     // set constant value
     PASE_REAL constant = 3.5;
     PASE_Printf(PASE_COMM_WORLD, "Set constant value %f to x\n\n", constant);
     PASE_Vector_set_constant_value( pase_x, constant);
-    PrintHypreParVector(par_x, "x");
+    PrintPaseVector(pase_x, "x");
     PASE_Printf(PASE_COMM_WORLD, "-------------------------------------------------------------\n\n");
     
     // set random value
     PASE_INT seed = 1;
     PASE_Printf(PASE_COMM_WORLD, "Set random value to z with seed = %d\n\n", seed);
     PASE_Vector_set_random_value(pase_z, seed);
-    PrintHypreParVector(par_z, "z");
+    PrintPaseVector(pase_z, "z");
     PASE_Printf(PASE_COMM_WORLD, "-------------------------------------------------------------\n\n");
     
     // axpy
     PASE_REAL alpha = 2.0;
     PASE_Printf(PASE_COMM_WORLD, "Perform y = %f * x + y\n\n", alpha);
     PASE_Vector_axpy(alpha, pase_x, pase_y);
-    PrintHypreParVector(par_y, "y");
+    PrintPaseVector(pase_y, "y");
     PASE_Printf(PASE_COMM_WORLD, "-------------------------------------------------------------\n\n");
 
     // scale
     PASE_REAL scale = 10.0;
     PASE_Printf(PASE_COMM_WORLD, "Scale y = %1.2f * y\n\n", scale);
     PASE_Vector_scale( scale, pase_y);
-    PrintHypreParVector(par_y, "y");
+    PrintPaseVector(pase_y, "y");
     PASE_Printf(PASE_COMM_WORLD, "-------------------------------------------------------------\n\n");
 
     // orthogonalization 
@@ -114,9 +113,9 @@ PASE_INT main(PASE_INT argc, char *argv[])
     pase_X[2] = pase_z;
     PASE_Printf(PASE_COMM_WORLD, "orthogonalize [x, y, z]\n\n");
     PASE_Vector_orthogonalize_all(pase_X, 3); //这个函数里调用了 PASE_Vector_orthogonalize
-    PrintHypreParVector(par_x, "x");
-    PrintHypreParVector(par_y, "y");
-    PrintHypreParVector(par_z, "z");
+    PrintPaseVector(pase_x, "x");
+    PrintPaseVector(pase_y, "y");
+    PrintPaseVector(pase_z, "z");
     PASE_Printf(PASE_COMM_WORLD, "-------------------------------------------------------------\n\n");
 
     // inner product
@@ -144,7 +143,7 @@ PASE_INT main(PASE_INT argc, char *argv[])
   return(0);
 }
 
-void GetTwoTestVector(HYPRE_IJVector *x, HYPRE_IJVector *y, PASE_INT n)
+void GetTwoTestHypreParVector(HYPRE_IJVector *x, HYPRE_IJVector *y, PASE_INT n)
 {
   PASE_INT ilower, iupper, local_size, extra, i;
   PASE_SCALAR *x_values;
@@ -224,11 +223,13 @@ void GetCommandLineInfo(PASE_INT argc, char **argv, PASE_INT *n)
   }
 }
 
-void PrintHypreParVector(HYPRE_ParVector par_x, char *vector_name)
+void PrintPaseVector(PASE_VECTOR pase_x, char *vector_name)
 {
   PASE_INT myid, np, idx_proc, local_size, i;
   MPI_Comm_size(MPI_COMM_WORLD, &np);
   MPI_Comm_rank(MPI_COMM_WORLD, &myid);
+
+  HYPRE_ParVector par_x = (HYPRE_ParVector)pase_x->vector_data;
   local_size = par_x->local_vector->size;
   if(NULL != vector_name) {
     PASE_Printf(MPI_COMM_WORLD, "%s = ", vector_name);

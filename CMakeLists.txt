@@ -27,7 +27,7 @@ include_directories(${PROJECT_SOURCE_DIR}/source)
 set(LIB_PASE "pase")
 add_library(${LIB_PASE} STATIC ${LIB_SRC})
 
-# 测试 PASE_VECTOR1
+# 测试 PASE_VECTOR
 file(GLOB_RECURSE TEST_VECTOR_SRC ${PROJECT_SOURCE_DIR}/test/source/test_pase_vector.c)
 set(BIN_TEST_VECTOR_NAME "test_vector.exe")
 add_executable(${BIN_TEST_VECTOR_NAME} ${TEST_VECTOR_SRC})
@@ -38,3 +38,16 @@ file(GLOB_RECURSE TEST_MATRIX_SRC ${PROJECT_SOURCE_DIR}/test/source/test_pase_ma
 set(BIN_TEST_MATRIX_NAME "test_matrix.exe")
 add_executable(${BIN_TEST_MATRIX_NAME} ${TEST_MATRIX_SRC})
 target_link_libraries(${BIN_TEST_MATRIX_NAME} ${LIB_PASE} ${LIB_HYPRE} "-lm")
+
+# 测试 PASE_AUX_VECTOR
+file(GLOB_RECURSE TEST_AUX_VECTOR_SRC ${PROJECT_SOURCE_DIR}/test/source/test_pase_aux_vector.c)
+set(BIN_TEST_AUX_VECTOR_NAME "test_aux_vector.exe")
+add_executable(${BIN_TEST_AUX_VECTOR_NAME} ${TEST_AUX_VECTOR_SRC})
+target_link_libraries(${BIN_TEST_AUX_VECTOR_NAME} ${LIB_PASE} ${LIB_HYPRE} "-lm")
+
+# 测试 PASE_AUX_MATRIX
+file(GLOB_RECURSE TEST_AUX_MATRIX_SRC ${PROJECT_SOURCE_DIR}/test/source/test_pase_aux_matrix.c)
+set(BIN_TEST_AUX_MATRIX_NAME "test_aux_matrix.exe")
+add_executable(${BIN_TEST_AUX_MATRIX_NAME} ${TEST_AUX_MATRIX_SRC})
+target_link_libraries(${BIN_TEST_AUX_MATRIX_NAME} ${LIB_PASE} ${LIB_HYPRE} "-lm")
+

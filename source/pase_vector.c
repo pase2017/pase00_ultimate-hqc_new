@@ -113,6 +113,7 @@ PASE_Vector_assign(void *vector_data, PASE_VECTOR_DATA_OPERATOR ops)
   x->is_vector_data_owner = PASE_NO;
   x->data_form            = PASE_USER;
   *(x->ops)               = *ops;
+  x->ops->get_global_nrow(x->vector_data, &x->global_nrow);
   return x;
 }
 

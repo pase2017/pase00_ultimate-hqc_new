@@ -39,13 +39,14 @@
 #include "HYPRE_utilities.h"
 
 
-void GetTwoTestMatrix(HYPRE_IJMatrix *A, HYPRE_IJMatrix *B, PASE_INT n);
-void GetTwoTestVector(HYPRE_IJVector *x, HYPRE_IJVector *y, PASE_INT n);
+void GetTwoTestHypreParCSRMatrix(HYPRE_IJMatrix *A, HYPRE_IJMatrix *B, PASE_INT n);
+void GetTwoTestHypreParVector(HYPRE_IJVector *x, HYPRE_IJVector *y, PASE_INT n);
 void GetCommandLineInfo(PASE_INT argc, char **argv, PASE_INT *n);
-void PrintHypreParCSRMatrix(HYPRE_ParCSRMatrix A, char *matrix_name);
-void PrintHypreParVector(HYPRE_ParVector par_x, char *vector_name);
+void PrintPaseMatrix(PASE_MATRIX pase_A, char *matrix_name);
+void PrintPaseVector(PASE_VECTOR pase_x, char *vector_name);
 
-PASE_INT main (PASE_INT argc, char *argv[])
+PASE_INT 
+main (PASE_INT argc, char *argv[])
 {
   PASE_INT myid, num_procs;
   MPI_Init(&argc, &argv);
@@ -57,13 +58,13 @@ PASE_INT main (PASE_INT argc, char *argv[])
 
   HYPRE_IJMatrix A, B;
   HYPRE_ParCSRMatrix parcsr_A, parcsr_B;
-  GetTwoTestMatrix(&A, &B, n);
+  GetTwoTestHypreParCSRMatrix(&A, &B, n);
   HYPRE_IJMatrixGetObject(A, (void**) &parcsr_A);
   HYPRE_IJMatrixGetObject(B, (void**) &parcsr_B);
 
   HYPRE_IJVector x, y;
   HYPRE_ParVector par_x, par_y;
-  GetTwoTestVector(&x, &y, n);
+  GetTwoTestHypreParVector(&x, &y, n);
   HYPRE_IJVectorGetObject(x, (void **) &par_x);
   HYPRE_IJVectorGetObject(y, (void **) &par_y);
 
@@ -75,16 +76,15 @@ PASE_INT main (PASE_INT argc, char *argv[])
     PASE_VECTOR pase_x = PASE_Vector_create((void*)par_x, 1);
     PASE_VECTOR pase_y = PASE_Vector_create((void*)par_y, 1);
     PASE_VECTOR pase_z = PASE_Vector_create_by_matrix_and_vector_data_operator(pase_A, pase_x->ops);
-    HYPRE_ParVector par_z = (HYPRE_ParVector)pase_z->vector_data;
     PASE_Printf(MPI_COMM_WORLD, "=============================================================\n");
     PASE_Printf(MPI_COMM_WORLD, "This is a test program for PASE_MATRIX\n");
     PASE_Printf(MPI_COMM_WORLD, "=============================================================\n");
     PASE_Printf(MPI_COMM_WORLD, "\n");
     PASE_Printf(MPI_COMM_WORLD, "Initial\n");
-    PrintHypreParCSRMatrix(parcsr_A, "A");
-    PrintHypreParCSRMatrix(parcsr_B, "B");
-    PrintHypreParVector(par_x, "x");
-    PrintHypreParVector(par_y, "y");
+    PrintPaseMatrix(pase_A, "A");
+    PrintPaseMatrix(pase_B, "B");
+    PrintPaseVector(pase_x, "x");
+    PrintPaseVector(pase_y, "y");
     PASE_Printf(MPI_COMM_WORLD, "-------------------------------------------------------------\n\n");
 
     //Get matrix global numbers of rows and cols
@@ -97,55 +97,52 @@ PASE_INT main (PASE_INT argc, char *argv[])
     //Transpose matrix
     PASE_Printf(MPI_COMM_WORLD, "Transpose AT = A^T\n\n");
     PASE_MATRIX pase_AT = PASE_Matrix_transpose(pase_A);
-    HYPRE_ParCSRMatrix parcsr_AT = (HYPRE_ParCSRMatrix)pase_AT->matrix_data;
-    PrintHypreParCSRMatrix(parcsr_AT, "AT");
+    PrintPaseMatrix(pase_AT, "AT");
     PASE_Printf(MPI_COMM_WORLD, "-------------------------------------------------------------\n\n");
 
     //Multiply two matrices
     PASE_Printf(MPI_COMM_WORLD, "Multiply C = AT * B\n\n");
     PASE_MATRIX pase_C = PASE_Matrix_multiply_matrix(pase_AT, pase_B);
-    HYPRE_ParCSRMatrix parcsr_C = (HYPRE_ParCSRMatrix)pase_C->matrix_data;
-    PrintHypreParCSRMatrix(parcsr_C, "C");
+    PrintPaseMatrix(pase_C, "C");
     PASE_Printf(MPI_COMM_WORLD, "-------------------------------------------------------------\n\n");
 
     //Multiply matrixT and matrix
     PASE_Printf(MPI_COMM_WORLD, "Multiply D = A^T * B\n\n");
     PASE_MATRIX pase_D = PASE_MatrixT_multiply_matrix(pase_A, pase_B);
-    HYPRE_ParCSRMatrix parcsr_D = (HYPRE_ParCSRMatrix)pase_D->matrix_data; 
-    PrintHypreParCSRMatrix(parcsr_D, "D");
+    PrintPaseMatrix(pase_D, "D");
     PASE_Printf(MPI_COMM_WORLD, "-------------------------------------------------------------\n\n");
      
     //Multiply matrix and vector
     PASE_Printf(MPI_COMM_WORLD, "Multiply y = AT * x\n\n");
     PASE_Matrix_multiply_vector(pase_AT, pase_x, pase_y);
-    PrintHypreParVector(par_y, "y");
+    PrintPaseVector(pase_y, "y");
     PASE_SCALAR a = 1.0;
     PASE_SCALAR b = 2.0;
-    PASE_Printf(MPI_COMM_WORLD, "\nGeneral multiply y = a * AT * x + b * y\n\n");
+    PASE_Printf(MPI_COMM_WORLD, "\nGeneral multiply y = %.4f * AT * x + %.4f * y\n\n", a, b);
     PASE_Matrix_multiply_vector_general(a, pase_AT, pase_x, b, pase_y);
-    PrintHypreParVector(par_y, "y");
+    PrintPaseVector(pase_y, "y");
     PASE_Printf(MPI_COMM_WORLD, "-------------------------------------------------------------\n\n");
 
     //Multiply matrixT and vector
-    PASE_Printf(MPI_COMM_WORLD, "Multiply z = AT * x\n\n");
-    PASE_Matrix_multiply_vector(pase_AT, pase_x, pase_z);
-    PrintHypreParVector(par_z, "z");
+    PASE_Printf(MPI_COMM_WORLD, "Multiply z = A^T * x\n\n");
+    PASE_MatrixT_multiply_vector(pase_A, pase_x, pase_z);
+    PrintPaseVector(pase_z, "z");
     PASE_Printf(MPI_COMM_WORLD, "-------------------------------------------------------------\n\n");
 
     // orthogonalization 
     PASE_VECTOR *pase_X = (PASE_VECTOR*)PASE_Malloc(3*sizeof(PASE_VECTOR));
     PASE_Vector_set_random_value(pase_z, 1);
     PASE_Printf(PASE_COMM_WORLD, "set random values to z\n\n");
-    PrintHypreParVector(par_z, "z");
+    PrintPaseVector(pase_z, "z");
     PASE_Printf(MPI_COMM_WORLD, "\n");
     PASE_Printf(PASE_COMM_WORLD, "B-orthogonalize [x, y, z]\n\n");
     pase_X[0] = pase_x;
     pase_X[1] = pase_y;
     pase_X[2] = pase_z;
     PASE_Vector_orthogonalize_general_all(pase_X, 3, pase_B); //这个函数里调用了 PASE_Vector_orthogonalize_general
-    PrintHypreParVector(par_x, "x");
-    PrintHypreParVector(par_y, "y");
-    PrintHypreParVector(par_z, "z");
+    PrintPaseVector(pase_x, "x");
+    PrintPaseVector(pase_y, "y");
+    PrintPaseVector(pase_z, "z");
     PASE_Printf(PASE_COMM_WORLD, "-------------------------------------------------------------\n\n");
 
     // inner product
@@ -180,7 +177,8 @@ PASE_INT main (PASE_INT argc, char *argv[])
   return 0;
 }
 
-void GetCommandLineInfo(PASE_INT argc, char **argv, PASE_INT *n)
+void 
+GetCommandLineInfo(PASE_INT argc, char **argv, PASE_INT *n)
 {
   PASE_INT arg_index = 0;
   PASE_INT print_usage = 0;
@@ -212,7 +210,8 @@ void GetCommandLineInfo(PASE_INT argc, char **argv, PASE_INT *n)
   }
 }
 
-void GetTwoTestMatrix(HYPRE_IJMatrix *A, HYPRE_IJMatrix *B, PASE_INT n)
+void 
+GetTwoTestHypreParCSRMatrix(HYPRE_IJMatrix *A, HYPRE_IJMatrix *B, PASE_INT n)
 {
   PASE_INT i;
   PASE_INT ilower, iupper;
@@ -294,7 +293,9 @@ void GetTwoTestMatrix(HYPRE_IJMatrix *A, HYPRE_IJMatrix *B, PASE_INT n)
   HYPRE_IJMatrixAssemble(*B);
 }
 
-void GetTwoTestVector(HYPRE_IJVector *x, HYPRE_IJVector *y, PASE_INT n)
+
+void 
+GetTwoTestHypreParVector(HYPRE_IJVector *x, HYPRE_IJVector *y, PASE_INT n)
 {
   PASE_INT     ilower, iupper, local_size, extra, i;
   PASE_SCALAR *x_values;
@@ -341,12 +342,14 @@ void GetTwoTestVector(HYPRE_IJVector *x, HYPRE_IJVector *y, PASE_INT n)
   HYPRE_IJVectorAssemble(*y);
 }
 
-void PrintHypreParCSRMatrix(HYPRE_ParCSRMatrix A, char *matrix_name)
+void PrintPaseMatrix(PASE_MATRIX pase_A, char *matrix_name)
 {
   PASE_INT myid, np, idx_proc, size_local_row, idx_col, idx_local_row, idx_local_col, flag_colnz;
   PASE_INT row_start_diag, row_end_diag, row_start_offd, row_end_offd; 
   MPI_Comm_size(MPI_COMM_WORLD, &np);
   MPI_Comm_rank(MPI_COMM_WORLD, &myid);
+
+  HYPRE_ParCSRMatrix A = (HYPRE_ParCSRMatrix)pase_A->matrix_data;
   size_local_row = A->last_row_index-A->first_row_index+1;
 
   if(NULL != matrix_name) {
@@ -392,11 +395,12 @@ void PrintHypreParCSRMatrix(HYPRE_ParCSRMatrix A, char *matrix_name)
   PASE_Printf(MPI_COMM_WORLD, "\n");
 }
 
-void PrintHypreParVector(HYPRE_ParVector par_x, char *vector_name)
+void PrintPaseVector(PASE_VECTOR pase_x, char *vector_name)
 {
   PASE_INT myid, np, idx_proc, local_size, i;
   MPI_Comm_size(MPI_COMM_WORLD, &np);
   MPI_Comm_rank(MPI_COMM_WORLD, &myid);
+  HYPRE_ParVector par_x = (HYPRE_ParVector)pase_x->vector_data;
   local_size = par_x->local_vector->size;
   if(NULL != vector_name) {
     PASE_Printf(MPI_COMM_WORLD, "%s = ", vector_name);
