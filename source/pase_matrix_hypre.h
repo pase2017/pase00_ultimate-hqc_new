@@ -1,5 +1,5 @@
-#ifndef __PASE_MATRIX_HYPRE__
-#define __PASE_MATRIX_HYPRE__
+#ifndef __PASE_MATRIX_HYPRE_H__
+#define __PASE_MATRIX_HYPRE_H__
 
 #include "pase_config.h"
 

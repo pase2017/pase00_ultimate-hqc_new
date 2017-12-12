@@ -29,16 +29,7 @@ PASE_Multigrid_create(PASE_MATRIX A, PASE_MATRIX B, PASE_PARAMETER param, PASE_M
     multigrid->ops = PASE_Multigrid_operator_create(A->data_form);
   }
 
-  multigrid->A        = (PASE_MATRIX*)PASE_Malloc(multigrid->actual_level*sizeof(PASE_MATRIX));
-  multigrid->B        = (PASE_MATRIX*)PASE_Malloc(multigrid->actual_level*sizeof(PASE_MATRIX));
-  multigrid->P        = (PASE_MATRIX*)PASE_Malloc((multigrid->actual_level-1)*sizeof(PASE_MATRIX));
-  multigrid->R        = (PASE_MATRIX*)PASE_Malloc((multigrid->actual_level-1)*sizeof(PASE_MATRIX));
-  multigrid->aux_A    = (PASE_AUX_MATRIX*)calloc(multigrid->actual_level, sizeof(PASE_AUX_MATRIX));
-  multigrid->aux_B    = (PASE_AUX_MATRIX*)calloc(multigrid->actual_level, sizeof(PASE_AUX_MATRIX));
-  multigrid->A[0]     = A;
-  multigrid->B[0]     = B;
-
-  PASE_Multigrid_get_amg_array(multigrid, param);
+  PASE_Multigrid_get_amg_array(multigrid, A, B, param);
 
   return multigrid;
 }
@@ -48,30 +39,40 @@ PASE_Multigrid_create(PASE_MATRIX A, PASE_MATRIX B, PASE_PARAMETER param, PASE_M
 /**
  * @brief AMG 分层
  *
- * @param multigrid  输入/输出参数, 其中各个指针成员已申请好空间
+ * @param multigrid  输入/输出参数 
+ * @param A          输入参数
+ * @param B          输入参数
  * @param param      输入参数, 包含 AMG 分层的各个参数
  */
 void
-PASE_Multigrid_get_amg_array(PASE_MULTIGRID multigrid, PASE_PARAMETER param)
+PASE_Multigrid_get_amg_array(PASE_MULTIGRID multigrid, PASE_MATRIX A, PASE_MATRIX B, PASE_PARAMETER param)
 {
   void **A_array, **P_array, **R_array; 
   PASE_INT    level = 0;
   PASE_MATRIX tmp   = NULL;
-  multigrid->ops->get_amg_array(multigrid->A[0]->matrix_data, 
+  multigrid->ops->get_amg_array(A->matrix_data, 
                                 param, 
                                 &(A_array),
                                 &(P_array),
                                 &(R_array),
                                 &(multigrid->actual_level),
                                 &(multigrid->amg_data));
+  multigrid->A     = (PASE_MATRIX*)PASE_Malloc(multigrid->actual_level*sizeof(PASE_MATRIX));
+  multigrid->B     = (PASE_MATRIX*)PASE_Malloc(multigrid->actual_level*sizeof(PASE_MATRIX));
+  multigrid->P     = (PASE_MATRIX*)PASE_Malloc((multigrid->actual_level-1)*sizeof(PASE_MATRIX));
+  multigrid->R     = (PASE_MATRIX*)PASE_Malloc((multigrid->actual_level-1)*sizeof(PASE_MATRIX));
+  multigrid->aux_A = (PASE_AUX_MATRIX*)calloc(multigrid->actual_level, sizeof(PASE_AUX_MATRIX));
+  multigrid->aux_B = (PASE_AUX_MATRIX*)calloc(multigrid->actual_level, sizeof(PASE_AUX_MATRIX));
+  multigrid->A[0]  = A;
+  multigrid->B[0]  = B;
   for(level=1; level<multigrid->actual_level; level++) {
-    multigrid->A[level]                         = PASE_Matrix_assign(A_array[level], multigrid->A[0]->ops);
-    multigrid->A[level]->data_form              = multigrid->A[0]->data_form;
-    multigrid->P[level-1]                       = PASE_Matrix_assign(P_array[level-1], multigrid->A[0]->ops);
-    multigrid->P[level-1]->data_form            = multigrid->A[0]->data_form;
-    multigrid->R[level-1]                       = PASE_Matrix_assign(R_array[level-1], multigrid->A[0]->ops);
+    multigrid->A[level]                         = PASE_Matrix_assign(A_array[level], A->ops);
+    multigrid->A[level]->data_form              = A->data_form;
+    multigrid->P[level-1]                       = PASE_Matrix_assign(P_array[level-1], A->ops);
+    multigrid->P[level-1]->data_form            = A->data_form;
+    multigrid->R[level-1]                       = PASE_Matrix_assign(R_array[level-1], A->ops);
     multigrid->R[level-1]->is_matrix_data_owner = 1;
-    multigrid->R[level-1]->data_form            = multigrid->A[0]->data_form;
+    multigrid->R[level-1]->data_form            = A->data_form;
 
     /* B1 = R0 * B0 * P0 */
     tmp                                         = PASE_Matrix_multiply_matrix(multigrid->B[level-1], multigrid->P[level-1]); 

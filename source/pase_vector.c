@@ -312,3 +312,67 @@ void PASE_Vector_orthogonalize_all(PASE_VECTOR *x, PASE_INT num)
     PASE_Vector_orthogonalize(x, j, 0, j-1);
   }
 }
+
+#undef  __FUNCT__
+#define __FUNCT__ "PASE_Multi_vector_combination"
+/**
+ * @brief 向量线性组合: y = \sum_i coef[i] * x[i]
+ *
+ * @param x       输入向量, 用于做线性组合的向量组
+ * @param num_nev 输入向量, 用于做线型组合的向量个数
+ * @param coef    输入向量, 用于做线性组合的系数数组
+ * @param y       输出向量, 用于存储线性组合完毕得到的向量
+ */
+void
+PASE_Multi_vector_combination(PASE_VECTOR *x, PASE_INT num_vec, PASE_SCALAR *coef, PASE_VECTOR y)
+{
+#if DEBUG_PASE_VECTOR
+  if(NULL == x) {
+    PASE_Error(__FUNCT__": Cannot compute the linear combination of an empty PASE VECTOR set.\n");
+  }
+  if(NULL == coef) {
+    PASE_Error(__FUNCT__": Cannot compute the linear combination of an empty coefficient set.\n");
+  }
+  if(NULL == y) {
+    PASE_Error(__FUNCT__": Cannot store the linear combination with an empty PASE VECTOR.\n");
+  }
+#endif
+
+  PASE_INT j = 0;
+  PASE_Vector_set_constant_value(y, 0.0);
+  for(j = 0; j < num_vec; j++) {
+    PASE_Vector_axpy(coef[j], x[j], y);
+  }
+}
+
+#undef  __FUNCT__
+#define __FUNCT__ "PASE_Multi_vector_by_matrix"
+/**
+ * @brief 多重向量线性组合: y = x * mat
+ *
+ * @param x       输入向量, 用于做线性组合的向量组
+ * @param num_nev 输入向量, 用于做线型组合的向量个数
+ * @param mat     输入向量, 二维数组, 用于做线性组合的系数, 其维数为 num_vec * num_mat
+ * @param num_mat 输入向量, 需做线型组合得到的向量个数
+ * @param y       输出向量, 用于存储线性组合完毕得到的向量组
+ */
+void
+PASE_Multi_vector_by_matrix(PASE_VECTOR *x, PASE_INT num_vec, PASE_SCALAR **mat, PASE_INT num_mat, PASE_VECTOR *y)
+{
+#if DEBUG_PASE_VECTOR
+  if(NULL == x) {
+    PASE_Error(__FUNCT__": Cannot compute the linear combinations of an empty PASE VECTOR set.\n");
+  }
+  if(NULL == mat) {
+    PASE_Error(__FUNCT__": Cannot compute the linear combinations of an empty coefficient set.\n");
+  }
+  if(NULL == y) {
+    PASE_Error(__FUNCT__": Cannot store the linear combinations with an empty PASE VECTOR set.\n");
+  }
+#endif
+
+  PASE_INT i = 0;
+  for(i = 0; i < num_mat; i++) {
+    PASE_Multi_vector_combination(x, num_vec, mat[i], y[i]);
+  }
+}

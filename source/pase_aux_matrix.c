@@ -475,7 +475,7 @@ PASE_Aux_matrix_multiply_aux_vector_general(PASE_SCALAR a, PASE_AUX_MATRIX aux_A
  * @param comm   输出参数
  */
 void
-PASE_Aux_matrix_get_comm_info(PASE_AUX_MATRIX aux_A, MPI_Comm *comm)
+PASE_Aux_matrix_get_mpi_comm(PASE_AUX_MATRIX aux_A, MPI_Comm *comm)
 {
 #if DEBUG_PASE_AUX_MATRIX
   if(NULL == aux_A) {

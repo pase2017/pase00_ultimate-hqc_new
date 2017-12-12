@@ -1,5 +1,5 @@
-#ifndef __PASE_MULTIGRID_HYPRE__
-#define __PASE_MULTIGRID_HYPRE__
+#ifndef __PASE_MULTIGRID_HYPRE_H__
+#define __PASE_MULTIGRID_HYPRE_H__
 
 #include "pase_config.h"
 #include "pase_param.h"

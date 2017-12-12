@@ -220,4 +220,24 @@ void PASE_Vector_orthogonalize(PASE_VECTOR *x, PASE_INT i, PASE_INT start, PASE_
  */
 void PASE_Vector_orthogonalize_all(PASE_VECTOR *x, PASE_INT num);
 
+/**
+ * @brief 向量线性组合: y = \sum_i coef[i] * x[i]
+ *
+ * @param x       输入向量, 用于做线性组合的向量组
+ * @param num_nev 输入向量, 用于做线型组合的向量个数
+ * @param coef    输入向量, 用于做线性组合的系数数组
+ * @param y       输出向量, 用于存储线性组合完毕得到的向量
+ */
+void PASE_Multi_vector_combination(PASE_VECTOR *x, PASE_INT num_vec, PASE_SCALAR *coef, PASE_VECTOR y);
+
+/**
+ * @brief 多重向量线性组合: y = x * mat
+ *
+ * @param x       输入向量, 用于做线性组合的向量组
+ * @param num_nev 输入向量, 用于做线型组合的向量个数
+ * @param mat     输入向量, 二维数组, 用于做线性组合的系数, 其维数为 num_vec * num_mat
+ * @param num_mat 输入向量, 需做线型组合得到的向量个数
+ * @param y       输出向量, 用于存储线性组合完毕得到的向量组
+ */
+void PASE_Multi_vector_by_matrix(PASE_VECTOR *x, PASE_INT num_vec, PASE_SCALAR **mat, PASE_INT num_mat, PASE_VECTOR *y);
 #endif
