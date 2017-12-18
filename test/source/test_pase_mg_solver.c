@@ -49,14 +49,14 @@ PASE_INT main(PASE_INT argc, char *argv[])
    MPI_Comm_rank(MPI_COMM_WORLD, &myid);
 
    PASE_INT  n           = 200;
-   PASE_INT  block_size  = 1;
-   PASE_INT  max_iter    = 200;
-   PASE_INT  pre_iter    = 2;
+   PASE_INT  block_size  = 5;
+   PASE_INT  max_iter    = 50;
+   PASE_INT  pre_iter    = 1;
    PASE_INT  post_iter   = 1;
-   PASE_REAL atol        = 1e-8;
+   PASE_REAL atol        = 1e-14;
    PASE_REAL rtol        = 1e-6;
    PASE_INT  print_level = 1;
-   PASE_INT  max_level   = 40;
+   PASE_INT  max_level   = 6;
 
    HYPRE_IJMatrix A, B;
    HYPRE_ParCSRMatrix parcsr_A, parcsr_B;
@@ -71,8 +71,8 @@ PASE_INT main(PASE_INT argc, char *argv[])
    HYPRE_IJMatrixGetObject(B, (void**) &parcsr_B);
    HYPRE_IJVectorGetObject(x, (void**) &par_x);
 
-   HYPRE_Real *eigenvalues, *exact_eigenvalues;
-   eigenvalues = PASE_Malloc(block_size*sizeof(HYPRE_Real));
+   PASE_REAL *eigenvalues, *exact_eigenvalues;
+   eigenvalues = PASE_Malloc(block_size*sizeof(PASE_REAL));
    GetExactEigenvalues(&exact_eigenvalues, n, block_size);
 
    if(myid ==0) {
@@ -321,7 +321,7 @@ void GetExactEigenvalues(PASE_REAL **exact_eigenvalues, PASE_INT n, PASE_INT blo
     h = 1.0/(n+1); /* mesh size*/
     h2 = h*h;
     PASE_INT tmp_nn = (PASE_INT) sqrt(block_size) + 2;
-    *exact_eigenvalues = PASE_Malloc(sizeof(HYPRE_Real)*tmp_nn*tmp_nn);
+    *exact_eigenvalues = PASE_Malloc(sizeof(PASE_REAL)*tmp_nn*tmp_nn);
     for (i = 0; i < tmp_nn; ++i) 
     {
        for (k = 0; k < tmp_nn; ++k) 

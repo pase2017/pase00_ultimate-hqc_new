@@ -81,6 +81,14 @@ void PASE_Aux_matrix_set_aux_space_some(PASE_AUX_MATRIX aux_A, PASE_INT i, PASE_
  */
 void PASE_Aux_matrix_set_aux_space(PASE_AUX_MATRIX aux_A, PASE_MATRIX R_hH, PASE_MATRIX A_h, PASE_VECTOR *u_h); 
 
+PASE_INT PASE_Aux_matrix_set_vec_some(PASE_AUX_MATRIX aux_A, PASE_INT i, PASE_INT j, PASE_MATRIX R_hH, PASE_MATRIX A_h, PASE_VECTOR *u_h);
+
+PASE_INT PASE_Aux_matrix_set_vec(PASE_AUX_MATRIX aux_A, PASE_MATRIX R_hH, PASE_MATRIX A_h, PASE_VECTOR *u_h);
+
+PASE_INT PASE_Aux_matrix_set_block_some(PASE_AUX_MATRIX aux_A, PASE_INT i, PASE_INT j, PASE_MATRIX A_h, PASE_VECTOR *u_h);
+
+PASE_INT PASE_Aux_matrix_set_block(PASE_AUX_MATRIX aux_A, PASE_MATRIX A_h, PASE_VECTOR *u_h);
+
 /**
  * @brief 创建辅助空间 V_H + span{ aux_u_h[0], ..., aux_u_h[block_size-1]}
  *        对应的矩阵 [mat   vec  ], 

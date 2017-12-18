@@ -96,7 +96,9 @@ PASE_Multigrid_destroy(PASE_MULTIGRID multigrid)
   if(NULL != multigrid && multigrid->actual_level > 1) {
     if(multigrid->aux_A) {
       for(i=0; i<multigrid->actual_level; i++) {
-	PASE_Aux_matrix_destroy(multigrid->aux_A[i]);
+	if(NULL != multigrid->aux_A[i]) {
+	  PASE_Aux_matrix_destroy(multigrid->aux_A[i]);
+	}
       }
       PASE_Free(multigrid->aux_A);
     }

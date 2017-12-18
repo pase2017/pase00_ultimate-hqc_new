@@ -52,11 +52,16 @@ PASE_INT PASE_Mg_solver_destroy(PASE_MG_SOLVER solver);
 PASE_INT PASE_Mg_set_up(PASE_MG_SOLVER solver);
 PASE_INT PASE_Mg_solve(PASE_MG_SOLVER solver);
 PASE_INT PASE_Mg_iteration(PASE_MG_SOLVER solver);
+PASE_INT PASE_Mg_iteration_two_gird(PASE_MG_SOLVER solver);
+PASE_INT PASE_Mg_set_aux_matrix_two_grid(PASE_MG_SOLVER solver);
+PASE_INT PASE_Mg_prolong_two_grid(PASE_MG_SOLVER solver);
+PASE_INT PASE_Mg_prolong_general(PASE_MG_SOLVER solver,  PASE_INT i, PASE_VECTOR u_i, PASE_INT j, PASE_VECTOR u_j);
 PASE_INT PASE_Mg_error_estimate(PASE_MG_SOLVER solver);
 PASE_INT PASE_Mg_print(PASE_MG_SOLVER solver);
 PASE_INT PASE_Mg_presmoothing(PASE_MG_SOLVER solver);
 PASE_INT PASE_Mg_pre_set_up(PASE_MG_SOLVER solver);
 PASE_INT PASE_Mg_postsmoothing(PASE_MG_SOLVER solver);
+PASE_INT PASE_Mg_direct_solve(PASE_MG_SOLVER solver);
 PASE_INT PASE_Mg_prolong(PASE_MG_SOLVER solver);
 PASE_INT PASE_Mg_set_aux_matrix(PASE_MG_SOLVER solver);
 PASE_INT PASE_Mg_orthogonalize(PASE_MG_SOLVER solver);
@@ -76,6 +81,9 @@ PASE_INT PASE_Linear_solve_by_cg(PASE_MATRIX A, PASE_VECTOR b, PASE_VECTOR x, PA
 PASE_INT PASE_Linear_solve_by_cg_aux(PASE_AUX_MATRIX aux_A, PASE_AUX_VECTOR aux_b, PASE_AUX_VECTOR aux_x, PASE_REAL tol, PASE_INT max_iter);
 //PASE_INT PASE_Mg_solve_directly_by_IRA(void *mg_solver);
 
+PASE_INT PASE_Mg_coarsest_aux_matrix_set(PASE_MG_SOLVER solver);
+PASE_INT PASE_Mg_coarsest_aux_matrix_create(PASE_MG_SOLVER solver, PASE_AUX_MATRIX *aux_A, PASE_MATRIX A_H);
+PASE_INT PASE_Mg_restrict(PASE_MG_SOLVER solver, PASE_INT i, PASE_VECTOR u_i, PASE_INT j, PASE_VECTOR u_j);
 
 
 

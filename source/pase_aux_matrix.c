@@ -101,17 +101,18 @@ PASE_Aux_matrix_set_aux_space_some(PASE_AUX_MATRIX aux_A, PASE_INT i, PASE_INT j
     PASE_Error(__FUNCT__": Cannot set aux space of PASE AUX MATRIX without fine grid vectors u_h.\n");
   }
 #endif 
-  PASE_INT k, l;
+  PASE_Aux_matrix_set_vec_some(aux_A, i, j, R_hH, A_h, u_h);
+  PASE_Aux_matrix_set_block_some(aux_A, i, j, A_h, u_h);
+}
+
+PASE_INT
+PASE_Aux_matrix_set_vec_some(PASE_AUX_MATRIX aux_A, PASE_INT i, PASE_INT j, PASE_MATRIX R_hH, PASE_MATRIX A_h, PASE_VECTOR *u_h)
+{
+  PASE_INT k;
   if(NULL == aux_A->vec) {
     aux_A->vec = (PASE_VECTOR*)PASE_Malloc(aux_A->block_size*sizeof(PASE_VECTOR));
     for(k = 0; k < aux_A->block_size; k++) {
       aux_A->vec[k] = PASE_Vector_create_by_matrix_and_vector_data_operator(aux_A->mat, u_h[0]->ops);
-    }
-  }
-  if(NULL == aux_A->block) {
-    aux_A->block = (PASE_SCALAR**)PASE_Malloc(aux_A->block_size*sizeof(PASE_SCALAR*));
-    for(k = 0; k<aux_A->block_size; k++) {
-      aux_A->block[k] = (PASE_SCALAR*)PASE_Malloc(aux_A->block_size*sizeof(PASE_SCALAR));
     }
   }
 
@@ -119,16 +120,46 @@ PASE_Aux_matrix_set_aux_space_some(PASE_AUX_MATRIX aux_A, PASE_INT i, PASE_INT j
   for(k = i; k <= j; k++) {
     PASE_Matrix_multiply_vector(A_h, u_h[k], workspace_h);
     PASE_Matrix_multiply_vector(R_hH, workspace_h, aux_A->vec[k]);
+  }
+  PASE_Vector_destroy(workspace_h);
+  return 0;
+}
+
+PASE_INT
+PASE_Aux_matrix_set_vec(PASE_AUX_MATRIX aux_A, PASE_MATRIX R_hH, PASE_MATRIX A_h, PASE_VECTOR *u_h)
+{
+  PASE_Aux_matrix_set_vec_some(aux_A, 0, aux_A->block_size-1, R_hH, A_h, u_h);
+  return 0;
+}
+
+PASE_INT
+PASE_Aux_matrix_set_block_some(PASE_AUX_MATRIX aux_A, PASE_INT i, PASE_INT j, PASE_MATRIX A_h, PASE_VECTOR *u_h)
+{
+  PASE_INT k, l;
+  if(NULL == aux_A->block) {
+    aux_A->block = (PASE_SCALAR**)PASE_Malloc(aux_A->block_size*sizeof(PASE_SCALAR*));
+    for(k = 0; k<aux_A->block_size; k++) {
+      aux_A->block[k] = (PASE_SCALAR*)PASE_Malloc(aux_A->block_size*sizeof(PASE_SCALAR));
+    }
+  }
+  for(k = i; k <= j; k++) {
     for(l = 0; l < aux_A->block_size; l++) {
       if(l >= i && l <= j) {
-        PASE_Vector_inner_product(workspace_h, u_h[l], &(aux_A->block[k][l]));
+        PASE_Vector_inner_product_general(u_h[k], u_h[l], A_h, &(aux_A->block[k][l]));
       } else {
-        PASE_Vector_inner_product(workspace_h, u_h[l], &(aux_A->block[l][k]));
-        PASE_Vector_inner_product(workspace_h, u_h[l], &(aux_A->block[k][l]));
+        PASE_Vector_inner_product_general(u_h[k], u_h[l], A_h, &(aux_A->block[k][l]));
+	aux_A->block[l][k] = aux_A->block[k][l];
       }
     }
   }
-  PASE_Vector_destroy(workspace_h);
+  return 0;
+}
+
+PASE_INT
+PASE_Aux_matrix_set_block(PASE_AUX_MATRIX aux_A, PASE_MATRIX A_h, PASE_VECTOR *u_h)
+{
+  PASE_Aux_matrix_set_block_some(aux_A, 0, aux_A->block_size-1, A_h, u_h);
+  return 0;
 }
 
 #undef  __FUNCT__
@@ -365,6 +396,7 @@ PASE_Aux_matrix_destroy(PASE_AUX_MATRIX aux_A)
     }
     PASE_Free(aux_A->block);
   }
+  PASE_Free(aux_A);
 }
 
 #undef  __FUNCT__

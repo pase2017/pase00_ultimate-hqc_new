@@ -8,8 +8,9 @@
 
 PASE_INT PASE_Mg_get_initial_vector_by_coarse_grid_hypre(void *mg_solver);
 PASE_INT PASE_Mg_presmoothing_by_pcg_hypre(void *mg_solver);
+PASE_INT PASE_Mg_presmoothing_by_pcg_amg_hypre(void *mg_solver);
 PASE_INT PASE_Mg_presmoothing_by_pcg_aux_hypre(void *mg_solver);
-PASE_INT PASE_Mg_solve_directly_by_lobpcg_aux_hypre(void *mg_solver);
+PASE_INT PASE_Mg_direct_solve_by_lobpcg_aux_hypre(void *mg_solver);
 
 #endif
 
