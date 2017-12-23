@@ -2,7 +2,7 @@
 EXE="./parMG.exe"
 N="1000"
 BLOCKSIZE="100"
-ATOL="1e-9"
+ATOL="-9"
 NSMOOTH="2"
 NP="20"
 
@@ -11,14 +11,14 @@ echo ""
 echo ${EXEC}
 
 OUTPUT="output/10lobpcg/"
-mpirun -np ${NP} ${EXEC} > ${OUTPUT}/np${NP}_n${N}_bs${BLOCKSIZE}_atol${ATOL}_nsmooth${NSMOOTH} 2>&1
+mpirun -np ${NP} ${EXEC} > ${OUTPUT}/np${NP}_n${N}_bs${BLOCKSIZE}_atol1e${ATOL}_nsmooth${NSMOOTH} 2>&1
 
 
 #============================================================================================================
 EXE="./parMG.exe"
 N="2000"
 BLOCKSIZE="100"
-ATOL="1e-9"
+ATOL="-9"
 NSMOOTH="2"
 NP="20"
 
@@ -27,14 +27,14 @@ echo ""
 echo ${EXEC}
 
 OUTPUT="output/10lobpcg/"
-mpirun -np ${NP} ${EXEC} > ${OUTPUT}/np${NP}_n${N}_bs${BLOCKSIZE}_atol${ATOL}_nsmooth${NSMOOTH} 2>&1
+mpirun -np ${NP} ${EXEC} > ${OUTPUT}/np${NP}_n${N}_bs${BLOCKSIZE}_atol1e${ATOL}_nsmooth${NSMOOTH} 2>&1
 
 
 #============================================================================================================
 EXE="./parMG.exe"
 N="3000"
 BLOCKSIZE="100"
-ATOL="1e-9"
+ATOL="-9"
 NSMOOTH="2"
 NP="20"
 
@@ -43,14 +43,14 @@ echo ""
 echo ${EXEC}
 
 OUTPUT="output/10lobpcg/"
-mpirun -np ${NP} ${EXEC} > ${OUTPUT}/np${NP}_n${N}_bs${BLOCKSIZE}_atol${ATOL}_nsmooth${NSMOOTH} 2>&1
+mpirun -np ${NP} ${EXEC} > ${OUTPUT}/np${NP}_n${N}_bs${BLOCKSIZE}_atol1e${ATOL}_nsmooth${NSMOOTH} 2>&1
 
 
 #============================================================================================================
 EXE="./parMG.exe"
 N="4000"
 BLOCKSIZE="100"
-ATOL="1e-9"
+ATOL="-9"
 NSMOOTH="2"
 NP="20"
 
@@ -59,14 +59,14 @@ echo ""
 echo ${EXEC}
 
 OUTPUT="output/10lobpcg/"
-mpirun -np ${NP} ${EXEC} > ${OUTPUT}/np${NP}_n${N}_bs${BLOCKSIZE}_atol${ATOL}_nsmooth${NSMOOTH} 2>&1
+mpirun -np ${NP} ${EXEC} > ${OUTPUT}/np${NP}_n${N}_bs${BLOCKSIZE}_atol1e${ATOL}_nsmooth${NSMOOTH} 2>&1
 
 
 #============================================================================================================
 EXE="./parMG.exe"
 N="5000"
 BLOCKSIZE="100"
-ATOL="1e-9"
+ATOL="-9"
 NSMOOTH="2"
 NP="20"
 
@@ -75,7 +75,7 @@ echo ""
 echo ${EXEC}
 
 OUTPUT="output/10lobpcg/"
-mpirun -np ${NP} ${EXEC} > ${OUTPUT}/np${NP}_n${N}_bs${BLOCKSIZE}_atol${ATOL}_nsmooth${NSMOOTH} 2>&1
+mpirun -np ${NP} ${EXEC} > ${OUTPUT}/np${NP}_n${N}_bs${BLOCKSIZE}_atol1e${ATOL}_nsmooth${NSMOOTH} 2>&1
 
 
 

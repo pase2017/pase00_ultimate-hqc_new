@@ -51,8 +51,8 @@ PASE_INT main(PASE_INT argc, char *argv[])
 
    PASE_INT  n           = 400;
    PASE_INT  block_size  = 30;
-   PASE_INT  max_iter    = 50;
-   PASE_INT  pre_iter    = 5;
+   PASE_INT  max_iter    = 200;
+   PASE_INT  pre_iter    = 2;
    PASE_INT  post_iter   = 1;
    PASE_REAL atol        = 1e-12;
    PASE_REAL rtol        = 1e-6;
@@ -265,8 +265,8 @@ void GetEigenProblem(HYPRE_IJMatrix *A, HYPRE_IJMatrix *B, HYPRE_IJVector *x, PA
 
 void GetCommandLineInfo(PASE_INT argc, char **argv, PASE_INT *n, PASE_INT *block_size, PASE_REAL *atol, PASE_INT *nsmooth)
 {
-  PASE_INT arg_index = 0;
-  PASE_INT print_usage = 0;
+   PASE_INT arg_index = 0;
+   PASE_INT print_usage = 0;
    PASE_INT myid;
   
    MPI_Comm_rank(MPI_COMM_WORLD, &myid);
@@ -285,7 +285,7 @@ void GetCommandLineInfo(PASE_INT argc, char **argv, PASE_INT *n, PASE_INT *block
      else if ( strcmp(argv[arg_index], "-atol") == 0 )
      {
         arg_index++;
-        *atol= atoi(argv[arg_index++]);
+        *atol= pow(10, atoi(argv[arg_index++]));
      }
      else if ( strcmp(argv[arg_index], "-nsmooth") == 0 )
      {
