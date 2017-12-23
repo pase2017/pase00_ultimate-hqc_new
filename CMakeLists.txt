@@ -51,9 +51,15 @@ set(BIN_TEST_AUX_MATRIX_NAME "test_aux_matrix.exe")
 add_executable(${BIN_TEST_AUX_MATRIX_NAME} ${TEST_AUX_MATRIX_SRC})
 target_link_libraries(${BIN_TEST_AUX_MATRIX_NAME} ${LIB_PASE} ${LIB_HYPRE} "-lm")
 
-# 测试 PASE_MG_SOLVER
-file(GLOB_RECURSE TEST_MG_SOLVER_SRC ${PROJECT_SOURCE_DIR}/test/source/test_pase_mg_solver.c)
-set(BIN_TEST_MG_SOLVER_NAME "test_mg_solver.exe")
-add_executable(${BIN_TEST_MG_SOLVER_NAME} ${TEST_MG_SOLVER_SRC})
-target_link_libraries(${BIN_TEST_MG_SOLVER_NAME} ${LIB_PASE} ${LIB_HYPRE} "-lm")
+# 测试 PASE_MG_SOLVER, 用户可自定义
+file(GLOB_RECURSE TEST_MG_USER_SRC ${PROJECT_SOURCE_DIR}/test/source/test_pase_mg_user.c)
+set(BIN_TEST_MG_USER_NAME "test_mg_user.exe")
+add_executable(${BIN_TEST_MG_USER_NAME} ${TEST_MG_USER_SRC})
+target_link_libraries(${BIN_TEST_MG_USER_NAME} ${LIB_PASE} ${LIB_HYPRE} "-lm")
+
+# 测试 PASE_Eigensolver
+file(GLOB_RECURSE TEST_MG_HYPRE_SRC ${PROJECT_SOURCE_DIR}/test/source/test_pase_mg_hypre.c)
+set(BIN_TEST_MG_HYPRE_NAME "test_mg_hypre.exe")
+add_executable(${BIN_TEST_MG_HYPRE_NAME} ${TEST_MG_HYPRE_SRC})
+target_link_libraries(${BIN_TEST_MG_HYPRE_NAME} ${LIB_PASE} ${LIB_HYPRE} "-lm")
 

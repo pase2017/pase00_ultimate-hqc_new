@@ -16,6 +16,14 @@ typedef struct PASE_PARAMETER_PRIVATE_ {
   /* 外部软件包, 用于提供实际的矩阵和向量的数据结构与操作 */
   PASE_INT external_package; // 1: HYPRE
   
+  /* mg_solver parameter */
+  PASE_INT  block_size;
+  PASE_INT  max_cycle;
+  PASE_INT  max_pre_iter;
+  PASE_INT  max_post_iter;
+  PASE_INT  print_level;
+  PASE_REAL atol;
+  PASE_REAL rtol;
    
   /* linear smoother/solver */
   /**

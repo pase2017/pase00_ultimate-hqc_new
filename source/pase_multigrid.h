@@ -116,16 +116,4 @@ PASE_MULTIGRID_OPERATOR PASE_Multigrid_operator_create(PASE_INT data_form);
  */
 void PASE_Multigrid_operator_destroy(PASE_MULTIGRID_OPERATOR ops);
 
-/**
- * @brief 
- *
- * @param A
- * @param B
- * @param eval
- * @param evec
- * @param block_size
- * @param param
- */
-void PASE_EigenSolver(PASE_MATRIX *A, PASE_MATRIX *B, PASE_SCALAR *eval, PASE_VECTOR **evec, PASE_INT block_size, PASE_PARAMETER param);
-
 #endif

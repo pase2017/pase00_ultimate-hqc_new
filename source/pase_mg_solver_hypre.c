@@ -30,7 +30,8 @@ PASE_Mg_get_initial_vector_by_coarse_grid_hypre(void *mg_solver)
   PASE_INT     block_size     = solver->block_size;       
   PASE_MATRIX  A              = solver->multigrid->A[max_level];
   PASE_MATRIX  B              = solver->multigrid->B[max_level];
-  PASE_VECTOR  u_temp         = PASE_Vector_create_by_matrix_and_vector_data_operator(A, NULL); 
+  PASE_VECTOR  u_temp = PASE_Vector_create_by_matrix_and_vector_data_operator(A, solver->u[0]->ops); 
+
   PASE_VECTOR  x              = PASE_Vector_create_by_vector(u_temp);
   PASE_INT     max_block_size = ((2*block_size)<(block_size+5))?(2*block_size):(block_size+5);
   PASE_SCALAR *eigenvalues    = (PASE_SCALAR*)PASE_Malloc(max_block_size*sizeof(PASE_SCALAR));
@@ -63,7 +64,7 @@ PASE_Mg_get_initial_vector_by_coarse_grid_hypre(void *mg_solver)
   while(i < (max_block_size-block_size) && index > -1) {
     rate[i] = fabs(eigenvalues[i+block_size-1]/eigenvalues[i+block_size]);
     if(rate[i] < 0.9) {
-      solver->block_size = block_size+i;
+      solver->block_size = block_size + i;
       index = -1;
     } else if(max_rate > rate[i]) {
       max_rate = rate[i];
@@ -74,17 +75,40 @@ PASE_Mg_get_initial_vector_by_coarse_grid_hypre(void *mg_solver)
 
   if(index > -1) {
     solver->block_size = block_size + index;
+    PASE_Printf(MPI_COMM_WORLD, "modified block_size = %d\n\n", solver->block_size);
   }
-  PASE_Printf(MPI_COMM_WORLD, "modified block_size = %d\n\n", solver->block_size);
+  if(NULL == solver->u) {
+    solver->u = (PASE_VECTOR*)PASE_Malloc(solver->block_size*sizeof(PASE_VECTOR));
+    for(i = 0; i < solver->block_size; i++) {
+      solver->u[i] = PASE_Vector_create_by_matrix_and_vector_data_operator(solver->multigrid->A[0], NULL);
+    }
+  } else if(solver->block_size != block_size) {
+    PASE_VECTOR *u = (PASE_VECTOR*)PASE_Malloc(solver->block_size*sizeof(PASE_VECTOR));
+    for(i = 0; i < solver->block_size; i++) {
+      if(i < block_size) {
+	u[i] = solver->u[i];
+      } else {
+	u[i] = PASE_Vector_create_by_vector(solver->u[0]);
+      }
+    }
+    PASE_Free(solver->u);
+    solver->u = u;
+  }
+  if(NULL == solver->eigenvalues) {
+    solver->eigenvalues = (PASE_SCALAR*)PASE_Malloc(solver->block_size*sizeof(PASE_SCALAR));
+  } else if(solver->block_size != block_size) {
+    PASE_Free(solver->eigenvalues);
+    solver->eigenvalues = (PASE_SCALAR*)PASE_Malloc(solver->block_size*sizeof(PASE_SCALAR));
+  }
 
   block_size              = solver->block_size;
   mv_TempMultiVector *tmp = (mv_TempMultiVector*) mv_MultiVectorGetData(eigenvectors_Hh);
   PASE_VECTOR        *u_H = (PASE_VECTOR*)(tmp->vector);
   PASE_VECTOR         u_h = NULL; 
   PASE_INT            j   = 0;
-  for(j=max_level-1; j>=0; j--) {
+  for(j = max_level-1; j > 0; j--) {
     u_h = PASE_Vector_create_by_matrix_and_vector_data_operator(solver->multigrid->A[j], u_H[0]->ops);
-    for(i=0; i<block_size; i++) {
+    for(i = 0; i < block_size; i++) {
       if(i > 0) {
 	u_h = PASE_Vector_create_by_vector(u_H[i-1]);	
       } 
@@ -95,14 +119,14 @@ PASE_Mg_get_initial_vector_by_coarse_grid_hypre(void *mg_solver)
     }
   }
 
-  solver->u = (PASE_VECTOR*)PASE_Malloc(block_size*sizeof(PASE_VECTOR));
-  solver->eigenvalues = (PASE_SCALAR*)PASE_Malloc(block_size*sizeof(PASE_SCALAR));
-  for(i=0; i<block_size; i++) {
-    solver->eigenvalues[i] = eigenvalues[i];
-    solver->u[i]           = u_H[i];
+  for(i = 0; i < block_size; i++) {
+    PASE_Matrix_multiply_vector(solver->multigrid->P[0], u_H[i], solver->u[i]); 
   }
-  for(i=block_size; i<max_block_size; i++) {
+  for(i = 0; i < max_block_size; i++) {
     PASE_Vector_destroy(u_H[i]);
+  }
+  for(i = 0; i < block_size; i++) {
+    solver->eigenvalues[i] = eigenvalues[i];
   }
 
   if( solver->print_level > 1)
@@ -144,7 +168,7 @@ PASE_Mg_presmoothing_by_pcg_hypre(void *mg_solver)
   PASE_MG_SOLVER solver  = (PASE_MG_SOLVER)mg_solver;
   HYPRE_Solver cg_solver = NULL;
   PASE_Pcg_create(MPI_COMM_WORLD, &cg_solver);
-  HYPRE_PCGSetMaxIter(cg_solver, solver->pre_iter); /* max iterations */
+  HYPRE_PCGSetMaxIter(cg_solver, solver->max_pre_iter); /* max iterations */
   HYPRE_PCGSetTol(cg_solver, 1.0e-50); 
   HYPRE_PCGSetTwoNorm(cg_solver, 1); /* use the two norm as the st    opping criteria */
   HYPRE_PCGSetPrintLevel(cg_solver, 0); 
@@ -153,7 +177,7 @@ PASE_Mg_presmoothing_by_pcg_hypre(void *mg_solver)
   PASE_SCALAR  inner_A, inner_B;
   PASE_INT     cur_level 	= solver->cur_level;
   PASE_INT     block_size	= solver->block_size;
-  PASE_INT     num_converged    = solver->num_converged; 
+  PASE_INT     nconv            = solver->nconv; 
   PASE_INT     i		= 0;
 
   PASE_MATRIX  A                = solver->multigrid->A[cur_level];            
@@ -161,7 +185,7 @@ PASE_Mg_presmoothing_by_pcg_hypre(void *mg_solver)
   PASE_VECTOR *u                = solver->u;
   PASE_SCALAR *eigenvalues 	= solver->eigenvalues;
   PASE_VECTOR  rhs 		= PASE_Vector_create_by_vector(u[0]);
-  for( i=num_converged; i<block_size; i++) {
+  for(i = nconv; i < block_size; i++) {
     PASE_Matrix_multiply_vector(B, u[i], rhs);
     PASE_Vector_scale(eigenvalues[i], rhs);
     hypre_PCGSetup(cg_solver, A, rhs, u[i]);
@@ -191,7 +215,7 @@ PASE_Mg_presmoothing_by_pcg_amg_hypre(void *mg_solver)
   PASE_MG_SOLVER  solver        = (PASE_MG_SOLVER)mg_solver;
   HYPRE_Solver    cg_solver     = NULL;
   PASE_INT        block_size	= solver->block_size;
-  PASE_INT        num_converged = solver->num_converged; 
+  PASE_INT        nconv         = solver->nconv; 
   PASE_INT        i		= 0;
 
   PASE_MATRIX     A             = solver->multigrid->A[0];            
@@ -201,7 +225,7 @@ PASE_Mg_presmoothing_by_pcg_amg_hypre(void *mg_solver)
   PASE_VECTOR     rhs 	        = PASE_Vector_create_by_vector(u[0]);
 
   HYPRE_ParCSRPCGCreate(MPI_COMM_WORLD, &cg_solver);
-  HYPRE_PCGSetMaxIter(cg_solver, solver->pre_iter); /* max iterations */
+  HYPRE_PCGSetMaxIter(cg_solver, solver->max_pre_iter); /* max iterations */
   HYPRE_PCGSetTol(cg_solver, 1.0e-50); 
   HYPRE_PCGSetTwoNorm(cg_solver, 1); /* use the two norm as the st    opping criteria */
   HYPRE_PCGSetPrintLevel(cg_solver, 0); 
@@ -210,7 +234,7 @@ PASE_Mg_presmoothing_by_pcg_amg_hypre(void *mg_solver)
   HYPRE_ParCSRPCGSetup(cg_solver, (HYPRE_ParCSRMatrix)(A->matrix_data), (HYPRE_ParVector)(rhs->vector_data), (HYPRE_ParVector)(u[i]->vector_data));
   HYPRE_PCGSetPrecond(cg_solver, (HYPRE_PtrToSolverFcn) HYPRE_BoomerAMGSolve, (HYPRE_PtrToSolverFcn) HYPRE_BoomerAMGSetup, solver->multigrid->amg_data);
 
-  for(i=num_converged; i<block_size; i++) {
+  for(i = nconv; i < block_size; i++) {
     PASE_Matrix_multiply_vector(B, u[i], rhs);
     PASE_Vector_scale(eigenvalues[i], rhs);
     HYPRE_ParCSRPCGSolve(cg_solver, (HYPRE_ParCSRMatrix)(A->matrix_data), (HYPRE_ParVector)(rhs->vector_data), (HYPRE_ParVector)(u[i]->vector_data));
@@ -238,7 +262,7 @@ PASE_Mg_presmoothing_by_pcg_aux_hypre(void *mg_solver)
   PASE_MG_SOLVER solver    = (PASE_MG_SOLVER)mg_solver;
   HYPRE_Solver   cg_solver = NULL;
   PASE_Pcg_create_aux(MPI_COMM_WORLD, &cg_solver);
-  HYPRE_PCGSetMaxIter(cg_solver, solver->pre_iter); /* max iterations */
+  HYPRE_PCGSetMaxIter(cg_solver, solver->max_pre_iter); /* max iterations */
   HYPRE_PCGSetTol(cg_solver, 1.0e-50); 
   HYPRE_PCGSetTwoNorm(cg_solver, 1); /* use the two norm as the st    opping criteria */
   HYPRE_PCGSetPrintLevel(cg_solver, 0); 
@@ -247,7 +271,7 @@ PASE_Mg_presmoothing_by_pcg_aux_hypre(void *mg_solver)
   PASE_SCALAR      inner_A, inner_B;
   PASE_INT         cur_level 	 = solver->cur_level;
   PASE_INT         block_size	 = solver->block_size;
-  PASE_INT         num_converged = solver->num_converged; 
+  PASE_INT         nconv         = solver->nconv; 
   PASE_INT         i		 = 0;
 
   PASE_AUX_MATRIX  aux_A         = solver->multigrid->aux_A[cur_level];            
@@ -256,7 +280,7 @@ PASE_Mg_presmoothing_by_pcg_aux_hypre(void *mg_solver)
   PASE_SCALAR     *eigenvalues   = solver->eigenvalues;
   PASE_AUX_VECTOR  rhs           = PASE_Aux_vector_create_by_aux_vector(aux_u[0]);
 
-  for( i = num_converged; i < block_size; i++) {
+  for( i = nconv; i < block_size; i++) {
     PASE_Aux_matrix_multiply_aux_vector(aux_B, aux_u[i], rhs);
     PASE_Aux_vector_scale(eigenvalues[i], rhs);
     hypre_PCGSetup(cg_solver, aux_A, rhs, aux_u[i]);

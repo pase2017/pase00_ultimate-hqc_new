@@ -17,17 +17,17 @@ typedef PASE_MG_FUNCTION_PRIVATE * PASE_MG_FUNCTION;
 typedef struct PASE_MG_SOLVER_PRIVATE_ {
    PASE_INT 	block_size;
    PASE_INT     actual_block_size;
-   PASE_INT     pre_iter;
-   PASE_INT     post_iter;
-   PASE_INT 	max_iter;
+   PASE_INT     max_pre_iter;
+   PASE_INT     max_post_iter;
+   PASE_INT 	max_cycle;
    PASE_INT     max_level;
    PASE_INT     cur_level;
    PASE_REAL   	rtol;
    PASE_REAL   	atol;
    PASE_REAL    *r_norm;
-   PASE_INT     num_converged;
-   PASE_INT     last_num_converged;
-   PASE_INT     num_iter;
+   PASE_INT     nconv;
+   PASE_INT     nlock;
+   PASE_INT     ncycl;
    PASE_INT     print_level; 
 
    PASE_REAL    set_up_time;
@@ -40,6 +40,7 @@ typedef struct PASE_MG_SOLVER_PRIVATE_ {
    PASE_SCALAR *eigenvalues;
    PASE_SCALAR *exact_eigenvalues;
    PASE_VECTOR *u;
+   PASE_INT     is_u_owner;
    PASE_AUX_VECTOR    	**aux_u;
 
    PASE_MULTIGRID    multigrid;
@@ -47,9 +48,10 @@ typedef struct PASE_MG_SOLVER_PRIVATE_ {
 } PASE_MG_SOLVER_PRIVATE; 
 typedef PASE_MG_SOLVER_PRIVATE * PASE_MG_SOLVER;
 
+PASE_MG_SOLVER PASE_Mg_solver_create(PASE_MATRIX A, PASE_MATRIX B, PASE_PARAMETER param, PASE_MULTIGRID_OPERATOR ops);
 PASE_MG_SOLVER PASE_Mg_solver_create_by_multigrid(PASE_MULTIGRID multigrid);
 PASE_INT PASE_Mg_solver_destroy(PASE_MG_SOLVER solver);
-PASE_INT PASE_Mg_set_up(PASE_MG_SOLVER solver);
+PASE_INT PASE_Mg_set_up(PASE_MG_SOLVER solver, PASE_VECTOR x);
 PASE_INT PASE_Mg_solve(PASE_MG_SOLVER solver);
 PASE_INT PASE_Mg_iteration(PASE_MG_SOLVER solver);
 PASE_INT PASE_Mg_iteration_two_gird(PASE_MG_SOLVER solver);
@@ -68,7 +70,7 @@ PASE_INT PASE_Mg_orthogonalize(PASE_MG_SOLVER solver);
 PASE_INT PASE_Mg_set_exact_eigenvalues(PASE_MG_SOLVER solver, PASE_SCALAR *exact_eigenvalues);
 
 PASE_INT PASE_Mg_set_block_size(PASE_MG_SOLVER solver, PASE_INT block_size);
-PASE_INT PASE_Mg_set_max_iteration(PASE_MG_SOLVER solver, PASE_INT max_iter);
+PASE_INT PASE_Mg_set_max_cycle(PASE_MG_SOLVER solver, PASE_INT max_iter);
 PASE_INT PASE_Mg_set_max_pre_iteration(PASE_MG_SOLVER solver, PASE_INT pre_iter);
 PASE_INT PASE_Mg_set_max_post_iteration(PASE_MG_SOLVER solver, PASE_INT post_iter);
 PASE_INT PASE_Mg_set_atol(PASE_MG_SOLVER solver, PASE_REAL atol);
@@ -84,6 +86,18 @@ PASE_INT PASE_Linear_solve_by_cg_aux(PASE_AUX_MATRIX aux_A, PASE_AUX_VECTOR aux_
 PASE_INT PASE_Mg_coarsest_aux_matrix_set(PASE_MG_SOLVER solver);
 PASE_INT PASE_Mg_coarsest_aux_matrix_create(PASE_MG_SOLVER solver, PASE_AUX_MATRIX *aux_A, PASE_MATRIX A_H);
 PASE_INT PASE_Mg_restrict(PASE_MG_SOLVER solver, PASE_INT i, PASE_VECTOR u_i, PASE_INT j, PASE_VECTOR u_j);
+
+/**
+ * @brief 
+ *
+ * @param A
+ * @param B
+ * @param eval
+ * @param evec
+ * @param block_size
+ * @param param
+ */
+PASE_INT PASE_EigenSolver(PASE_MATRIX A, PASE_MATRIX B, PASE_SCALAR *eval, PASE_VECTOR *evec, PASE_INT block_size, PASE_PARAMETER param);
 
 
 
