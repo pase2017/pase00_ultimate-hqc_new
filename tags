@@ -4,6 +4,7 @@
 !_TAG_PROGRAM_NAME	Exuberant Ctags	//
 !_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
 !_TAG_PROGRAM_VERSION	5.8	//
+A	source/pase_multigrid.h	/^  PASE_MATRIX *A;         \/\/ A_0 (细) ---->> A_n (粗)$/;"	m	struct:PASE_MULTIGRID_PRIVATE_
 ARCH	source/Makefile	/^ARCH = ar$/;"	m
 ARCHFLAGS	source/Makefile	/^ARCHFLAGS = -rcu$/;"	m
 ARCHITECTURE_ID	build/CMakeFiles/2.8.12.2/CompilerIdC/CMakeCCompilerId.c	298;"	d	file:
@@ -22,11 +23,13 @@ ARCHITECTURE_ID	build/CMakeFiles/2.8.12.2/CompilerIdCXX/CMakeCXXCompilerId.cpp	3
 ARCHITECTURE_ID	build/CMakeFiles/2.8.12.2/CompilerIdCXX/CMakeCXXCompilerId.cpp	306;"	d	file:
 ARCHITECTURE_ID	build/CMakeFiles/2.8.12.2/CompilerIdCXX/CMakeCXXCompilerId.cpp	309;"	d	file:
 ARCHITECTURE_ID	build/CMakeFiles/2.8.12.2/CompilerIdCXX/CMakeCXXCompilerId.cpp	313;"	d	file:
+B	source/pase_multigrid.h	/^  PASE_MATRIX *B;         \/\/ B_0 (细) ---->> B_n (粗)$/;"	m	struct:PASE_MULTIGRID_PRIVATE_
 CC	source/Makefile	/^CC        = mpicc$/;"	m
 CDEFS	source/Makefile	/^CDEFS     = -DHAVE_CONFIG_H -DHYPRE_TIMING$/;"	m
 CFLAGS	source/Makefile	/^CFLAGS    = $(COPTS) $(CINCLUDES) $(CDEFS)$/;"	m
 CINCLUDES	source/Makefile	/^CINCLUDES = -I$(HYPRE_DIR)\/include$/;"	m
 CLJP	source/pase_config.h	/^typedef enum { CLJP = 1, FALGOUT = 2, PMHIS = 3 } PASE_COARSEN_TYPE;$/;"	e	enum:__anon1
+CLK_TCK	source/pase_mg_solver.c	9;"	d	file:
 CMAKE_BINARY_DIR	build/Makefile	/^CMAKE_BINARY_DIR = \/home\/hongqichen\/software\/hypre-2.11.2\/src\/examples\/pase1130\/build$/;"	m
 CMAKE_COMMAND	build/Makefile	/^CMAKE_COMMAND = \/usr\/bin\/cmake$/;"	m
 CMAKE_EDIT_COMMAND	build/Makefile	/^CMAKE_EDIT_COMMAND = \/usr\/bin\/ccmake$/;"	m
@@ -209,6 +212,8 @@ CXXDEFS	source/Makefile	/^CXXDEFS   = $(CDEFS)$/;"	m
 CXXFLAGS	source/Makefile	/^CXXFLAGS  = $(CXXOPTS) $(CXXINCLUDES) $(CXXDEFS) $(IFLAGS_BXX)$/;"	m
 CXXINCLUDES	source/Makefile	/^CXXINCLUDES = $(CINCLUDES) -I..$/;"	m
 CXXOPTS	source/Makefile	/^CXXOPTS   = $(COPTS) -Wno-deprecated$/;"	m
+DEBUG_PASE_AUX_MATRIX	source/pase_aux_matrix.c	9;"	d	file:
+DEBUG_PASE_AUX_VECTOR	source/pase_aux_vector.c	10;"	d	file:
 DEBUG_PASE_MATRIX	source/pase_matrix.c	9;"	d	file:
 DEBUG_PASE_VECTOR	source/pase_vector.c	10;"	d	file:
 DEC	build/CMakeFiles/2.8.12.2/CompilerIdC/CMakeCCompilerId.c	324;"	d	file:
@@ -222,11 +227,21 @@ FALGOUT	source/pase_config.h	/^typedef enum { CLJP = 1, FALGOUT = 2, PMHIS = 3 }
 FFLAGS	source/Makefile	/^FFLAGS    = $(FOPTS) $(FINCLUDES)$/;"	m
 FINCLUDES	source/Makefile	/^FINCLUDES = $(CINCLUDES)$/;"	m
 FOPTS	source/Makefile	/^FOPTS     = -g$/;"	m
-GetCommandLineInfo	test/source/test_pase_matrix.c	/^void GetCommandLineInfo(PASE_INT argc, char **argv, PASE_INT *n)$/;"	f
+GetCommandLineInfo	test/source/test_pase_aux_matrix.c	/^GetCommandLineInfo(PASE_INT argc, char **argv, PASE_INT *n, PASE_INT *block_size)$/;"	f
+GetCommandLineInfo	test/source/test_pase_aux_vector.c	/^void GetCommandLineInfo(PASE_INT argc, char **argv, PASE_INT *n, PASE_INT *block_size)$/;"	f
+GetCommandLineInfo	test/source/test_pase_matrix.c	/^GetCommandLineInfo(PASE_INT argc, char **argv, PASE_INT *n)$/;"	f
+GetCommandLineInfo	test/source/test_pase_mg_hypre.c	/^void GetCommandLineInfo(PASE_INT argc, char **argv, PASE_INT *n, PASE_INT *block_size, PASE_REAL *atol, PASE_INT *nsmooth)$/;"	f
+GetCommandLineInfo	test/source/test_pase_mg_user.c	/^void GetCommandLineInfo(PASE_INT argc, char **argv, PASE_INT *n, PASE_INT *block_size, PASE_REAL *atol, PASE_INT *nsmooth)$/;"	f
 GetCommandLineInfo	test/source/test_pase_vector.c	/^void GetCommandLineInfo(PASE_INT argc, char **argv, PASE_INT *n)$/;"	f
-GetTwoTestMatrix	test/source/test_pase_matrix.c	/^void GetTwoTestMatrix(HYPRE_IJMatrix *A, HYPRE_IJMatrix *B, PASE_INT n)$/;"	f
-GetTwoTestVector	test/source/test_pase_matrix.c	/^void GetTwoTestVector(HYPRE_IJVector *x, HYPRE_IJVector *y, PASE_INT n)$/;"	f
-GetTwoTestVector	test/source/test_pase_vector.c	/^void GetTwoTestVector(HYPRE_IJVector *x, HYPRE_IJVector *y, PASE_INT n)$/;"	f
+GetEigenProblem	test/source/test_pase_mg_hypre.c	/^void GetEigenProblem(HYPRE_IJMatrix *A, HYPRE_IJMatrix *B, PASE_INT n)$/;"	f
+GetEigenProblem	test/source/test_pase_mg_user.c	/^void GetEigenProblem(HYPRE_IJMatrix *A, HYPRE_IJMatrix *B, PASE_INT n)$/;"	f
+GetExactEigenvalues	test/source/test_pase_mg_user.c	/^void GetExactEigenvalues(PASE_REAL **exact_eigenvalues, PASE_INT n, PASE_INT block_size)$/;"	f
+GetTestHypreParCSRMatrix	test/source/test_pase_aux_matrix.c	/^GetTestHypreParCSRMatrix(HYPRE_IJMatrix *A, HYPRE_IJMatrix *B, HYPRE_IJMatrix *R, PASE_INT n)$/;"	f
+GetTestHypreParVector	test/source/test_pase_aux_matrix.c	/^GetTestHypreParVector(HYPRE_IJVector *x, PASE_INT n, PASE_INT block_size)$/;"	f
+GetTwoTestHypreParCSRMatrix	test/source/test_pase_matrix.c	/^GetTwoTestHypreParCSRMatrix(HYPRE_IJMatrix *A, HYPRE_IJMatrix *B, PASE_INT n)$/;"	f
+GetTwoTestHypreParVector	test/source/test_pase_aux_vector.c	/^void GetTwoTestHypreParVector(HYPRE_IJVector *x, HYPRE_IJVector *y, PASE_INT n)$/;"	f
+GetTwoTestHypreParVector	test/source/test_pase_matrix.c	/^GetTwoTestHypreParVector(HYPRE_IJVector *x, HYPRE_IJVector *y, PASE_INT n)$/;"	f
+GetTwoTestHypreParVector	test/source/test_pase_vector.c	/^void GetTwoTestHypreParVector(HYPRE_IJVector *x, HYPRE_IJVector *y, PASE_INT n)$/;"	f
 HEX	build/CMakeFiles/2.8.12.2/CompilerIdC/CMakeCCompilerId.c	335;"	d	file:
 HEX	build/CMakeFiles/2.8.12.2/CompilerIdCXX/CMakeCXXCompilerId.cpp	328;"	d	file:
 HYPRE_DIR	source/Makefile	/^HYPRE_DIR = ..\/..\/hypre$/;"	m
@@ -241,22 +256,85 @@ LIB	source/Makefile	/^LIB = libpase.a$/;"	m
 LIBS	source/Makefile	/^LIBS      = -L$(HYPRE_DIR)\/lib -lHYPRE -lm$/;"	m
 LINKOPTS	source/Makefile	/^LINKOPTS  = $(COPTS)$/;"	m
 OBJS	source/Makefile	/^OBJS = pase_vector.o pase_matrix.o pase_aux_vector.o pase_aux_matrix.o pase_multigrid.o pase_pcg.o pase_mg_solver.o $/;"	m
+P	source/pase_multigrid.h	/^  PASE_MATRIX *P;         \/\/ 相邻网格层扩张算子 I_{k+1}^{k}, k = 0,\\cdots,n-1$/;"	m	struct:PASE_MULTIGRID_PRIVATE_
 PACKAGE_HYPRE	source/pase_config.h	/^typedef enum { PACKAGE_HYPRE = 1, PACKAGE_JXPAMG = 2 } EXTERNAL_PACKAGE;$/;"	e	enum:__anon2
 PACKAGE_JXPAMG	source/pase_config.h	/^typedef enum { PACKAGE_HYPRE = 1, PACKAGE_JXPAMG = 2 } EXTERNAL_PACKAGE;$/;"	e	enum:__anon2
+PASE_AUX_MATRIX	source/pase_aux_matrix.h	/^typedef PASE_AUX_MATRIX_PRIVATE * PASE_AUX_MATRIX;$/;"	t
+PASE_AUX_MATRIX_PRIVATE	source/pase_aux_matrix.h	/^} PASE_AUX_MATRIX_PRIVATE;$/;"	t	typeref:struct:PASE_AUX_MATRIX_PRIVATE_
+PASE_AUX_MATRIX_PRIVATE_	source/pase_aux_matrix.h	/^typedef struct PASE_AUX_MATRIX_PRIVATE_ {$/;"	s
+PASE_AUX_VECTOR	source/pase_aux_vector.h	/^typedef PASE_AUX_VECTOR_PRIVATE * PASE_AUX_VECTOR;$/;"	t
+PASE_AUX_VECTOR_PRIVATE	source/pase_aux_vector.h	/^} PASE_AUX_VECTOR_PRIVATE;$/;"	t	typeref:struct:PASE_AUX_VECTOR_PRIVATE_
+PASE_AUX_VECTOR_PRIVATE_	source/pase_aux_vector.h	/^typedef struct PASE_AUX_VECTOR_PRIVATE_ {$/;"	s
+PASE_Aux_matrix_copy	source/pase_aux_matrix.c	/^PASE_Aux_matrix_copy(PASE_AUX_MATRIX aux_A, PASE_AUX_MATRIX aux_B)$/;"	f
+PASE_Aux_matrix_create	source/pase_aux_matrix.c	/^PASE_Aux_matrix_create(PASE_MATRIX A_H, PASE_MATRIX R_hH, PASE_MATRIX A_h, PASE_VECTOR *u_h, PASE_INT block_size)$/;"	f
+PASE_Aux_matrix_create_by_aux_matrix	source/pase_aux_matrix.c	/^PASE_Aux_matrix_create_by_aux_matrix(PASE_MATRIX A_H, PASE_MATRIX R_hH, PASE_AUX_MATRIX aux_A_h, PASE_AUX_VECTOR *aux_u_h, PASE_INT block_size)$/;"	f
+PASE_Aux_matrix_destroy	source/pase_aux_matrix.c	/^PASE_Aux_matrix_destroy(PASE_AUX_MATRIX aux_A)$/;"	f
+PASE_Aux_matrix_get_mpi_comm	source/pase_aux_matrix.c	/^PASE_Aux_matrix_get_mpi_comm(PASE_AUX_MATRIX aux_A, MPI_Comm *comm)$/;"	f
+PASE_Aux_matrix_multiply_aux_matrix	source/pase_aux_matrix.c	/^PASE_Aux_matrix_multiply_aux_matrix(PASE_AUX_MATRIX aux_A, PASE_AUX_MATRIX aux_B, PASE_AUX_MATRIX aux_C)$/;"	f
+PASE_Aux_matrix_multiply_aux_vector	source/pase_aux_matrix.c	/^PASE_Aux_matrix_multiply_aux_vector(PASE_AUX_MATRIX aux_A, PASE_AUX_VECTOR aux_x, PASE_AUX_VECTOR aux_y)$/;"	f
+PASE_Aux_matrix_multiply_aux_vector_general	source/pase_aux_matrix.c	/^PASE_Aux_matrix_multiply_aux_vector_general(PASE_SCALAR a, PASE_AUX_MATRIX aux_A, PASE_AUX_VECTOR aux_x, PASE_SCALAR b, PASE_AUX_VECTOR aux_y)$/;"	f
+PASE_Aux_matrix_set_aux_space	source/pase_aux_matrix.c	/^PASE_Aux_matrix_set_aux_space(PASE_AUX_MATRIX aux_A, PASE_MATRIX R_hH, PASE_MATRIX A_h, PASE_VECTOR *u_h)$/;"	f
+PASE_Aux_matrix_set_aux_space_by_aux_matrix	source/pase_aux_matrix.c	/^PASE_Aux_matrix_set_aux_space_by_aux_matrix(PASE_AUX_MATRIX aux_A, PASE_MATRIX R_hH, PASE_AUX_MATRIX aux_A_h, PASE_AUX_VECTOR *aux_u_h)$/;"	f
+PASE_Aux_matrix_set_aux_space_some	source/pase_aux_matrix.c	/^PASE_Aux_matrix_set_aux_space_some(PASE_AUX_MATRIX aux_A, PASE_INT i, PASE_INT j, PASE_MATRIX R_hH, PASE_MATRIX A_h, PASE_VECTOR *u_h)$/;"	f
+PASE_Aux_matrix_set_aux_space_some_by_aux_matrix	source/pase_aux_matrix.c	/^PASE_Aux_matrix_set_aux_space_some_by_aux_matrix(PASE_AUX_MATRIX aux_A, PASE_INT i, PASE_INT j, PASE_MATRIX R_hH, PASE_AUX_MATRIX aux_A_h, PASE_AUX_VECTOR *aux_u_h)$/;"	f
+PASE_Aux_matrix_set_block	source/pase_aux_matrix.c	/^PASE_Aux_matrix_set_block(PASE_AUX_MATRIX aux_A, PASE_MATRIX A_h, PASE_VECTOR *u_h)$/;"	f
+PASE_Aux_matrix_set_block_some	source/pase_aux_matrix.c	/^PASE_Aux_matrix_set_block_some(PASE_AUX_MATRIX aux_A, PASE_INT i, PASE_INT j, PASE_MATRIX A_h, PASE_VECTOR *u_h)$/;"	f
+PASE_Aux_matrix_set_vec	source/pase_aux_matrix.c	/^PASE_Aux_matrix_set_vec(PASE_AUX_MATRIX aux_A, PASE_MATRIX R_hH, PASE_MATRIX A_h, PASE_VECTOR *u_h)$/;"	f
+PASE_Aux_matrix_set_vec_some	source/pase_aux_matrix.c	/^PASE_Aux_matrix_set_vec_some(PASE_AUX_MATRIX aux_A, PASE_INT i, PASE_INT j, PASE_MATRIX R_hH, PASE_MATRIX A_h, PASE_VECTOR *u_h)$/;"	f
+PASE_Aux_vector_axpy	source/pase_aux_vector.c	/^PASE_Aux_vector_axpy(PASE_SCALAR a, PASE_AUX_VECTOR aux_x, PASE_AUX_VECTOR aux_y)$/;"	f
+PASE_Aux_vector_copy	source/pase_aux_vector.c	/^PASE_Aux_vector_copy(PASE_AUX_VECTOR aux_x, PASE_AUX_VECTOR aux_y)$/;"	f
+PASE_Aux_vector_create	source/pase_aux_vector.c	/^PASE_Aux_vector_create(PASE_VECTOR vec, PASE_SCALAR *block, PASE_INT block_size)$/;"	f
+PASE_Aux_vector_create_by_aux_matrix	source/pase_aux_matrix.c	/^PASE_Aux_vector_create_by_aux_matrix(PASE_AUX_MATRIX aux_A)$/;"	f
+PASE_Aux_vector_create_by_aux_vector	source/pase_aux_vector.c	/^PASE_Aux_vector_create_by_aux_vector(PASE_AUX_VECTOR aux_x)$/;"	f
+PASE_Aux_vector_destroy	source/pase_aux_vector.c	/^PASE_Aux_vector_destroy(PASE_AUX_VECTOR aux_x)$/;"	f
+PASE_Aux_vector_inner_product	source/pase_aux_vector.c	/^PASE_Aux_vector_inner_product(PASE_AUX_VECTOR aux_x, PASE_AUX_VECTOR aux_y, PASE_REAL *prod)$/;"	f
+PASE_Aux_vector_inner_product_general	source/pase_aux_matrix.c	/^PASE_Aux_vector_inner_product_general(PASE_AUX_VECTOR aux_x, PASE_AUX_VECTOR aux_y, PASE_AUX_MATRIX aux_A, PASE_REAL *prod)$/;"	f
+PASE_Aux_vector_inner_product_general_some	source/pase_aux_matrix.c	/^PASE_Aux_vector_inner_product_general_some(PASE_AUX_VECTOR *aux_x, PASE_INT start, PASE_INT end, PASE_AUX_MATRIX aux_A, PASE_REAL **prod)$/;"	f
+PASE_Aux_vector_inner_product_some	source/pase_aux_vector.c	/^PASE_Aux_vector_inner_product_some(PASE_AUX_VECTOR *aux_x, PASE_INT start, PASE_INT end, PASE_REAL **prod)$/;"	f
+PASE_Aux_vector_norm	source/pase_aux_vector.c	/^PASE_Aux_vector_norm(PASE_AUX_VECTOR aux_x, PASE_REAL *norm)$/;"	f
+PASE_Aux_vector_orthogonalize	source/pase_aux_vector.c	/^PASE_Aux_vector_orthogonalize(PASE_AUX_VECTOR *aux_x, PASE_INT i, PASE_INT start, PASE_INT end)$/;"	f
+PASE_Aux_vector_orthogonalize_all	source/pase_aux_vector.c	/^PASE_Aux_vector_orthogonalize_all(PASE_AUX_VECTOR *aux_x, PASE_INT num)$/;"	f
+PASE_Aux_vector_orthogonalize_general	source/pase_aux_matrix.c	/^PASE_Aux_vector_orthogonalize_general(PASE_AUX_VECTOR *aux_x, PASE_INT i, PASE_INT start, PASE_INT end, PASE_AUX_MATRIX aux_A)$/;"	f
+PASE_Aux_vector_orthogonalize_general_all	source/pase_aux_matrix.c	/^PASE_Aux_vector_orthogonalize_general_all(PASE_AUX_VECTOR *aux_x, PASE_INT num, PASE_AUX_MATRIX aux_A)$/;"	f
+PASE_Aux_vector_scale	source/pase_aux_vector.c	/^PASE_Aux_vector_scale(PASE_SCALAR a, PASE_AUX_VECTOR aux_x)$/;"	f
+PASE_Aux_vector_set_block_constant	source/pase_aux_vector.c	/^PASE_Aux_vector_set_block_constant(PASE_AUX_VECTOR aux_x, PASE_SCALAR val)$/;"	f
+PASE_Aux_vector_set_block_random	source/pase_aux_vector.c	/^PASE_Aux_vector_set_block_random(PASE_AUX_VECTOR aux_x, PASE_INT seed)$/;"	f
+PASE_Aux_vector_set_constant_value	source/pase_aux_vector.c	/^PASE_Aux_vector_set_constant_value(PASE_AUX_VECTOR aux_x, PASE_SCALAR val)$/;"	f
+PASE_Aux_vector_set_random_value	source/pase_aux_vector.c	/^PASE_Aux_vector_set_random_value(PASE_AUX_VECTOR aux_x, PASE_INT seed)$/;"	f
+PASE_Aux_vector_set_vec	source/pase_aux_vector.c	/^PASE_Aux_vector_set_vec(PASE_AUX_VECTOR aux_x, PASE_VECTOR vec)$/;"	f
 PASE_COARSEN_TYPE	source/pase_config.h	/^typedef enum { CLJP = 1, FALGOUT = 2, PMHIS = 3 } PASE_COARSEN_TYPE;$/;"	t	typeref:enum:__anon1
 PASE_COMM_SELF	source/pase_config.h	48;"	d
 PASE_COMM_WORLD	source/pase_config.h	47;"	d
 PASE_COMPLEX	source/pase_config.h	/^typedef complex PASE_COMPLEX;$/;"	t
 PASE_DOUBLE	source/pase_config.h	/^typedef double PASE_DOUBLE;$/;"	t
+PASE_EigenSolver	source/pase_mg_solver.c	/^PASE_EigenSolver(PASE_MATRIX A, PASE_MATRIX B, PASE_SCALAR *eval, PASE_VECTOR *evec, PASE_INT block_size, PASE_PARAMETER param)$/;"	f
 PASE_Error	source/pase_config.c	/^void PASE_Error(char *fmt, ...)$/;"	f
 PASE_Free	source/pase_config.h	37;"	d
 PASE_INT	source/pase_config.h	/^typedef int    PASE_INT;$/;"	t
+PASE_Linear_solve_by_cg	source/pase_mg_solver.c	/^PASE_Linear_solve_by_cg(PASE_MATRIX A, PASE_VECTOR b, PASE_VECTOR x, PASE_REAL tol, PASE_INT max_iter)$/;"	f
+PASE_Linear_solve_by_cg_aux	source/pase_mg_solver.c	/^PASE_Linear_solve_by_cg_aux(PASE_AUX_MATRIX aux_A, PASE_AUX_VECTOR aux_b, PASE_AUX_VECTOR aux_x, PASE_REAL tol, PASE_INT max_iter)$/;"	f
+PASE_Lobpcg_setup_interpreter	source/pase_lobpcg_hypre.c	/^PASE_Lobpcg_setup_interpreter( mv_InterfaceInterpreter* i)$/;"	f
+PASE_Lobpcg_setup_interpreter_aux	source/pase_lobpcg_hypre.c	/^PASE_Lobpcg_setup_interpreter_aux( mv_InterfaceInterpreter* i)$/;"	f
+PASE_Lobpcg_setup_matvec	source/pase_lobpcg_hypre.c	/^PASE_Lobpcg_setup_matvec(HYPRE_MatvecFunctions* mv)$/;"	f
+PASE_Lobpcg_setup_matvec_aux	source/pase_lobpcg_hypre.c	/^PASE_Lobpcg_setup_matvec_aux(HYPRE_MatvecFunctions* mv)$/;"	f
 PASE_MATRIX	source/pase_matrix.h	/^typedef PASE_MATRIX_PRIVATE * PASE_MATRIX;$/;"	t
 PASE_MATRIX_DATA_OPERATOR	source/pase_matrix.h	/^typedef PASE_MATRIX_DATA_OPERATOR_PRIVATE * PASE_MATRIX_DATA_OPERATOR;$/;"	t
 PASE_MATRIX_DATA_OPERATOR_PRIVATE	source/pase_matrix.h	/^} PASE_MATRIX_DATA_OPERATOR_PRIVATE;$/;"	t	typeref:struct:PASE_MATRIX_DATA_OPERATOR_PRIVATE_
 PASE_MATRIX_DATA_OPERATOR_PRIVATE_	source/pase_matrix.h	/^typedef struct PASE_MATRIX_DATA_OPERATOR_PRIVATE_ {$/;"	s
 PASE_MATRIX_PRIVATE	source/pase_matrix.h	/^} PASE_MATRIX_PRIVATE;$/;"	t	typeref:struct:PASE_MATRIX_PRIVATE_
 PASE_MATRIX_PRIVATE_	source/pase_matrix.h	/^typedef struct PASE_MATRIX_PRIVATE_ {$/;"	s
+PASE_MG_FUNCTION	source/pase_mg_solver.h	/^typedef PASE_MG_FUNCTION_PRIVATE * PASE_MG_FUNCTION;$/;"	t
+PASE_MG_FUNCTION_PRIVATE	source/pase_mg_solver.h	/^} PASE_MG_FUNCTION_PRIVATE;$/;"	t	typeref:struct:PASE_MG_FUNCTION_PRIVATE_
+PASE_MG_FUNCTION_PRIVATE_	source/pase_mg_solver.h	/^typedef struct PASE_MG_FUNCTION_PRIVATE_ { $/;"	s
+PASE_MG_SOLVER	source/pase_mg_solver.h	/^typedef PASE_MG_SOLVER_PRIVATE * PASE_MG_SOLVER;$/;"	t
+PASE_MG_SOLVER_PRIVATE	source/pase_mg_solver.h	/^} PASE_MG_SOLVER_PRIVATE; $/;"	t	typeref:struct:PASE_MG_SOLVER_PRIVATE_
+PASE_MG_SOLVER_PRIVATE_	source/pase_mg_solver.h	/^typedef struct PASE_MG_SOLVER_PRIVATE_ {$/;"	s
+PASE_MULTIGRID	source/pase_multigrid.h	/^typedef PASE_MULTIGRID_PRIVATE * PASE_MULTIGRID;$/;"	t
+PASE_MULTIGRID_OPERATOR	source/pase_multigrid.h	/^typedef PASE_MULTIGRID_OPERATOR_PRIVATE * PASE_MULTIGRID_OPERATOR;$/;"	t
+PASE_MULTIGRID_OPERATOR_PRIVATE	source/pase_multigrid.h	/^} PASE_MULTIGRID_OPERATOR_PRIVATE;$/;"	t	typeref:struct:PASE_MULTIGRID_OPERATOR_PRIVATE_
+PASE_MULTIGRID_OPERATOR_PRIVATE_	source/pase_multigrid.h	/^typedef struct PASE_MULTIGRID_OPERATOR_PRIVATE_ {$/;"	s
+PASE_MULTIGRID_PRIVATE	source/pase_multigrid.h	/^} PASE_MULTIGRID_PRIVATE;$/;"	t	typeref:struct:PASE_MULTIGRID_PRIVATE_
+PASE_MULTIGRID_PRIVATE_	source/pase_multigrid.h	/^typedef struct PASE_MULTIGRID_PRIVATE_ {$/;"	s
 PASE_Malloc	source/pase_config.h	36;"	d
 PASE_MatrixT_multiply_matrix	source/pase_matrix.c	/^PASE_MatrixT_multiply_matrix(PASE_MATRIX A, PASE_MATRIX B)$/;"	f
 PASE_MatrixT_multiply_matrix_hypre	source/pase_matrix_hypre.c	/^PASE_MatrixT_multiply_matrix_hypre(void *A, void *B)$/;"	f
@@ -288,7 +366,84 @@ PASE_Matrix_multiply_vector_general_hypre	source/pase_matrix_hypre.c	/^PASE_Matr
 PASE_Matrix_multiply_vector_hypre	source/pase_matrix_hypre.c	/^PASE_Matrix_multiply_vector_hypre(void *A, void *x, void *y)$/;"	f
 PASE_Matrix_transpose	source/pase_matrix.c	/^PASE_Matrix_transpose(PASE_MATRIX A)$/;"	f
 PASE_Matrix_transpose_hypre	source/pase_matrix_hypre.c	/^PASE_Matrix_transpose_hypre(void *A)$/;"	f
+PASE_Mg_coarsest_aux_matrix_create	source/pase_mg_solver.c	/^PASE_Mg_coarsest_aux_matrix_create(PASE_MG_SOLVER solver, PASE_AUX_MATRIX *aux_A, PASE_MATRIX A_H)$/;"	f
+PASE_Mg_coarsest_aux_matrix_set	source/pase_mg_solver.c	/^PASE_Mg_coarsest_aux_matrix_set(PASE_MG_SOLVER solver)$/;"	f
+PASE_Mg_direct_solve	source/pase_mg_solver.c	/^PASE_Mg_direct_solve(PASE_MG_SOLVER solver)$/;"	f
+PASE_Mg_direct_solve_by_lobpcg_aux_hypre	source/pase_mg_solver_hypre.c	/^PASE_Mg_direct_solve_by_lobpcg_aux_hypre(void *mg_solver)$/;"	f
+PASE_Mg_error_estimate	source/pase_mg_solver.c	/^PASE_Mg_error_estimate(PASE_MG_SOLVER solver)$/;"	f
+PASE_Mg_function_create	source/pase_mg_solver.c	/^PASE_Mg_function_create(PASE_INT (*get_initial_vector) (void *solver),$/;"	f
+PASE_Mg_get_initial_vector_by_coarse_grid_hypre	source/pase_mg_solver_hypre.c	/^PASE_Mg_get_initial_vector_by_coarse_grid_hypre(void *mg_solver)$/;"	f
+PASE_Mg_iteration	source/pase_mg_solver.c	/^PASE_Mg_iteration(PASE_MG_SOLVER solver)$/;"	f
+PASE_Mg_iteration_two_gird	source/pase_mg_solver.c	/^PASE_Mg_iteration_two_gird(PASE_MG_SOLVER solver)$/;"	f
+PASE_Mg_orthogonalize	source/pase_mg_solver.c	/^PASE_Mg_orthogonalize(PASE_MG_SOLVER solver)$/;"	f
+PASE_Mg_postsmoothing	source/pase_mg_solver.c	/^PASE_Mg_postsmoothing(PASE_MG_SOLVER solver)$/;"	f
+PASE_Mg_pre_set_up	source/pase_mg_solver.c	/^PASE_Mg_pre_set_up(PASE_MG_SOLVER solver)$/;"	f
+PASE_Mg_presmoothing	source/pase_mg_solver.c	/^PASE_Mg_presmoothing(PASE_MG_SOLVER solver)$/;"	f
+PASE_Mg_presmoothing_by_cg	source/pase_mg_solver.c	/^PASE_Mg_presmoothing_by_cg(void *mg_solver)$/;"	f
+PASE_Mg_presmoothing_by_cg_aux	source/pase_mg_solver.c	/^PASE_Mg_presmoothing_by_cg_aux(void *mg_solver)$/;"	f
+PASE_Mg_presmoothing_by_pcg_amg_hypre	source/pase_mg_solver_hypre.c	/^PASE_Mg_presmoothing_by_pcg_amg_hypre(void *mg_solver)$/;"	f
+PASE_Mg_presmoothing_by_pcg_aux_hypre	source/pase_mg_solver_hypre.c	/^PASE_Mg_presmoothing_by_pcg_aux_hypre(void *mg_solver)$/;"	f
+PASE_Mg_presmoothing_by_pcg_hypre	source/pase_mg_solver_hypre.c	/^PASE_Mg_presmoothing_by_pcg_hypre(void *mg_solver)$/;"	f
+PASE_Mg_print	source/pase_mg_solver.c	/^PASE_Mg_print(PASE_MG_SOLVER solver)$/;"	f
+PASE_Mg_prolong	source/pase_mg_solver.c	/^PASE_Mg_prolong(PASE_MG_SOLVER solver)$/;"	f
+PASE_Mg_prolong_general	source/pase_mg_solver.c	/^PASE_Mg_prolong_general(PASE_MG_SOLVER solver,  PASE_INT i, PASE_VECTOR u_i, PASE_INT j, PASE_VECTOR u_j)$/;"	f
+PASE_Mg_prolong_two_grid	source/pase_mg_solver.c	/^PASE_Mg_prolong_two_grid(PASE_MG_SOLVER solver)$/;"	f
+PASE_Mg_restrict	source/pase_mg_solver.c	/^PASE_Mg_restrict(PASE_MG_SOLVER solver, PASE_INT i, PASE_VECTOR u_i, PASE_INT j, PASE_VECTOR u_j)$/;"	f
+PASE_Mg_set_atol	source/pase_mg_solver.c	/^PASE_Mg_set_atol(PASE_MG_SOLVER solver, PASE_REAL atol)$/;"	f
+PASE_Mg_set_aux_matrix	source/pase_mg_solver.c	/^PASE_Mg_set_aux_matrix(PASE_MG_SOLVER solver)$/;"	f
+PASE_Mg_set_aux_matrix_two_grid	source/pase_mg_solver.c	/^PASE_Mg_set_aux_matrix_two_grid(PASE_MG_SOLVER solver)$/;"	f
+PASE_Mg_set_block_size	source/pase_mg_solver.c	/^PASE_Mg_set_block_size(PASE_MG_SOLVER solver, PASE_INT block_size)$/;"	f
+PASE_Mg_set_exact_eigenvalues	source/pase_mg_solver.c	/^PASE_Mg_set_exact_eigenvalues(PASE_MG_SOLVER solver, PASE_SCALAR *exact_eigenvalues)$/;"	f
+PASE_Mg_set_max_cycle	source/pase_mg_solver.c	/^PASE_Mg_set_max_cycle(PASE_MG_SOLVER solver, PASE_INT max_cycle)$/;"	f
+PASE_Mg_set_max_post_iteration	source/pase_mg_solver.c	/^PASE_Mg_set_max_post_iteration(PASE_MG_SOLVER solver, PASE_INT max_post_iter)$/;"	f
+PASE_Mg_set_max_pre_iteration	source/pase_mg_solver.c	/^PASE_Mg_set_max_pre_iteration(PASE_MG_SOLVER solver, PASE_INT max_pre_iter)$/;"	f
+PASE_Mg_set_print_level	source/pase_mg_solver.c	/^PASE_Mg_set_print_level(PASE_MG_SOLVER solver, PASE_INT print_level)$/;"	f
+PASE_Mg_set_rtol	source/pase_mg_solver.c	/^PASE_Mg_set_rtol(PASE_MG_SOLVER solver, PASE_REAL rtol)$/;"	f
+PASE_Mg_set_up	source/pase_mg_solver.c	/^PASE_Mg_set_up(PASE_MG_SOLVER solver, PASE_VECTOR x)$/;"	f
+PASE_Mg_solve	source/pase_mg_solver.c	/^PASE_Mg_solve(PASE_MG_SOLVER solver)$/;"	f
+PASE_Mg_solver_create	source/pase_mg_solver.c	/^PASE_Mg_solver_create(PASE_MATRIX A, PASE_MATRIX B, PASE_PARAMETER param, PASE_MULTIGRID_OPERATOR ops)$/;"	f
+PASE_Mg_solver_create_by_multigrid	source/pase_mg_solver.c	/^PASE_Mg_solver_create_by_multigrid(PASE_MULTIGRID multigrid)$/;"	f
+PASE_Mg_solver_destroy	source/pase_mg_solver.c	/^PASE_Mg_solver_destroy(PASE_MG_SOLVER solver)$/;"	f
+PASE_Multi_aux_vector_by_matrix	source/pase_aux_vector.c	/^PASE_Multi_aux_vector_by_matrix(PASE_AUX_VECTOR *aux_x, PASE_INT num_vec, PASE_SCALAR **mat, PASE_INT num_mat, PASE_AUX_VECTOR *aux_y)$/;"	f
+PASE_Multi_aux_vector_combination	source/pase_aux_vector.c	/^PASE_Multi_aux_vector_combination(PASE_AUX_VECTOR *aux_x, PASE_INT num_vec, PASE_SCALAR *coef, PASE_AUX_VECTOR aux_y)$/;"	f
+PASE_Multi_vector_by_matrix	source/pase_vector.c	/^PASE_Multi_vector_by_matrix(PASE_VECTOR *x, PASE_INT num_vec, PASE_SCALAR **mat, PASE_INT num_mat, PASE_VECTOR *y)$/;"	f
+PASE_Multi_vector_combination	source/pase_vector.c	/^PASE_Multi_vector_combination(PASE_VECTOR *x, PASE_INT num_vec, PASE_SCALAR *coef, PASE_VECTOR y)$/;"	f
+PASE_Multigrid_create	source/pase_multigrid.c	/^PASE_Multigrid_create(PASE_MATRIX A, PASE_MATRIX B, PASE_PARAMETER param, PASE_MULTIGRID_OPERATOR ops)$/;"	f
+PASE_Multigrid_destroy	source/pase_multigrid.c	/^PASE_Multigrid_destroy(PASE_MULTIGRID multigrid)$/;"	f
+PASE_Multigrid_destroy_amg_data_hypre	source/pase_multigrid_hypre.c	/^PASE_Multigrid_destroy_amg_data_hypre(void *amg_data)$/;"	f
+PASE_Multigrid_get_amg_array	source/pase_multigrid.c	/^PASE_Multigrid_get_amg_array(PASE_MULTIGRID multigrid, PASE_MATRIX A, PASE_MATRIX B, PASE_PARAMETER param)$/;"	f
+PASE_Multigrid_get_amg_array_hypre	source/pase_multigrid_hypre.c	/^PASE_Multigrid_get_amg_array_hypre$/;"	f
+PASE_Multigrid_operator_assign	source/pase_multigrid.c	/^PASE_Multigrid_operator_assign$/;"	f
+PASE_Multigrid_operator_create	source/pase_multigrid.c	/^PASE_Multigrid_operator_create(PASE_INT data_form)$/;"	f
+PASE_Multigrid_operator_destroy	source/pase_multigrid.c	/^PASE_Multigrid_operator_destroy(PASE_MULTIGRID_OPERATOR ops)$/;"	f
 PASE_NO	source/pase_config.h	40;"	d
+PASE_PARAMETER	source/pase_param.h	/^typedef PASE_PARAMETER_PRIVATE * PASE_PARAMETER;$/;"	t
+PASE_PARAMETER_PRIVATE	source/pase_param.h	/^} PASE_PARAMETER_PRIVATE;$/;"	t	typeref:struct:PASE_PARAMETER_PRIVATE_
+PASE_PARAMETER_PRIVATE_	source/pase_param.h	/^typedef struct PASE_PARAMETER_PRIVATE_ {$/;"	s
+PASE_Pcg_add_vector	source/pase_pcg_hypre.c	/^PASE_Pcg_add_vector(PASE_SCALAR alpha, void *x, void *y )$/;"	f
+PASE_Pcg_add_vector_aux	source/pase_pcg_hypre.c	/^PASE_Pcg_add_vector_aux(PASE_SCALAR alpha, void *x, void *y )$/;"	f
+PASE_Pcg_clear_vector	source/pase_pcg_hypre.c	/^PASE_Pcg_clear_vector(void *x)$/;"	f
+PASE_Pcg_clear_vector_aux	source/pase_pcg_hypre.c	/^PASE_Pcg_clear_vector_aux(void *x)$/;"	f
+PASE_Pcg_comm_info	source/pase_pcg_hypre.c	/^PASE_Pcg_comm_info(void *A, PASE_INT *my_id, PASE_INT *num_procs)$/;"	f
+PASE_Pcg_comm_info_aux	source/pase_pcg_hypre.c	/^PASE_Pcg_comm_info_aux(void *A, PASE_INT *my_id, PASE_INT *num_procs)$/;"	f
+PASE_Pcg_copy_vector	source/pase_pcg_hypre.c	/^PASE_Pcg_copy_vector(void *x, void *y)$/;"	f
+PASE_Pcg_copy_vector_aux	source/pase_pcg_hypre.c	/^PASE_Pcg_copy_vector_aux(void *x, void *y)$/;"	f
+PASE_Pcg_create	source/pase_pcg_hypre.c	/^PASE_Pcg_create(MPI_Comm comm, HYPRE_Solver *solver)$/;"	f
+PASE_Pcg_create_aux	source/pase_pcg_hypre.c	/^PASE_Pcg_create_aux(MPI_Comm comm, HYPRE_Solver *solver)$/;"	f
+PASE_Pcg_create_vector	source/pase_pcg_hypre.c	/^PASE_Pcg_create_vector(void *x )$/;"	f
+PASE_Pcg_create_vector_aux	source/pase_pcg_hypre.c	/^PASE_Pcg_create_vector_aux(void *x)$/;"	f
+PASE_Pcg_destroy_vector	source/pase_pcg_hypre.c	/^PASE_Pcg_destroy_vector(void *x)$/;"	f
+PASE_Pcg_destroy_vector_aux	source/pase_pcg_hypre.c	/^PASE_Pcg_destroy_vector_aux(void *x)$/;"	f
+PASE_Pcg_identity	source/pase_pcg_hypre.c	/^PASE_Pcg_identity( void *vdata, void *A, void *b, void *x )$/;"	f
+PASE_Pcg_identity_aux	source/pase_pcg_hypre.c	/^PASE_Pcg_identity_aux(void *vdata, void *A, void *b, void *x )$/;"	f
+PASE_Pcg_inner_product	source/pase_pcg_hypre.c	/^PASE_Pcg_inner_product(void *x, void *y)$/;"	f
+PASE_Pcg_inner_product_aux	source/pase_pcg_hypre.c	/^PASE_Pcg_inner_product_aux(void *x, void *y)$/;"	f
+PASE_Pcg_matvec	source/pase_pcg_hypre.c	/^PASE_Pcg_matvec(void        *matvec_data,$/;"	f
+PASE_Pcg_matvec_aux	source/pase_pcg_hypre.c	/^PASE_Pcg_matvec_aux(void        *matvec_data,$/;"	f
+PASE_Pcg_scale_vector	source/pase_pcg_hypre.c	/^PASE_Pcg_scale_vector(PASE_SCALAR alpha, void *x)$/;"	f
+PASE_Pcg_scale_vector_aux	source/pase_pcg_hypre.c	/^PASE_Pcg_scale_vector_aux(PASE_SCALAR alpha, void *x)$/;"	f
+PASE_Pcg_set_random_value	source/pase_pcg_hypre.c	/^PASE_Pcg_set_random_value( void* v, PASE_INT seed ) $/;"	f
+PASE_Pcg_set_random_value_aux	source/pase_pcg_hypre.c	/^PASE_Pcg_set_random_value_aux( void* v, PASE_INT seed ) $/;"	f
 PASE_Printf	source/pase_config.c	/^void PASE_Printf(MPI_Comm comm, char *fmt, ...)$/;"	f
 PASE_REAL	source/pase_config.h	/^typedef double PASE_REAL;$/;"	t
 PASE_SCALAR	source/pase_config.h	/^typedef complex PASE_SCALAR;$/;"	t
@@ -388,9 +543,17 @@ PLATFORM_ID	build/CMakeFiles/2.8.12.2/CompilerIdCXX/CMakeCXXCompilerId.cpp	274;"
 PLATFORM_ID	build/CMakeFiles/2.8.12.2/CompilerIdCXX/CMakeCXXCompilerId.cpp	277;"	d	file:
 PLATFORM_ID	build/CMakeFiles/2.8.12.2/CompilerIdCXX/CMakeCXXCompilerId.cpp	280;"	d	file:
 PMHIS	source/pase_config.h	/^typedef enum { CLJP = 1, FALGOUT = 2, PMHIS = 3 } PASE_COARSEN_TYPE;$/;"	e	enum:__anon1
-PrintHypreParCSRMatrix	test/source/test_pase_matrix.c	/^void PrintHypreParCSRMatrix(HYPRE_ParCSRMatrix A, char *matrix_name)$/;"	f
-PrintHypreParCSRVector	test/source/test_pase_vector.c	/^void PrintHypreParCSRVector(HYPRE_ParVector par_x, char *vector_name)$/;"	f
-PrintHypreParVector	test/source/test_pase_matrix.c	/^void PrintHypreParVector(HYPRE_ParVector par_x, char *vector_name)$/;"	f
+PrintParameter	test/source/test_pase_mg_hypre.c	/^void PrintParameter(PASE_PARAMETER param)$/;"	f
+PrintPaseAuxMatrix	test/source/test_pase_aux_matrix.c	/^PrintPaseAuxMatrix(PASE_AUX_MATRIX aux_A, char *matrix_name)$/;"	f
+PrintPaseAuxVector	test/source/test_pase_aux_matrix.c	/^PrintPaseAuxVector(PASE_AUX_VECTOR aux_x, char *vector_name)$/;"	f
+PrintPaseAuxVector	test/source/test_pase_aux_vector.c	/^void PrintPaseAuxVector(PASE_AUX_VECTOR aux_x, char *vector_name)$/;"	f
+PrintPaseMatrix	test/source/test_pase_aux_matrix.c	/^PrintPaseMatrix(PASE_MATRIX pase_A, char *matrix_name)$/;"	f
+PrintPaseMatrix	test/source/test_pase_matrix.c	/^void PrintPaseMatrix(PASE_MATRIX pase_A, char *matrix_name)$/;"	f
+PrintPaseVector	test/source/test_pase_aux_matrix.c	/^PrintPaseVector(PASE_VECTOR pase_x, char *vector_name)$/;"	f
+PrintPaseVector	test/source/test_pase_matrix.c	/^void PrintPaseVector(PASE_VECTOR pase_x, char *vector_name)$/;"	f
+PrintPaseVector	test/source/test_pase_vector.c	/^void PrintPaseVector(PASE_VECTOR pase_x, char *vector_name)$/;"	f
+PrintPaseVectors	test/source/test_pase_aux_matrix.c	/^PrintPaseVectors(PASE_VECTOR *pase_x, PASE_INT block_size, char *vector_set_name)$/;"	f
+R	source/pase_multigrid.h	/^  PASE_MATRIX *R;         \/\/ 相邻网格层限制算子 I_{k}^{k+1}, k = 0,\\cdots,n-1$/;"	m	struct:PASE_MULTIGRID_PRIVATE_
 RANLIB	source/Makefile	/^RANLIB = ranlib$/;"	m
 RM	build/Makefile	/^RM = \/usr\/bin\/cmake -E remove -f$/;"	m
 RM	source/Makefile	/^RM = \/bin\/rm$/;"	m
@@ -398,100 +561,225 @@ RMFLAGS	source/Makefile	/^RMFLAGS = -f$/;"	m
 SHELL	build/Makefile	/^SHELL = \/bin\/sh$/;"	m
 SUFFIXES	build/Makefile	/^SUFFIXES =$/;"	m
 USE_HYPRE	source/pase_config.h	19;"	d
+__FUNCT__	source/pase_aux_matrix.c	11;"	d	file:
+__FUNCT__	source/pase_aux_matrix.c	12;"	d	file:
+__FUNCT__	source/pase_aux_matrix.c	165;"	d	file:
+__FUNCT__	source/pase_aux_matrix.c	166;"	d	file:
+__FUNCT__	source/pase_aux_matrix.c	205;"	d	file:
+__FUNCT__	source/pase_aux_matrix.c	206;"	d	file:
+__FUNCT__	source/pase_aux_matrix.c	254;"	d	file:
+__FUNCT__	source/pase_aux_matrix.c	255;"	d	file:
+__FUNCT__	source/pase_aux_matrix.c	326;"	d	file:
+__FUNCT__	source/pase_aux_matrix.c	327;"	d	file:
+__FUNCT__	source/pase_aux_matrix.c	366;"	d	file:
+__FUNCT__	source/pase_aux_matrix.c	367;"	d	file:
+__FUNCT__	source/pase_aux_matrix.c	402;"	d	file:
+__FUNCT__	source/pase_aux_matrix.c	403;"	d	file:
+__FUNCT__	source/pase_aux_matrix.c	423;"	d	file:
+__FUNCT__	source/pase_aux_matrix.c	424;"	d	file:
+__FUNCT__	source/pase_aux_matrix.c	438;"	d	file:
+__FUNCT__	source/pase_aux_matrix.c	439;"	d	file:
+__FUNCT__	source/pase_aux_matrix.c	470;"	d	file:
+__FUNCT__	source/pase_aux_matrix.c	471;"	d	file:
+__FUNCT__	source/pase_aux_matrix.c	501;"	d	file:
+__FUNCT__	source/pase_aux_matrix.c	502;"	d	file:
+__FUNCT__	source/pase_aux_matrix.c	521;"	d	file:
+__FUNCT__	source/pase_aux_matrix.c	522;"	d	file:
+__FUNCT__	source/pase_aux_matrix.c	549;"	d	file:
+__FUNCT__	source/pase_aux_matrix.c	550;"	d	file:
+__FUNCT__	source/pase_aux_matrix.c	568;"	d	file:
+__FUNCT__	source/pase_aux_matrix.c	569;"	d	file:
+__FUNCT__	source/pase_aux_matrix.c	603;"	d	file:
+__FUNCT__	source/pase_aux_matrix.c	604;"	d	file:
+__FUNCT__	source/pase_aux_matrix.c	62;"	d	file:
+__FUNCT__	source/pase_aux_matrix.c	63;"	d	file:
+__FUNCT__	source/pase_aux_matrix.c	641;"	d	file:
+__FUNCT__	source/pase_aux_matrix.c	642;"	d	file:
+__FUNCT__	source/pase_aux_vector.c	111;"	d	file:
+__FUNCT__	source/pase_aux_vector.c	112;"	d	file:
+__FUNCT__	source/pase_aux_vector.c	12;"	d	file:
+__FUNCT__	source/pase_aux_vector.c	135;"	d	file:
+__FUNCT__	source/pase_aux_vector.c	136;"	d	file:
+__FUNCT__	source/pase_aux_vector.c	13;"	d	file:
+__FUNCT__	source/pase_aux_vector.c	156;"	d	file:
+__FUNCT__	source/pase_aux_vector.c	157;"	d	file:
+__FUNCT__	source/pase_aux_vector.c	177;"	d	file:
+__FUNCT__	source/pase_aux_vector.c	178;"	d	file:
+__FUNCT__	source/pase_aux_vector.c	201;"	d	file:
+__FUNCT__	source/pase_aux_vector.c	202;"	d	file:
+__FUNCT__	source/pase_aux_vector.c	226;"	d	file:
+__FUNCT__	source/pase_aux_vector.c	227;"	d	file:
+__FUNCT__	source/pase_aux_vector.c	252;"	d	file:
+__FUNCT__	source/pase_aux_vector.c	253;"	d	file:
+__FUNCT__	source/pase_aux_vector.c	281;"	d	file:
+__FUNCT__	source/pase_aux_vector.c	282;"	d	file:
+__FUNCT__	source/pase_aux_vector.c	302;"	d	file:
+__FUNCT__	source/pase_aux_vector.c	303;"	d	file:
+__FUNCT__	source/pase_aux_vector.c	330;"	d	file:
+__FUNCT__	source/pase_aux_vector.c	331;"	d	file:
+__FUNCT__	source/pase_aux_vector.c	355;"	d	file:
+__FUNCT__	source/pase_aux_vector.c	356;"	d	file:
+__FUNCT__	source/pase_aux_vector.c	37;"	d	file:
+__FUNCT__	source/pase_aux_vector.c	388;"	d	file:
+__FUNCT__	source/pase_aux_vector.c	389;"	d	file:
+__FUNCT__	source/pase_aux_vector.c	38;"	d	file:
+__FUNCT__	source/pase_aux_vector.c	411;"	d	file:
+__FUNCT__	source/pase_aux_vector.c	412;"	d	file:
+__FUNCT__	source/pase_aux_vector.c	443;"	d	file:
+__FUNCT__	source/pase_aux_vector.c	444;"	d	file:
+__FUNCT__	source/pase_aux_vector.c	65;"	d	file:
+__FUNCT__	source/pase_aux_vector.c	66;"	d	file:
+__FUNCT__	source/pase_aux_vector.c	91;"	d	file:
+__FUNCT__	source/pase_aux_vector.c	92;"	d	file:
+__FUNCT__	source/pase_matrix.c	101;"	d	file:
 __FUNCT__	source/pase_matrix.c	102;"	d	file:
-__FUNCT__	source/pase_matrix.c	103;"	d	file:
 __FUNCT__	source/pase_matrix.c	11;"	d	file:
 __FUNCT__	source/pase_matrix.c	12;"	d	file:
+__FUNCT__	source/pase_matrix.c	135;"	d	file:
 __FUNCT__	source/pase_matrix.c	136;"	d	file:
-__FUNCT__	source/pase_matrix.c	137;"	d	file:
+__FUNCT__	source/pase_matrix.c	169;"	d	file:
 __FUNCT__	source/pase_matrix.c	170;"	d	file:
-__FUNCT__	source/pase_matrix.c	171;"	d	file:
+__FUNCT__	source/pase_matrix.c	200;"	d	file:
 __FUNCT__	source/pase_matrix.c	201;"	d	file:
-__FUNCT__	source/pase_matrix.c	202;"	d	file:
+__FUNCT__	source/pase_matrix.c	235;"	d	file:
 __FUNCT__	source/pase_matrix.c	236;"	d	file:
-__FUNCT__	source/pase_matrix.c	237;"	d	file:
+__FUNCT__	source/pase_matrix.c	271;"	d	file:
 __FUNCT__	source/pase_matrix.c	272;"	d	file:
-__FUNCT__	source/pase_matrix.c	273;"	d	file:
+__FUNCT__	source/pase_matrix.c	306;"	d	file:
 __FUNCT__	source/pase_matrix.c	307;"	d	file:
-__FUNCT__	source/pase_matrix.c	308;"	d	file:
+__FUNCT__	source/pase_matrix.c	350;"	d	file:
 __FUNCT__	source/pase_matrix.c	351;"	d	file:
-__FUNCT__	source/pase_matrix.c	352;"	d	file:
+__FUNCT__	source/pase_matrix.c	383;"	d	file:
 __FUNCT__	source/pase_matrix.c	384;"	d	file:
-__FUNCT__	source/pase_matrix.c	385;"	d	file:
+__FUNCT__	source/pase_matrix.c	421;"	d	file:
 __FUNCT__	source/pase_matrix.c	422;"	d	file:
-__FUNCT__	source/pase_matrix.c	423;"	d	file:
+__FUNCT__	source/pase_matrix.c	454;"	d	file:
 __FUNCT__	source/pase_matrix.c	455;"	d	file:
-__FUNCT__	source/pase_matrix.c	456;"	d	file:
+__FUNCT__	source/pase_matrix.c	491;"	d	file:
 __FUNCT__	source/pase_matrix.c	492;"	d	file:
-__FUNCT__	source/pase_matrix.c	493;"	d	file:
+__FUNCT__	source/pase_matrix.c	510;"	d	file:
 __FUNCT__	source/pase_matrix.c	511;"	d	file:
-__FUNCT__	source/pase_matrix.c	512;"	d	file:
+__FUNCT__	source/pase_matrix.c	529;"	d	file:
 __FUNCT__	source/pase_matrix.c	52;"	d	file:
 __FUNCT__	source/pase_matrix.c	530;"	d	file:
-__FUNCT__	source/pase_matrix.c	531;"	d	file:
 __FUNCT__	source/pase_matrix.c	53;"	d	file:
+__FUNCT__	source/pase_matrix.c	548;"	d	file:
 __FUNCT__	source/pase_matrix.c	549;"	d	file:
-__FUNCT__	source/pase_matrix.c	550;"	d	file:
 __FUNCT__	source/pase_matrix.c	585;"	d	file:
 __FUNCT__	source/pase_matrix.c	586;"	d	file:
 __FUNCT__	source/pase_matrix.c	605;"	d	file:
 __FUNCT__	source/pase_matrix.c	606;"	d	file:
-__FUNCT__	source/pase_matrix.c	640;"	d	file:
-__FUNCT__	source/pase_matrix.c	641;"	d	file:
-__FUNCT__	source/pase_matrix.c	673;"	d	file:
-__FUNCT__	source/pase_matrix.c	674;"	d	file:
+__FUNCT__	source/pase_matrix.c	635;"	d	file:
+__FUNCT__	source/pase_matrix.c	636;"	d	file:
+__FUNCT__	source/pase_matrix.c	668;"	d	file:
+__FUNCT__	source/pase_matrix.c	669;"	d	file:
 __FUNCT__	source/pase_matrix.c	90;"	d	file:
 __FUNCT__	source/pase_matrix.c	91;"	d	file:
+__FUNCT__	source/pase_multigrid.c	10;"	d	file:
+__FUNCT__	source/pase_multigrid.c	145;"	d	file:
+__FUNCT__	source/pase_multigrid.c	146;"	d	file:
+__FUNCT__	source/pase_multigrid.c	171;"	d	file:
+__FUNCT__	source/pase_multigrid.c	172;"	d	file:
+__FUNCT__	source/pase_multigrid.c	196;"	d	file:
+__FUNCT__	source/pase_multigrid.c	197;"	d	file:
+__FUNCT__	source/pase_multigrid.c	37;"	d	file:
+__FUNCT__	source/pase_multigrid.c	38;"	d	file:
+__FUNCT__	source/pase_multigrid.c	85;"	d	file:
+__FUNCT__	source/pase_multigrid.c	86;"	d	file:
+__FUNCT__	source/pase_multigrid.c	9;"	d	file:
+__FUNCT__	source/pase_vector.c	120;"	d	file:
 __FUNCT__	source/pase_vector.c	121;"	d	file:
-__FUNCT__	source/pase_vector.c	122;"	d	file:
 __FUNCT__	source/pase_vector.c	12;"	d	file:
 __FUNCT__	source/pase_vector.c	13;"	d	file:
+__FUNCT__	source/pase_vector.c	143;"	d	file:
 __FUNCT__	source/pase_vector.c	144;"	d	file:
-__FUNCT__	source/pase_vector.c	145;"	d	file:
-__FUNCT__	source/pase_vector.c	170;"	d	file:
-__FUNCT__	source/pase_vector.c	171;"	d	file:
-__FUNCT__	source/pase_vector.c	185;"	d	file:
-__FUNCT__	source/pase_vector.c	186;"	d	file:
-__FUNCT__	source/pase_vector.c	201;"	d	file:
-__FUNCT__	source/pase_vector.c	202;"	d	file:
-__FUNCT__	source/pase_vector.c	212;"	d	file:
-__FUNCT__	source/pase_vector.c	213;"	d	file:
-__FUNCT__	source/pase_vector.c	223;"	d	file:
-__FUNCT__	source/pase_vector.c	224;"	d	file:
-__FUNCT__	source/pase_vector.c	234;"	d	file:
-__FUNCT__	source/pase_vector.c	235;"	d	file:
-__FUNCT__	source/pase_vector.c	245;"	d	file:
-__FUNCT__	source/pase_vector.c	246;"	d	file:
-__FUNCT__	source/pase_vector.c	256;"	d	file:
-__FUNCT__	source/pase_vector.c	257;"	d	file:
-__FUNCT__	source/pase_vector.c	285;"	d	file:
-__FUNCT__	source/pase_vector.c	286;"	d	file:
-__FUNCT__	source/pase_vector.c	306;"	d	file:
-__FUNCT__	source/pase_vector.c	307;"	d	file:
+__FUNCT__	source/pase_vector.c	167;"	d	file:
+__FUNCT__	source/pase_vector.c	168;"	d	file:
+__FUNCT__	source/pase_vector.c	182;"	d	file:
+__FUNCT__	source/pase_vector.c	183;"	d	file:
+__FUNCT__	source/pase_vector.c	196;"	d	file:
+__FUNCT__	source/pase_vector.c	197;"	d	file:
+__FUNCT__	source/pase_vector.c	207;"	d	file:
+__FUNCT__	source/pase_vector.c	208;"	d	file:
+__FUNCT__	source/pase_vector.c	218;"	d	file:
+__FUNCT__	source/pase_vector.c	219;"	d	file:
+__FUNCT__	source/pase_vector.c	229;"	d	file:
+__FUNCT__	source/pase_vector.c	230;"	d	file:
+__FUNCT__	source/pase_vector.c	240;"	d	file:
+__FUNCT__	source/pase_vector.c	241;"	d	file:
+__FUNCT__	source/pase_vector.c	251;"	d	file:
+__FUNCT__	source/pase_vector.c	252;"	d	file:
+__FUNCT__	source/pase_vector.c	280;"	d	file:
+__FUNCT__	source/pase_vector.c	281;"	d	file:
+__FUNCT__	source/pase_vector.c	303;"	d	file:
+__FUNCT__	source/pase_vector.c	304;"	d	file:
+__FUNCT__	source/pase_vector.c	316;"	d	file:
+__FUNCT__	source/pase_vector.c	317;"	d	file:
+__FUNCT__	source/pase_vector.c	348;"	d	file:
+__FUNCT__	source/pase_vector.c	349;"	d	file:
 __FUNCT__	source/pase_vector.c	46;"	d	file:
 __FUNCT__	source/pase_vector.c	47;"	d	file:
 __FUNCT__	source/pase_vector.c	81;"	d	file:
 __FUNCT__	source/pase_vector.c	82;"	d	file:
+__FUNCT__	source/pase_vector.c	92;"	d	file:
 __FUNCT__	source/pase_vector.c	93;"	d	file:
-__FUNCT__	source/pase_vector.c	94;"	d	file:
+__PASE_AUX_MATRIX_H__	source/pase_aux_matrix.h	2;"	d
+__PASE_AUX_VECTOR_H__	source/pase_aux_vector.h	2;"	d
 __PASE_CONFIG_H__	source/pase_config.h	2;"	d
-__PASE_MATRIX_HYPRE__	source/pase_matrix_hypre.h	2;"	d
+__PASE_LOBPCG_HYPRE_H__	source/pase_lobpcg_hypre.h	2;"	d
+__PASE_MATRIX_HYPRE_H__	source/pase_matrix_hypre.h	2;"	d
 __PASE_MATRIX_H__	source/pase_matrix.h	2;"	d
-__PASE_VECTOR_HYPRE__	source/pase_vector_hypre.h	2;"	d
+__PASE_MG_SOLVER_HYPRE_H__	source/pase_mg_solver_hypre.h	2;"	d
+__PASE_MG_SOLVER_H__	source/pase_mg_solver.h	2;"	d
+__PASE_MULTIGRID_HYPRE_H__	source/pase_multigrid_hypre.h	2;"	d
+__PASE_MULTIGRID_H__	source/pase_multigrid.h	2;"	d
+__PASE_PARAM_H__	source/pase_param.h	2;"	d
+__PASE_PCG_HYPRE_H__	source/pase_pcg_hypre.h	2;"	d
+__PASE_VECTOR_HYPRE_H__	source/pase_vector_hypre.h	2;"	d
 __PASE_VECTOR_H__	source/pase_vector.h	2;"	d
+actual_block_size	source/pase_mg_solver.h	/^   PASE_INT     actual_block_size;$/;"	m	struct:PASE_MG_SOLVER_PRIVATE_
+actual_level	source/pase_multigrid.h	/^  PASE_INT actual_level;$/;"	m	struct:PASE_MULTIGRID_PRIVATE_
+amg_data	source/pase_multigrid.h	/^  void *amg_data;$/;"	m	struct:PASE_MULTIGRID_PRIVATE_
+atol	source/pase_mg_solver.h	/^   PASE_REAL   	atol;$/;"	m	struct:PASE_MG_SOLVER_PRIVATE_
+atol	source/pase_param.h	/^  PASE_REAL atol;$/;"	m	struct:PASE_PARAMETER_PRIVATE_
+aux_A	source/pase_multigrid.h	/^  PASE_AUX_MATRIX *aux_A; \/\/ 辅助空间矩阵$/;"	m	struct:PASE_MULTIGRID_PRIVATE_
+aux_B	source/pase_multigrid.h	/^  PASE_AUX_MATRIX *aux_B; \/\/ 辅助空间矩阵$/;"	m	struct:PASE_MULTIGRID_PRIVATE_
+aux_u	source/pase_mg_solver.h	/^   PASE_AUX_VECTOR    	**aux_u;$/;"	m	struct:PASE_MG_SOLVER_PRIVATE_
 axpy	source/pase_vector.h	/^  void (*axpy)(PASE_SCALAR a, void *x, void *y);$/;"	m	struct:PASE_VECTOR_DATA_OPERATOR_PRIVATE_
+block	source/pase_aux_matrix.h	/^  PASE_SCALAR **block;$/;"	m	struct:PASE_AUX_MATRIX_PRIVATE_
+block	source/pase_aux_vector.h	/^  PASE_SCALAR *block;$/;"	m	struct:PASE_AUX_VECTOR_PRIVATE_
+block_size	source/pase_aux_matrix.h	/^  PASE_INT      block_size;   \/\/辅助空间的维数$/;"	m	struct:PASE_AUX_MATRIX_PRIVATE_
+block_size	source/pase_aux_vector.h	/^  PASE_INT     block_size;   \/\/辅助空间的维数$/;"	m	struct:PASE_AUX_VECTOR_PRIVATE_
+block_size	source/pase_mg_solver.h	/^   PASE_INT 	block_size;$/;"	m	struct:PASE_MG_SOLVER_PRIVATE_
+block_size	source/pase_param.h	/^  PASE_INT  block_size;$/;"	m	struct:PASE_PARAMETER_PRIVATE_
+cmp	test/source/test_pase_mg_user.c	/^static PASE_INT cmp( const void *a ,  const void *b )$/;"	f	file:
+coarse_type	source/pase_param.h	/^  PASE_INT coarse_type; \/\/ CLJP, falgout, ...$/;"	m	struct:PASE_PARAMETER_PRIVATE_
 copy	source/pase_matrix.h	/^  void (*copy)(void *src, void *dst);$/;"	m	struct:PASE_MATRIX_DATA_OPERATOR_PRIVATE_
 copy	source/pase_vector.h	/^  void (*copy)(void *src, void *dst);$/;"	m	struct:PASE_VECTOR_DATA_OPERATOR_PRIVATE_
 create_by_matrix	source/pase_matrix.h	/^  void * (*create_by_matrix)(void *A);$/;"	m	struct:PASE_MATRIX_DATA_OPERATOR_PRIVATE_
 create_by_matrix	source/pase_vector.h	/^  void * (*create_by_matrix)(void *A);$/;"	m	struct:PASE_VECTOR_DATA_OPERATOR_PRIVATE_
 create_by_vector	source/pase_vector.h	/^  void * (*create_by_vector)(void *x);$/;"	m	struct:PASE_VECTOR_DATA_OPERATOR_PRIVATE_
+cur_level	source/pase_mg_solver.h	/^   PASE_INT     cur_level;$/;"	m	struct:PASE_MG_SOLVER_PRIVATE_
 data_form	source/pase_matrix.h	/^  PASE_INT                   data_form;   \/\/ 矩阵数据格式$/;"	m	struct:PASE_MATRIX_PRIVATE_
 data_form	source/pase_vector.h	/^    PASE_INT                   data_form;   \/\/ 向量数据格式$/;"	m	struct:PASE_VECTOR_PRIVATE_
 destroy	source/pase_matrix.h	/^  void (*destroy)(void *A);$/;"	m	struct:PASE_MATRIX_DATA_OPERATOR_PRIVATE_
 destroy	source/pase_vector.h	/^  void (*destroy)(void *x);$/;"	m	struct:PASE_VECTOR_DATA_OPERATOR_PRIVATE_
+destroy_amg_data	source/pase_multigrid.h	/^  void (*destroy_amg_data) (void *amg_data);$/;"	m	struct:PASE_MULTIGRID_OPERATOR_PRIVATE_
+direct_solve	source/pase_mg_solver.h	/^    PASE_INT    (*direct_solve)       (void *solver); $/;"	m	struct:PASE_MG_FUNCTION_PRIVATE_
+direct_solve_time	source/pase_mg_solver.h	/^   PASE_REAL    direct_solve_time;$/;"	m	struct:PASE_MG_SOLVER_PRIVATE_
+eigen_smoother	source/pase_param.h	/^  PASE_INT eigen_smoother;      \/\/ 光滑.$/;"	m	struct:PASE_PARAMETER_PRIVATE_
+eigen_smoother_post	source/pase_param.h	/^  PASE_INT eigen_smoother_post; \/\/ 后光滑. 如无特别指定, 则默认与 eigen_smoother 相同$/;"	m	struct:PASE_PARAMETER_PRIVATE_
+eigen_smoother_pre	source/pase_param.h	/^  PASE_INT eigen_smoother_pre;  \/\/ 前光滑. 如无特别指定, 则默认与 eigen_smoother 相同$/;"	m	struct:PASE_PARAMETER_PRIVATE_
+eigen_solver	source/pase_param.h	/^  PASE_INT eigen_solver;        \/\/ 求解.$/;"	m	struct:PASE_PARAMETER_PRIVATE_
+eigenvalues	source/pase_mg_solver.h	/^   PASE_SCALAR *eigenvalues;$/;"	m	struct:PASE_MG_SOLVER_PRIVATE_
+exact_eigenvalues	source/pase_mg_solver.h	/^   PASE_SCALAR *exact_eigenvalues;$/;"	m	struct:PASE_MG_SOLVER_PRIVATE_
+external_package	source/pase_param.h	/^  PASE_INT external_package; \/\/ 1: HYPRE$/;"	m	struct:PASE_PARAMETER_PRIVATE_
+function	source/pase_mg_solver.h	/^   PASE_MG_FUNCTION  function;$/;"	m	struct:PASE_MG_SOLVER_PRIVATE_
+get_amg_array	source/pase_multigrid.h	/^  void (*get_amg_array)    (void *A, PASE_PARAMETER param, void ***A_array, void ***P_array, void ***R_array, PASE_INT *num_level, void **amg_data);$/;"	m	struct:PASE_MULTIGRID_OPERATOR_PRIVATE_
 get_global_ncol	source/pase_matrix.h	/^  void (*get_global_ncol)(void *A, PASE_INT *ncol);$/;"	m	struct:PASE_MATRIX_DATA_OPERATOR_PRIVATE_
 get_global_nrow	source/pase_matrix.h	/^  void (*get_global_nrow)(void *A, PASE_INT *nrow);$/;"	m	struct:PASE_MATRIX_DATA_OPERATOR_PRIVATE_
 get_global_nrow	source/pase_vector.h	/^  void (*get_global_nrow)(void *x, PASE_INT *nrow);$/;"	m	struct:PASE_VECTOR_DATA_OPERATOR_PRIVATE_
+get_initial_vector	source/pase_mg_solver.h	/^    PASE_INT    (*get_initial_vector) (void *solver);$/;"	m	struct:PASE_MG_FUNCTION_PRIVATE_
 get_mpi_comm	source/pase_matrix.h	/^  MPI_Comm (*get_mpi_comm)(void *A);$/;"	m	struct:PASE_MATRIX_DATA_OPERATOR_PRIVATE_
 global_ncol	source/pase_matrix.h	/^  PASE_INT                   global_ncol; \/\/ 全局列数$/;"	m	struct:PASE_MATRIX_PRIVATE_
 global_nrow	source/pase_matrix.h	/^  PASE_INT                   global_nrow; \/\/ 全局行数$/;"	m	struct:PASE_MATRIX_PRIVATE_
@@ -505,24 +793,67 @@ info_platform	build/CMakeFiles/2.8.12.2/CompilerIdCXX/CMakeCXXCompilerId.cpp	/^c
 info_version	build/CMakeFiles/2.8.12.2/CompilerIdC/CMakeCCompilerId.c	/^char const info_version[] = {$/;"	v
 info_version	build/CMakeFiles/2.8.12.2/CompilerIdCXX/CMakeCXXCompilerId.cpp	/^char const info_version[] = {$/;"	v
 inner_product	source/pase_vector.h	/^  void (*inner_product)(void *x, void *y, PASE_REAL *prod);$/;"	m	struct:PASE_VECTOR_DATA_OPERATOR_PRIVATE_
+is_mat_owner	source/pase_aux_matrix.h	/^  PASE_INT      is_mat_owner; \/\/是否为 mat 属主$/;"	m	struct:PASE_AUX_MATRIX_PRIVATE_
 is_matrix_data_owner	source/pase_matrix.h	/^  PASE_INT                   is_matrix_data_owner; \/\/ 是否为矩阵数据属主$/;"	m	struct:PASE_MATRIX_PRIVATE_
+is_u_owner	source/pase_mg_solver.h	/^   PASE_INT     is_u_owner;$/;"	m	struct:PASE_MG_SOLVER_PRIVATE_
+is_vec_owner	source/pase_aux_vector.h	/^  PASE_INT     is_vec_owner; \/\/是否为 vec 属主$/;"	m	struct:PASE_AUX_VECTOR_PRIVATE_
 is_vector_data_owner	source/pase_vector.h	/^    PASE_INT                   is_vector_data_owner; \/\/ 是否为向量数据属主$/;"	m	struct:PASE_VECTOR_PRIVATE_
+linear_smoother	source/pase_param.h	/^  PASE_INT linear_smoother;      \/\/ 光滑.$/;"	m	struct:PASE_PARAMETER_PRIVATE_
+linear_smoother_post	source/pase_param.h	/^  PASE_INT linear_smoother_post; \/\/ 后光滑. 如无特别指定, 则默认与 linear_smoother 相同$/;"	m	struct:PASE_PARAMETER_PRIVATE_
+linear_smoother_pre	source/pase_param.h	/^  PASE_INT linear_smoother_pre;  \/\/ 前光滑. 如无特别指定, 则默认与 linear_smoother 相同$/;"	m	struct:PASE_PARAMETER_PRIVATE_
+linear_solver	source/pase_param.h	/^  PASE_INT linear_solver;        \/\/ 求解. 可用于最粗层网格的求解.$/;"	m	struct:PASE_PARAMETER_PRIVATE_
 main	build/CMakeFiles/2.8.12.2/CompilerIdC/CMakeCCompilerId.c	/^int main(int argc, char* argv[])$/;"	f
 main	build/CMakeFiles/2.8.12.2/CompilerIdC/CMakeCCompilerId.c	/^void main() {}$/;"	f
 main	build/CMakeFiles/2.8.12.2/CompilerIdCXX/CMakeCXXCompilerId.cpp	/^int main(int argc, char* argv[])$/;"	f
-main	test/source/test_pase_matrix.c	/^PASE_INT main (PASE_INT argc, char *argv[])$/;"	f
+main	test/source/test_pase_aux_matrix.c	/^PASE_INT main (PASE_INT argc, char *argv[])$/;"	f
+main	test/source/test_pase_aux_vector.c	/^PASE_INT main(PASE_INT argc, char *argv[])$/;"	f
+main	test/source/test_pase_matrix.c	/^main (PASE_INT argc, char *argv[])$/;"	f
+main	test/source/test_pase_mg_hypre.c	/^PASE_INT main(PASE_INT argc, char *argv[])$/;"	f
+main	test/source/test_pase_mg_user.c	/^PASE_INT main(PASE_INT argc, char *argv[])$/;"	f
 main	test/source/test_pase_vector.c	/^PASE_INT main(PASE_INT argc, char *argv[])$/;"	f
+mat	source/pase_aux_matrix.h	/^  PASE_MATRIX   mat; $/;"	m	struct:PASE_AUX_MATRIX_PRIVATE_
 matrix_data	source/pase_matrix.h	/^  void                      *matrix_data; \/\/ 矩阵数据$/;"	m	struct:PASE_MATRIX_PRIVATE_
+max_cycle	source/pase_mg_solver.h	/^   PASE_INT 	max_cycle;$/;"	m	struct:PASE_MG_SOLVER_PRIVATE_
+max_cycle	source/pase_param.h	/^  PASE_INT  max_cycle;$/;"	m	struct:PASE_PARAMETER_PRIVATE_
+max_level	source/pase_mg_solver.h	/^   PASE_INT     max_level;$/;"	m	struct:PASE_MG_SOLVER_PRIVATE_
+max_level	source/pase_param.h	/^  PASE_INT max_level;$/;"	m	struct:PASE_PARAMETER_PRIVATE_
+max_post_iter	source/pase_mg_solver.h	/^   PASE_INT     max_post_iter;$/;"	m	struct:PASE_MG_SOLVER_PRIVATE_
+max_post_iter	source/pase_param.h	/^  PASE_INT  max_post_iter;$/;"	m	struct:PASE_PARAMETER_PRIVATE_
+max_pre_iter	source/pase_mg_solver.h	/^   PASE_INT     max_pre_iter;$/;"	m	struct:PASE_MG_SOLVER_PRIVATE_
+max_pre_iter	source/pase_param.h	/^  PASE_INT  max_pre_iter;$/;"	m	struct:PASE_PARAMETER_PRIVATE_
+min_coarse_size	source/pase_param.h	/^  PASE_INT min_coarse_size;$/;"	m	struct:PASE_PARAMETER_PRIVATE_
+multigrid	source/pase_mg_solver.h	/^   PASE_MULTIGRID    multigrid;$/;"	m	struct:PASE_MG_SOLVER_PRIVATE_
 multiply_matrixT_matrix	source/pase_matrix.h	/^  void * (*multiply_matrixT_matrix) (void *A, void *B);$/;"	m	struct:PASE_MATRIX_DATA_OPERATOR_PRIVATE_
 multiply_matrixT_vector	source/pase_matrix.h	/^  void (*multiply_matrixT_vector) (void *A, void *x, void *y);$/;"	m	struct:PASE_MATRIX_DATA_OPERATOR_PRIVATE_
 multiply_matrixT_vector_general	source/pase_matrix.h	/^  void (*multiply_matrixT_vector_general)(PASE_SCALAR a, void *A, void *x, PASE_SCALAR b, void *y);$/;"	m	struct:PASE_MATRIX_DATA_OPERATOR_PRIVATE_
 multiply_matrix_matrix	source/pase_matrix.h	/^  void * (*multiply_matrix_matrix)  (void *A, void *B);$/;"	m	struct:PASE_MATRIX_DATA_OPERATOR_PRIVATE_
 multiply_matrix_vector	source/pase_matrix.h	/^  void (*multiply_matrix_vector)(void *A, void *x, void *y);$/;"	m	struct:PASE_MATRIX_DATA_OPERATOR_PRIVATE_
 multiply_matrix_vector_general	source/pase_matrix.h	/^  void (*multiply_matrix_vector_general)(PASE_SCALAR a, void *A, void *x, PASE_SCALAR b, void *y);$/;"	m	struct:PASE_MATRIX_DATA_OPERATOR_PRIVATE_
+nconv	source/pase_mg_solver.h	/^   PASE_INT     nconv;$/;"	m	struct:PASE_MG_SOLVER_PRIVATE_
+ncycl	source/pase_mg_solver.h	/^   PASE_INT     ncycl;$/;"	m	struct:PASE_MG_SOLVER_PRIVATE_
+nlock	source/pase_mg_solver.h	/^   PASE_INT     nlock;$/;"	m	struct:PASE_MG_SOLVER_PRIVATE_
 ops	source/pase_matrix.h	/^  PASE_MATRIX_DATA_OPERATOR  ops;         \/\/ 矩阵运算集合$/;"	m	struct:PASE_MATRIX_PRIVATE_
+ops	source/pase_multigrid.h	/^  PASE_MULTIGRID_OPERATOR ops; $/;"	m	struct:PASE_MULTIGRID_PRIVATE_
 ops	source/pase_vector.h	/^    PASE_VECTOR_DATA_OPERATOR  ops;         \/\/ 向量运算集合$/;"	m	struct:PASE_VECTOR_PRIVATE_
+postsmoothing	source/pase_mg_solver.h	/^    PASE_INT    (*postsmoothing)      (void *solver); $/;"	m	struct:PASE_MG_FUNCTION_PRIVATE_
+postsmoothing_aux	source/pase_mg_solver.h	/^    PASE_INT    (*postsmoothing_aux)  (void *solver); $/;"	m	struct:PASE_MG_FUNCTION_PRIVATE_
+presmoothing	source/pase_mg_solver.h	/^    PASE_INT    (*presmoothing)       (void *solver); $/;"	m	struct:PASE_MG_FUNCTION_PRIVATE_
+presmoothing_aux	source/pase_mg_solver.h	/^    PASE_INT    (*presmoothing_aux)   (void *solver); $/;"	m	struct:PASE_MG_FUNCTION_PRIVATE_
+print_level	source/pase_mg_solver.h	/^   PASE_INT     print_level; $/;"	m	struct:PASE_MG_SOLVER_PRIVATE_
+print_level	source/pase_param.h	/^  PASE_INT  print_level;$/;"	m	struct:PASE_PARAMETER_PRIVATE_
+prolong_time	source/pase_mg_solver.h	/^   PASE_REAL    prolong_time;$/;"	m	struct:PASE_MG_SOLVER_PRIVATE_
+r_norm	source/pase_mg_solver.h	/^   PASE_REAL    *r_norm;$/;"	m	struct:PASE_MG_SOLVER_PRIVATE_
+rtol	source/pase_mg_solver.h	/^   PASE_REAL   	rtol;$/;"	m	struct:PASE_MG_SOLVER_PRIVATE_
+rtol	source/pase_param.h	/^  PASE_REAL rtol;$/;"	m	struct:PASE_PARAMETER_PRIVATE_
 scale	source/pase_vector.h	/^  void (*scale)(PASE_SCALAR a, void *x);$/;"	m	struct:PASE_VECTOR_DATA_OPERATOR_PRIVATE_
+set_aux_time	source/pase_mg_solver.h	/^   PASE_REAL    set_aux_time;$/;"	m	struct:PASE_MG_SOLVER_PRIVATE_
 set_constant_value	source/pase_vector.h	/^  void (*set_constant_value)(void *x, PASE_SCALAR a);$/;"	m	struct:PASE_VECTOR_DATA_OPERATOR_PRIVATE_
 set_random_value	source/pase_vector.h	/^  void (*set_random_value)(void *x, PASE_INT seed);$/;"	m	struct:PASE_VECTOR_DATA_OPERATOR_PRIVATE_
+set_up_time	source/pase_mg_solver.h	/^   PASE_REAL    set_up_time;$/;"	m	struct:PASE_MG_SOLVER_PRIVATE_
+smooth_time	source/pase_mg_solver.h	/^   PASE_REAL    smooth_time;$/;"	m	struct:PASE_MG_SOLVER_PRIVATE_
+total_solve_time	source/pase_mg_solver.h	/^   PASE_REAL    total_solve_time;$/;"	m	struct:PASE_MG_SOLVER_PRIVATE_
 transpose	source/pase_matrix.h	/^  void * (*transpose)(void *A);$/;"	m	struct:PASE_MATRIX_DATA_OPERATOR_PRIVATE_
+u	source/pase_mg_solver.h	/^   PASE_VECTOR *u;$/;"	m	struct:PASE_MG_SOLVER_PRIVATE_
+vec	source/pase_aux_matrix.h	/^  PASE_VECTOR  *vec;$/;"	m	struct:PASE_AUX_MATRIX_PRIVATE_
+vec	source/pase_aux_vector.h	/^  PASE_VECTOR  vec;$/;"	m	struct:PASE_AUX_VECTOR_PRIVATE_
 vector_data	source/pase_vector.h	/^    void                      *vector_data; \/\/ 向量数据$/;"	m	struct:PASE_VECTOR_PRIVATE_

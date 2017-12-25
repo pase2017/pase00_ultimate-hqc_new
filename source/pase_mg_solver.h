@@ -100,6 +100,7 @@ PASE_INT PASE_Mg_restrict(PASE_MG_SOLVER solver, PASE_INT i, PASE_VECTOR u_i, PA
 PASE_INT PASE_EigenSolver(PASE_MATRIX A, PASE_MATRIX B, PASE_SCALAR *eval, PASE_VECTOR *evec, PASE_INT block_size, PASE_PARAMETER param);
 
 
+PASE_INT PASE_Mg_print_eigenvalue_of_current_level(PASE_MG_SOLVER solver);
 
 
 

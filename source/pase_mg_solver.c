@@ -1217,4 +1217,24 @@ PASE_EigenSolver(PASE_MATRIX A, PASE_MATRIX B, PASE_SCALAR *eval, PASE_VECTOR *e
   return 0;
 }
 
+/**
+ * @brief 打印当前的近似特征向量和当前所在的层数
+ *
+ * @param solver
+ *
+ * @return 
+ */
+PASE_INT
+PASE_Mg_print_eigenvalue_of_current_level(PASE_MG_SOLVER solver)
+{
+  PASE_INT i = 0;
+  if(solver->print_level > 1) {
+    PASE_Printf(MPI_COMM_WORLD, "Cur_level %d", solver->cur_level);
+    for(i = 0; i < solver->block_size; i++) {
+      PASE_Printf(MPI_COMM_WORLD, ", eigen[%d] = %.16f", i, solver->eigenvalues[i]);
+    }
+    PASE_Printf(MPI_COMM_WORLD, ".\n");
+  }
+  return 0;
+}
 
