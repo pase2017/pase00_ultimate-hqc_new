@@ -2,9 +2,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <mpi.h>
 #include "pase_matrix.h"
 #include "pase_vector.h"
 #include "pase_aux_matrix.h"
+
+#if PASE_USE_HYPRE
+#include "_hypre_parcsr_mv.h"
+#endif
 
 #define DEBUG_PASE_AUX_MATRIX 1
 
@@ -101,8 +106,8 @@ PASE_Aux_matrix_set_aux_space_some(PASE_AUX_MATRIX aux_A, PASE_INT i, PASE_INT j
     PASE_Error(__FUNCT__": Cannot set aux space of PASE AUX MATRIX without fine grid vectors u_h.\n");
   }
 #endif 
-  PASE_Aux_matrix_set_vec_some(aux_A, i, j, R_hH, A_h, u_h);
   PASE_Aux_matrix_set_block_some(aux_A, i, j, A_h, u_h);
+  PASE_Aux_matrix_set_vec_some(aux_A, i, j, R_hH, A_h, u_h);
 }
 
 PASE_INT
@@ -136,22 +141,63 @@ PASE_INT
 PASE_Aux_matrix_set_block_some(PASE_AUX_MATRIX aux_A, PASE_INT i, PASE_INT j, PASE_MATRIX A_h, PASE_VECTOR *u_h)
 {
   PASE_INT k, l;
+  PASE_INT block_size = aux_A->block_size;
   if(NULL == aux_A->block) {
-    aux_A->block = (PASE_SCALAR**)PASE_Malloc(aux_A->block_size*sizeof(PASE_SCALAR*));
-    for(k = 0; k<aux_A->block_size; k++) {
-      aux_A->block[k] = (PASE_SCALAR*)PASE_Malloc(aux_A->block_size*sizeof(PASE_SCALAR));
+    aux_A->block = (PASE_SCALAR**)PASE_Malloc(block_size*sizeof(PASE_SCALAR*));
+    for(k = 0; k < block_size; k++) {
+      aux_A->block[k] = (PASE_SCALAR*)PASE_Malloc(block_size*sizeof(PASE_SCALAR));
     }
   }
+  PASE_VECTOR workspace_h = PASE_Vector_create_by_vector(u_h[0]);
+#if 0
   for(k = i; k <= j; k++) {
+    PASE_Matrix_multiply_vector(A_h, u_h[k], workspace_h);
     for(l = 0; l < aux_A->block_size; l++) {
       if(l >= i && l <= j) {
-        PASE_Vector_inner_product_general(u_h[k], u_h[l], A_h, &(aux_A->block[k][l]));
+        PASE_Vector_inner_product(workspace_h, u_h[l], &(aux_A->block[k][l]));
       } else {
-        PASE_Vector_inner_product_general(u_h[k], u_h[l], A_h, &(aux_A->block[k][l]));
+        PASE_Vector_inner_product(workspace_h, u_h[l], &(aux_A->block[k][l]));
 	aux_A->block[l][k] = aux_A->block[k][l];
       }
     }
   }
+#else
+  MPI_Status status;
+  MPI_Request *requests = (MPI_Request*)PASE_Malloc((j-i+1)*sizeof(MPI_Request));
+  //MPI_Request requests;
+  PASE_SCALAR *data = (PASE_SCALAR*)PASE_Malloc(block_size*(j-i+1)*sizeof(PASE_SCALAR));
+  for(k = i; k <= j; k++) {
+    PASE_Matrix_multiply_vector(A_h, u_h[k], workspace_h);
+    for(l = 0; l < block_size; l++) {
+      if(l < i) {
+        data[(k-i)*block_size+l] = hypre_SeqVectorInnerProd(hypre_ParVectorLocalVector((HYPRE_ParVector)(workspace_h->vector_data)), hypre_ParVectorLocalVector((HYPRE_ParVector)(u_h[l]->vector_data)));
+      } else if(l >= k) {
+        data[(k-i)*block_size+l-k+i] = hypre_SeqVectorInnerProd(hypre_ParVectorLocalVector((HYPRE_ParVector)(workspace_h->vector_data)), hypre_ParVectorLocalVector((HYPRE_ParVector)(u_h[l]->vector_data)));
+      }
+    }
+    MPI_Iallreduce(MPI_IN_PLACE, &(data[(k-i)*block_size]), block_size-k+i, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD, &(requests[k-i]));
+  }
+  for(k = i; k <= j; k++) {
+    MPI_Wait(&(requests[k-i]), &status);
+    for(l = 0; l < block_size; l++) {
+      if(l < i) {
+        aux_A->block[k][l] = data[(k-i)*block_size+l];
+        aux_A->block[l][k] = data[(k-i)*block_size+l];
+      } if(i <= l && l < k) {
+        MPI_Wait(&(requests[l-i]), &status);
+        aux_A->block[k][l] = data[(l-i)*block_size+k-l+i];
+      } else if(k <= l && l <= j) {
+        aux_A->block[k][l] = data[(k-i)*block_size+l-k+i];
+      } else if(l > j) {
+        aux_A->block[k][l] = data[(k-i)*block_size+l-k+i];
+        aux_A->block[l][k] = data[(k-i)*block_size+l-k+i];
+      }
+    }
+  }
+  PASE_Free(requests);
+  PASE_Free(data);
+#endif
+  PASE_Vector_destroy(workspace_h);
   return 0;
 }
 
@@ -457,6 +503,7 @@ PASE_Aux_matrix_multiply_aux_vector(PASE_AUX_MATRIX aux_A, PASE_AUX_VECTOR aux_x
 #endif
 
   PASE_INT i, j;
+#if 0
   PASE_Matrix_multiply_vector(aux_A->mat, aux_x->vec, aux_y->vec);
   for(i = 0; i < aux_A->block_size; i++) {
     PASE_Vector_axpy(aux_x->block[i], aux_A->vec[i], aux_y->vec);
@@ -465,6 +512,24 @@ PASE_Aux_matrix_multiply_aux_vector(PASE_AUX_MATRIX aux_A, PASE_AUX_VECTOR aux_x
       aux_y->block[i] += aux_A->block[i][j] * aux_x->block[j];
     }
   }
+#else
+  MPI_Request request;
+  MPI_Status  status;
+  for(i = 0; i < aux_A->block_size; i++) {
+    aux_y->block[i] = hypre_SeqVectorInnerProd(hypre_ParVectorLocalVector((HYPRE_ParVector)(aux_A->vec[i]->vector_data)), hypre_ParVectorLocalVector((HYPRE_ParVector)(aux_x->vec->vector_data)));
+  }
+  MPI_Iallreduce(MPI_IN_PLACE, aux_y->block, aux_A->block_size, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD, &request);
+  PASE_Matrix_multiply_vector(aux_A->mat, aux_x->vec, aux_y->vec);
+  for(i = 0; i < aux_A->block_size; i++) {
+    PASE_Vector_axpy(aux_x->block[i], aux_A->vec[i], aux_y->vec);
+  }
+  MPI_Wait(&request, &status);
+  for(i = 0; i < aux_A->block_size; i++) {
+    for(j = 0; j<aux_A->block_size; j++) {
+      aux_y->block[i] += aux_A->block[i][j] * aux_x->block[j];
+    }
+  }
+#endif
 }
 
 #undef  __FUNCT__

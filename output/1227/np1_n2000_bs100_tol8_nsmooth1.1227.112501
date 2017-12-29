@@ -1,0 +1,205 @@
+PASE (Parallel Auxiliary Space Eigen-solver), parallel version
+Please contact liyu@lsec.cc.ac.cn, if there is any bugs.
+=============================================================
+
+Set parameters:
+dimension       = 4000000
+block size      = 100
+max pre iter    = 1
+atol            = 1.000000e-08
+max cycle       = 100
+max level       = 20
+min coarse size = 5000
+
+
+
+ Num MPI tasks = 1
+
+ Num OpenMP threads = 1
+
+
+BoomerAMG SETUP PARAMETERS:
+
+ Max levels = 20
+ Num levels = 6
+
+ Strength Threshold = 0.250000
+ Interpolation Truncation Factor = 0.000000
+ Maximum Row Sum Threshold for Dependency Weakening = 0.900000
+
+ Coarsening Type = Falgout-CLJP 
+ measures are determined locally
+
+
+ No global partition option chosen.
+
+ Interpolation = modified classical interpolation
+
+Operator Matrix Information:
+
+            nonzero         entries per row        row sums
+lev   rows  entries  sparse  min  max   avg       min         max
+===================================================================
+ 0 4000000 19992000  0.000     3    5   5.0   0.000e+00   2.000e+00
+ 1 2000000 17984002  0.000     4    9   9.0   0.000e+00   2.500e+00
+ 2  500998  4504978  0.000     4   12   9.0   0.000e+00   3.020e+00
+ 3  125500  1127504  0.000     5   11   9.0  -1.110e-16   2.660e+00
+ 4   31377   281883  0.000     5   13   9.0  -9.368e-16   2.987e+00
+ 5    7875    70855  0.001     4   14   9.0  -1.991e-15   2.974e+00
+
+
+Interpolation Matrix Information:
+                 entries/row    min     max         row sums
+lev  rows cols    min max     weight   weight     min       max 
+=================================================================
+ 0 4000000 x 2000000   1   4   2.500e-01 2.500e-01 5.000e-01 1.000e+00
+ 1 2000000 x 500998   1   4   7.692e-02 5.000e-01 2.857e-01 1.000e+00
+ 2 500998 x 125500   1   4   6.950e-02 5.503e-01 1.110e-01 1.000e+00
+ 3 125500 x 31377   1   4   7.307e-02 5.388e-01 1.243e-01 1.000e+00
+ 4 31377 x 7875    0   4   6.100e-02 5.284e-01 0.000e+00 1.000e+00
+
+
+     Complexity:    grid = 1.666438
+                operator = 2.198941
+                memory = 2.997872
+
+
+
+
+BoomerAMG SOLVER PARAMETERS:
+
+  Maximum number of cycles:         1 
+  Stopping Tolerance:               1.000000e-07 
+  Cycle type (1 = V, 2 = W, etc.):  1
+
+  Relaxation Parameters:
+   Visiting Grid:                     down   up  coarse
+            Number of sweeps:            1    1     1 
+   Type 0=Jac, 3=hGS, 6=hSGS, 9=GE:      3    3     3 
+   Point types, partial sweeps (1=C, -1=F):
+                  Pre-CG relaxation (down):   1  -1
+                   Post-CG relaxation (up):  -1   1
+                             Coarsest grid:   0
+
+The number of levels = 6
+The dim of the coarsest space is 7875.
+modified block_size = 104
+
+cycle = 1, nconv = 0, residual of the first unconverged = 6.112599e-08
+cycle = 2, nconv = 54, residual of the first unconverged = 9.085105e-09
+cycle = 3, nconv = 98, residual of the first unconverged = 1.901433e-08
+cycle = 4, nconv = 98, residual of the first unconverged = 5.994834e-09
+cycle = 5, nconv = 100, residual of the first unconverged = 5.547710e-09
+
+=============================================================
+0-th eig=4.92987008e-06, aresi = 3.07925824e-10
+1-th eig=1.23246691e-05, aresi = 4.23071534e-10
+2-th eig=1.23246691e-05, aresi = 7.36856060e-10
+3-th eig=1.97194682e-05, aresi = 8.84998304e-10
+4-th eig=2.46493140e-05, aresi = 9.14602952e-10
+5-th eig=2.46493140e-05, aresi = 9.14015321e-10
+6-th eig=3.20441130e-05, aresi = 1.12599501e-09
+7-th eig=3.20441130e-05, aresi = 1.60900463e-09
+8-th eig=4.19037742e-05, aresi = 1.34673555e-09
+9-th eig=4.19037742e-05, aresi = 1.41233358e-09
+10-th eig=4.43687578e-05, aresi = 1.70202418e-09
+11-th eig=4.92985732e-05, aresi = 1.70154854e-09
+12-th eig=4.92985732e-05, aresi = 2.05819154e-09
+13-th eig=6.16232181e-05, aresi = 1.74294444e-09
+14-th eig=6.16232181e-05, aresi = 2.56060124e-09
+15-th eig=6.40880073e-05, aresi = 1.70424804e-09
+16-th eig=6.40880073e-05, aresi = 2.17619579e-09
+17-th eig=7.14828064e-05, aresi = 2.36629344e-09
+18-th eig=7.14828064e-05, aresi = 2.67247266e-09
+19-th eig=7.88776783e-05, aresi = 3.21626412e-09
+20-th eig=8.38074512e-05, aresi = 2.51922388e-09
+21-th eig=8.38074512e-05, aresi = 2.96339562e-09
+22-th eig=9.12019586e-05, aresi = 2.47219510e-09
+23-th eig=9.12019586e-05, aresi = 2.96961400e-09
+24-th eig=9.85967576e-05, aresi = 3.06834576e-09
+25-th eig=9.85967576e-05, aresi = 4.22990896e-09
+26-th eig=1.01061911e-04, aresi = 2.53217948e-09
+27-th eig=1.01061911e-04, aresi = 3.27301569e-09
+28-th eig=1.10921402e-04, aresi = 3.03705708e-09
+29-th eig=1.10921402e-04, aresi = 3.81011296e-09
+30-th eig=1.23245561e-04, aresi = 3.13470787e-09
+31-th eig=1.23245561e-04, aresi = 3.87287369e-09
+32-th eig=1.23246145e-04, aresi = 5.29859292e-09
+33-th eig=1.28175863e-04, aresi = 3.46506142e-09
+34-th eig=1.28175863e-04, aresi = 6.23495193e-09
+35-th eig=1.30640360e-04, aresi = 4.65824826e-09
+36-th eig=1.30640360e-04, aresi = 4.88238288e-09
+37-th eig=1.42965005e-04, aresi = 4.54578168e-09
+38-th eig=1.42965005e-04, aresi = 6.89005763e-09
+39-th eig=1.50360096e-04, aresi = 3.60903778e-09
+40-th eig=1.50360096e-04, aresi = 6.62123259e-09
+41-th eig=1.60218736e-04, aresi = 5.53498999e-09
+42-th eig=1.60218736e-04, aresi = 6.72871059e-09
+43-th eig=1.60219465e-04, aresi = 5.38664422e-09
+44-th eig=1.60219465e-04, aresi = 6.85514856e-09
+45-th eig=1.67613535e-04, aresi = 5.58858892e-09
+46-th eig=1.67613535e-04, aresi = 6.79174490e-09
+47-th eig=1.77474047e-04, aresi = 7.07126864e-09
+48-th eig=1.79938180e-04, aresi = 6.77180903e-09
+49-th eig=1.79938180e-04, aresi = 7.79593844e-09
+50-th eig=1.82403698e-04, aresi = 6.82003934e-09
+51-th eig=1.82403698e-04, aresi = 8.37769880e-09
+52-th eig=1.97192640e-04, aresi = 7.39267810e-09
+53-th eig=1.97192640e-04, aresi = 8.77393532e-09
+54-th eig=2.02121392e-04, aresi = 2.22356699e-10
+55-th eig=2.02121392e-04, aresi = 2.42061840e-10
+56-th eig=2.09516192e-04, aresi = 2.15240518e-10
+57-th eig=2.09516192e-04, aresi = 1.87705647e-10
+58-th eig=2.09517650e-04, aresi = 1.28283524e-10
+59-th eig=2.09517650e-04, aresi = 2.70075647e-10
+60-th eig=2.19376873e-04, aresi = 1.65624142e-10
+61-th eig=2.19376873e-04, aresi = 2.94313951e-10
+62-th eig=2.21840836e-04, aresi = 2.38642524e-10
+63-th eig=2.21840836e-04, aresi = 2.91827224e-10
+64-th eig=2.39095297e-04, aresi = 3.04553253e-10
+65-th eig=2.39095297e-04, aresi = 2.99740316e-10
+66-th eig=2.41561252e-04, aresi = 3.45744566e-10
+67-th eig=2.46490825e-04, aresi = 2.80049704e-10
+68-th eig=2.46490825e-04, aresi = 4.82366551e-10
+69-th eig=2.48953427e-04, aresi = 2.57511942e-10
+70-th eig=2.48953427e-04, aresi = 2.88561095e-10
+71-th eig=2.56348226e-04, aresi = 2.58712798e-10
+72-th eig=2.56348226e-04, aresi = 3.20277364e-10
+73-th eig=2.61279530e-04, aresi = 4.72087649e-10
+74-th eig=2.61279530e-04, aresi = 6.61073034e-10
+75-th eig=2.68672871e-04, aresi = 3.39131305e-10
+76-th eig=2.68672871e-04, aresi = 3.38266138e-10
+77-th eig=2.78534427e-04, aresi = 3.76770278e-10
+78-th eig=2.78534427e-04, aresi = 1.18066612e-09
+79-th eig=2.85927331e-04, aresi = 5.19430790e-10
+80-th eig=2.85927331e-04, aresi = 5.52261683e-10
+81-th eig=2.88393481e-04, aresi = 6.24442838e-10
+82-th eig=2.88393481e-04, aresi = 7.74141813e-10
+83-th eig=3.00714723e-04, aresi = 3.35316805e-10
+84-th eig=3.00714723e-04, aresi = 4.56731676e-10
+85-th eig=3.08109522e-04, aresi = 5.66101390e-10
+86-th eig=3.08109522e-04, aresi = 6.98892299e-10
+87-th eig=3.08111564e-04, aresi = 7.21840777e-10
+88-th eig=3.08111564e-04, aresi = 9.37193630e-10
+89-th eig=3.15507602e-04, aresi = 1.20073585e-09
+90-th eig=3.20434167e-04, aresi = 9.80269016e-10
+91-th eig=3.20434167e-04, aresi = 2.27990559e-09
+92-th eig=3.20437084e-04, aresi = 1.28607632e-09
+93-th eig=3.20437084e-04, aresi = 2.43122869e-09
+94-th eig=3.35225515e-04, aresi = 2.44321648e-09
+95-th eig=3.35225515e-04, aresi = 3.13128134e-09
+96-th eig=3.37688627e-04, aresi = 2.24771561e-09
+97-th eig=3.37688627e-04, aresi = 4.26248864e-09
+98-th eig=3.57405155e-04, aresi = 1.98431954e-09
+99-th eig=3.57405155e-04, aresi = 6.06544016e-09
+100-th eig=3.57410259e-04, aresi = 5.54770997e-09
+101-th eig=3.57410259e-04, aresi = 3.12113802e-08
+102-th eig=3.59872861e-04, aresi = 7.41709692e-09
+103-th eig=3.59872861e-04, aresi = 1.72247818e-08
+=============================================================
+set up time       = 135.080000 seconds
+smooth time       = 761.900000 seconds
+set aux time      = 570.080000 seconds
+prolong time      = 206.600000 seconds
+direct solve time = 204.250000 seconds
+total solve time  = 1759.620000 seconds

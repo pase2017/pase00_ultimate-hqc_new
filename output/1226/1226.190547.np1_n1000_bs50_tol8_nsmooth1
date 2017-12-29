@@ -1,0 +1,642 @@
+PASE (Parallel Auxiliary Space Eigen-solver), parallel version
+Please contact liyu@lsec.cc.ac.cn, if there is any bugs.
+=============================================================
+
+Set parameters:
+dimension       = 1000000
+block size      = 50
+max pre iter    = 1
+atol            = 1.000000e-08
+max cycle       = 30
+max level       = 20
+min coarse size = 5000
+
+
+
+ Num MPI tasks = 1
+
+ Num OpenMP threads = 1
+
+
+BoomerAMG SETUP PARAMETERS:
+
+ Max levels = 20
+ Num levels = 5
+
+ Strength Threshold = 0.250000
+ Interpolation Truncation Factor = 0.000000
+ Maximum Row Sum Threshold for Dependency Weakening = 0.900000
+
+ Coarsening Type = Falgout-CLJP 
+ measures are determined locally
+
+
+ No global partition option chosen.
+
+ Interpolation = modified classical interpolation
+
+Operator Matrix Information:
+
+            nonzero         entries per row        row sums
+lev   rows  entries  sparse  min  max   avg       min         max
+===================================================================
+ 0 1000000  4996000  0.000     3    5   5.0   0.000e+00   2.000e+00
+ 1  500000  4492002  0.000     4    9   9.0   0.000e+00   2.500e+00
+ 2  125498  1127478  0.000     4   12   9.0   0.000e+00   3.020e+00
+ 3   31500   282504  0.000     5   11   9.0  -1.110e-16   2.660e+00
+ 4    7878    70642  0.001     5   13   9.0  -9.368e-16   2.894e+00
+
+
+Interpolation Matrix Information:
+                 entries/row    min     max         row sums
+lev  rows cols    min max     weight   weight     min       max 
+=================================================================
+ 0 1000000 x 500000   1   4   2.500e-01 2.500e-01 5.000e-01 1.000e+00
+ 1 500000 x 125498   1   4   7.692e-02 5.000e-01 2.857e-01 1.000e+00
+ 2 125498 x 31500   1   4   6.950e-02 5.503e-01 1.110e-01 1.000e+00
+ 3 31500 x 7878    1   4   7.307e-02 5.162e-01 1.243e-01 1.000e+00
+
+
+     Complexity:    grid = 1.664876
+                operator = 2.195482
+                memory = 2.991042
+
+
+
+
+BoomerAMG SOLVER PARAMETERS:
+
+  Maximum number of cycles:         1 
+  Stopping Tolerance:               1.000000e-07 
+  Cycle type (1 = V, 2 = W, etc.):  1
+
+  Relaxation Parameters:
+   Visiting Grid:                     down   up  coarse
+            Number of sweeps:            1    1     1 
+   Type 0=Jac, 3=hGS, 6=hSGS, 9=GE:      3    3     3 
+   Point types, partial sweeps (1=C, -1=F):
+                  Pre-CG relaxation (down):   1  -1
+                   Post-CG relaxation (up):  -1   1
+                             Coarsest grid:   0
+
+The number of levels = 5
+The dim of the coarsest space is 7878.
+modified block_size = 52
+
+cycle = 1, nconv = 0, residual of the first unconverged = 2.992905e-06
+
+=============================================================
+0-th eig=1.96997794e-05, aresi = 2.99290489e-06
+1-th eig=4.92493547e-05, aresi = 5.23811631e-06
+2-th eig=4.92493622e-05, aresi = 6.53950187e-06
+3-th eig=7.87989471e-05, aresi = 9.29623932e-06
+4-th eig=9.84983376e-05, aresi = 9.39199818e-06
+5-th eig=9.84983470e-05, aresi = 1.04615988e-05
+6-th eig=1.28047939e-04, aresi = 1.30837204e-05
+7-th eig=1.28047969e-04, aresi = 1.54323263e-05
+8-th eig=1.67446253e-04, aresi = 1.47968238e-05
+9-th eig=1.67446270e-04, aresi = 1.59719078e-05
+10-th eig=1.77296989e-04, aresi = 1.99288463e-05
+11-th eig=1.96995895e-04, aresi = 1.99426409e-05
+12-th eig=1.96995912e-04, aresi = 2.08047078e-05
+13-th eig=2.46244950e-04, aresi = 2.52096993e-05
+14-th eig=2.46245035e-04, aresi = 2.91644272e-05
+15-th eig=2.56092446e-04, aresi = 2.17420966e-05
+16-th eig=2.56092469e-04, aresi = 2.27582601e-05
+17-th eig=2.85642124e-04, aresi = 2.72176263e-05
+18-th eig=2.85642153e-04, aresi = 2.83120727e-05
+19-th eig=3.15193052e-04, aresi = 3.50685234e-05
+20-th eig=3.34891285e-04, aresi = 3.51770932e-05
+21-th eig=3.34891307e-04, aresi = 3.57275328e-05
+22-th eig=3.64436069e-04, aresi = 3.02495868e-05
+23-th eig=3.64436103e-04, aresi = 3.12228765e-05
+24-th eig=3.93985802e-04, aresi = 3.62779976e-05
+25-th eig=3.93985834e-04, aresi = 3.69874028e-05
+26-th eig=4.03839362e-04, aresi = 4.16523120e-05
+27-th eig=4.03839554e-04, aresi = 4.76957048e-05
+28-th eig=4.43235041e-04, aresi = 4.45355749e-05
+29-th eig=4.43235081e-04, aresi = 4.55572693e-05
+30-th eig=4.92476113e-04, aresi = 4.05152915e-05
+31-th eig=4.92476152e-04, aresi = 4.10681171e-05
+32-th eig=4.92485968e-04, aresi = 5.49110264e-05
+33-th eig=5.12183350e-04, aresi = 5.52348501e-05
+34-th eig=5.12183377e-04, aresi = 5.53262249e-05
+35-th eig=5.22025908e-04, aresi = 4.65992127e-05
+36-th eig=5.22025950e-04, aresi = 4.72415943e-05
+37-th eig=5.71275260e-04, aresi = 5.59365063e-05
+38-th eig=5.71275299e-04, aresi = 5.61295641e-05
+39-th eig=6.00829852e-04, aresi = 6.26835348e-05
+40-th eig=6.00830244e-04, aresi = 7.14011070e-05
+41-th eig=6.40211336e-04, aresi = 5.23440271e-05
+42-th eig=6.40211384e-04, aresi = 5.28627351e-05
+43-th eig=6.40223705e-04, aresi = 6.68979486e-05
+44-th eig=6.40223773e-04, aresi = 6.77856258e-05
+45-th eig=6.69761219e-04, aresi = 5.87675670e-05
+46-th eig=6.69761271e-04, aresi = 5.93345387e-05
+47-th eig=7.09174378e-04, aresi = 8.00255166e-05
+48-th eig=7.19010701e-04, aresi = 6.84472765e-05
+49-th eig=7.19010782e-04, aresi = 6.90160910e-05
+50-th eig=7.28870608e-04, aresi = 8.04724558e-05
+51-th eig=7.28870897e-04, aresi = 8.05293685e-05
+=============================================================
+set up time       = 58.190000 seconds
+smooth time       = 18.510000 seconds
+set aux time      = 54.240000 seconds
+prolong time      = 5.070000 seconds
+direct solve time = 6.910000 seconds
+total solve time  = 0.000000 seconds
+cycle = 2, nconv = 0, residual of the first unconverged = 6.900752e-08
+
+=============================================================
+0-th eig=1.96997734e-05, aresi = 6.90075244e-08
+1-th eig=4.92493364e-05, aresi = 1.26636006e-07
+2-th eig=4.92493364e-05, aresi = 1.45561178e-07
+3-th eig=7.87988994e-05, aresi = 1.95056875e-07
+4-th eig=9.84982847e-05, aresi = 2.22246433e-07
+5-th eig=9.84982847e-05, aresi = 2.33590814e-07
+6-th eig=1.28047848e-04, aresi = 2.78037304e-07
+7-th eig=1.28047848e-04, aresi = 3.23425651e-07
+8-th eig=1.67446133e-04, aresi = 3.27365074e-07
+9-th eig=1.67446133e-04, aresi = 3.38955196e-07
+10-th eig=1.77296796e-04, aresi = 3.97069049e-07
+11-th eig=1.96995696e-04, aresi = 4.19747427e-07
+12-th eig=1.96995696e-04, aresi = 4.26908717e-07
+13-th eig=2.46244645e-04, aresi = 4.92644948e-07
+14-th eig=2.46244645e-04, aresi = 5.88686895e-07
+15-th eig=2.56092203e-04, aresi = 4.82512604e-07
+16-th eig=2.56092203e-04, aresi = 5.11362749e-07
+17-th eig=2.85641766e-04, aresi = 5.73428593e-07
+18-th eig=2.85641766e-04, aresi = 5.91306930e-07
+19-th eig=3.15192493e-04, aresi = 7.06449524e-07
+20-th eig=3.34890714e-04, aresi = 7.18296121e-07
+21-th eig=3.34890714e-04, aresi = 7.36478905e-07
+22-th eig=3.64435620e-04, aresi = 6.45086368e-07
+23-th eig=3.64435620e-04, aresi = 6.69280289e-07
+24-th eig=3.93985183e-04, aresi = 7.53332222e-07
+25-th eig=3.93985183e-04, aresi = 7.73603758e-07
+26-th eig=4.03838563e-04, aresi = 8.41612842e-07
+27-th eig=4.03838563e-04, aresi = 9.75361084e-07
+28-th eig=4.43234132e-04, aresi = 9.33422971e-07
+29-th eig=4.43234132e-04, aresi = 9.45485307e-07
+30-th eig=4.92475319e-04, aresi = 9.65967625e-07
+31-th eig=4.92475319e-04, aresi = 1.16224640e-06
+32-th eig=4.92484633e-04, aresi = 1.11971254e-06
+33-th eig=5.12181981e-04, aresi = 1.25462395e-06
+34-th eig=5.12181981e-04, aresi = 1.39363814e-06
+35-th eig=5.22024882e-04, aresi = 1.15690929e-06
+36-th eig=5.22024882e-04, aresi = 1.26773888e-06
+37-th eig=5.71273831e-04, aresi = 1.36351096e-06
+38-th eig=5.71273831e-04, aresi = 1.49122330e-06
+39-th eig=6.00828051e-04, aresi = 1.52629684e-06
+40-th eig=6.00828052e-04, aresi = 1.84602285e-06
+41-th eig=6.40210037e-04, aresi = 1.26050174e-06
+42-th eig=6.40210038e-04, aresi = 1.46573736e-06
+43-th eig=6.40221681e-04, aresi = 1.89231378e-06
+44-th eig=6.40221682e-04, aresi = 1.87949747e-06
+45-th eig=6.69759601e-04, aresi = 1.60522160e-06
+46-th eig=6.69759602e-04, aresi = 1.61574889e-06
+47-th eig=7.09171479e-04, aresi = 2.88351330e-06
+48-th eig=7.19008552e-04, aresi = 1.93205538e-06
+49-th eig=7.19008552e-04, aresi = 2.01870751e-06
+50-th eig=7.28867752e-04, aresi = 2.08454331e-06
+51-th eig=7.28867786e-04, aresi = 3.91922501e-06
+=============================================================
+set up time       = 58.190000 seconds
+smooth time       = 36.930000 seconds
+set aux time      = 108.560000 seconds
+prolong time      = 10.130000 seconds
+direct solve time = 13.800000 seconds
+total solve time  = 0.000000 seconds
+cycle = 3, nconv = 10, residual of the first unconverged = 1.068377e-08
+
+=============================================================
+0-th eig=1.96997734e-05, aresi = 1.76859098e-09
+1-th eig=4.92493364e-05, aresi = 3.67002224e-09
+2-th eig=4.92493364e-05, aresi = 3.69936414e-09
+3-th eig=7.87988994e-05, aresi = 5.01957118e-09
+4-th eig=9.84982846e-05, aresi = 6.59197307e-09
+5-th eig=9.84982846e-05, aresi = 5.88693924e-09
+6-th eig=1.28047848e-04, aresi = 8.34727520e-09
+7-th eig=1.28047848e-04, aresi = 8.25850098e-09
+8-th eig=1.67446133e-04, aresi = 9.27941032e-09
+9-th eig=1.67446133e-04, aresi = 8.73537121e-09
+10-th eig=1.77296796e-04, aresi = 1.06837672e-08
+11-th eig=1.96995696e-04, aresi = 1.20889487e-08
+12-th eig=1.96995696e-04, aresi = 1.14683977e-08
+13-th eig=2.46244644e-04, aresi = 1.48576461e-08
+14-th eig=2.46244644e-04, aresi = 1.61712843e-08
+15-th eig=2.56092203e-04, aresi = 1.35683081e-08
+16-th eig=2.56092203e-04, aresi = 1.78764001e-08
+17-th eig=2.85641766e-04, aresi = 1.67767279e-08
+18-th eig=2.85641766e-04, aresi = 1.79715736e-08
+19-th eig=3.15192493e-04, aresi = 2.07378011e-08
+20-th eig=3.34890714e-04, aresi = 2.06414813e-08
+21-th eig=3.34890714e-04, aresi = 2.39510478e-08
+22-th eig=3.64435620e-04, aresi = 1.82484219e-08
+23-th eig=3.64435620e-04, aresi = 2.17438106e-08
+24-th eig=3.93985183e-04, aresi = 2.27639652e-08
+25-th eig=3.93985183e-04, aresi = 2.60272858e-08
+26-th eig=4.03838562e-04, aresi = 3.09099057e-08
+27-th eig=4.03838562e-04, aresi = 3.12951811e-08
+28-th eig=4.43234131e-04, aresi = 3.14877884e-08
+29-th eig=4.43234131e-04, aresi = 3.60470207e-08
+30-th eig=4.92475318e-04, aresi = 4.39503727e-08
+31-th eig=4.92475318e-04, aresi = 1.24487875e-07
+32-th eig=4.92484632e-04, aresi = 4.17796736e-08
+33-th eig=5.12181980e-04, aresi = 5.85987224e-08
+34-th eig=5.12181980e-04, aresi = 1.35551184e-07
+35-th eig=5.22024881e-04, aresi = 6.05736262e-08
+36-th eig=5.22024881e-04, aresi = 1.13252497e-07
+37-th eig=5.71273829e-04, aresi = 8.69538914e-08
+38-th eig=5.71273829e-04, aresi = 1.37167502e-07
+39-th eig=6.00828049e-04, aresi = 1.45982614e-07
+40-th eig=6.00828049e-04, aresi = 1.66564755e-07
+41-th eig=6.40210036e-04, aresi = 1.01552013e-07
+42-th eig=6.40210036e-04, aresi = 1.91061729e-07
+43-th eig=6.40221678e-04, aresi = 2.17416939e-07
+44-th eig=6.40221678e-04, aresi = 2.71430368e-07
+45-th eig=6.69759599e-04, aresi = 2.11200968e-07
+46-th eig=6.69759599e-04, aresi = 2.63794648e-07
+47-th eig=7.09171468e-04, aresi = 5.78222866e-07
+48-th eig=7.19008547e-04, aresi = 3.44102485e-07
+49-th eig=7.19008547e-04, aresi = 3.62468340e-07
+50-th eig=7.28867748e-04, aresi = 3.22483287e-07
+51-th eig=7.28867754e-04, aresi = 1.17970730e-06
+=============================================================
+set up time       = 58.190000 seconds
+smooth time       = 55.210000 seconds
+set aux time      = 162.860000 seconds
+prolong time      = 15.190000 seconds
+direct solve time = 20.670000 seconds
+total solve time  = 0.000000 seconds
+cycle = 4, nconv = 30, residual of the first unconverged = 4.870507e-09
+
+=============================================================
+0-th eig=1.96997734e-05, aresi = 1.76859098e-09
+1-th eig=4.92493364e-05, aresi = 3.67002224e-09
+2-th eig=4.92493364e-05, aresi = 3.69936414e-09
+3-th eig=7.87988994e-05, aresi = 5.01957118e-09
+4-th eig=9.84982846e-05, aresi = 6.59197307e-09
+5-th eig=9.84982846e-05, aresi = 5.88693924e-09
+6-th eig=1.28047848e-04, aresi = 8.34727520e-09
+7-th eig=1.28047848e-04, aresi = 8.25850098e-09
+8-th eig=1.67446133e-04, aresi = 9.27941032e-09
+9-th eig=1.67446133e-04, aresi = 8.73537121e-09
+10-th eig=1.77296796e-04, aresi = 2.58742949e-10
+11-th eig=1.96995696e-04, aresi = 3.40523978e-10
+12-th eig=1.96995696e-04, aresi = 3.05111599e-10
+13-th eig=2.46244644e-04, aresi = 4.00717882e-10
+14-th eig=2.46244644e-04, aresi = 4.17073626e-10
+15-th eig=2.56092203e-04, aresi = 7.00940133e-10
+16-th eig=2.56092203e-04, aresi = 4.25919380e-10
+17-th eig=2.85641766e-04, aresi = 5.89408115e-10
+18-th eig=2.85641766e-04, aresi = 4.92433189e-10
+19-th eig=3.15192493e-04, aresi = 6.25348289e-10
+20-th eig=3.34890714e-04, aresi = 8.40531914e-10
+21-th eig=3.34890714e-04, aresi = 5.96223637e-10
+22-th eig=3.64435620e-04, aresi = 6.55303410e-10
+23-th eig=3.64435620e-04, aresi = 7.16900102e-10
+24-th eig=3.93985183e-04, aresi = 9.59311139e-10
+25-th eig=3.93985183e-04, aresi = 1.05814937e-09
+26-th eig=4.03838562e-04, aresi = 1.32296246e-09
+27-th eig=4.03838562e-04, aresi = 1.44028531e-09
+28-th eig=4.43234131e-04, aresi = 1.75387834e-09
+29-th eig=4.43234131e-04, aresi = 1.94291980e-09
+30-th eig=4.92475318e-04, aresi = 4.87050746e-09
+31-th eig=4.92475318e-04, aresi = 1.27136377e-08
+32-th eig=4.92484632e-04, aresi = 2.92665460e-09
+33-th eig=5.12181980e-04, aresi = 5.20773409e-09
+34-th eig=5.12181980e-04, aresi = 1.84654837e-08
+35-th eig=5.22024881e-04, aresi = 5.84704508e-09
+36-th eig=5.22024881e-04, aresi = 1.26366385e-08
+37-th eig=5.71273829e-04, aresi = 1.16272700e-08
+38-th eig=5.71273829e-04, aresi = 1.76030936e-08
+39-th eig=6.00828049e-04, aresi = 2.20153345e-08
+40-th eig=6.00828049e-04, aresi = 2.40004790e-08
+41-th eig=6.40210036e-04, aresi = 2.13779748e-08
+42-th eig=6.40210036e-04, aresi = 3.91329430e-08
+43-th eig=6.40221678e-04, aresi = 4.00591432e-08
+44-th eig=6.40221678e-04, aresi = 6.09197458e-08
+45-th eig=6.69759599e-04, aresi = 5.92517335e-08
+46-th eig=6.69759599e-04, aresi = 7.50994509e-08
+47-th eig=7.09171467e-04, aresi = 2.08133195e-07
+48-th eig=7.19008547e-04, aresi = 1.09752479e-07
+49-th eig=7.19008547e-04, aresi = 1.22711339e-07
+50-th eig=7.28867747e-04, aresi = 1.00601874e-07
+51-th eig=7.28867749e-04, aresi = 5.58030036e-07
+=============================================================
+set up time       = 58.190000 seconds
+smooth time       = 69.960000 seconds
+set aux time      = 216.920000 seconds
+prolong time      = 19.260000 seconds
+direct solve time = 25.900000 seconds
+total solve time  = 0.000000 seconds
+cycle = 5, nconv = 43, residual of the first unconverged = 9.415230e-09
+
+=============================================================
+0-th eig=1.96997734e-05, aresi = 1.76859098e-09
+1-th eig=4.92493364e-05, aresi = 3.67002224e-09
+2-th eig=4.92493364e-05, aresi = 3.69936414e-09
+3-th eig=7.87988994e-05, aresi = 5.01957118e-09
+4-th eig=9.84982846e-05, aresi = 6.59197307e-09
+5-th eig=9.84982846e-05, aresi = 5.88693924e-09
+6-th eig=1.28047848e-04, aresi = 8.34727520e-09
+7-th eig=1.28047848e-04, aresi = 8.25850098e-09
+8-th eig=1.67446133e-04, aresi = 9.27941032e-09
+9-th eig=1.67446133e-04, aresi = 8.73537121e-09
+10-th eig=1.77296796e-04, aresi = 2.58742949e-10
+11-th eig=1.96995696e-04, aresi = 3.40523978e-10
+12-th eig=1.96995696e-04, aresi = 3.05111599e-10
+13-th eig=2.46244644e-04, aresi = 4.00717882e-10
+14-th eig=2.46244644e-04, aresi = 4.17073626e-10
+15-th eig=2.56092203e-04, aresi = 7.00940133e-10
+16-th eig=2.56092203e-04, aresi = 4.25919380e-10
+17-th eig=2.85641766e-04, aresi = 5.89408115e-10
+18-th eig=2.85641766e-04, aresi = 4.92433189e-10
+19-th eig=3.15192493e-04, aresi = 6.25348289e-10
+20-th eig=3.34890714e-04, aresi = 8.40531914e-10
+21-th eig=3.34890714e-04, aresi = 5.96223637e-10
+22-th eig=3.64435620e-04, aresi = 6.55303410e-10
+23-th eig=3.64435620e-04, aresi = 7.16900102e-10
+24-th eig=3.93985183e-04, aresi = 9.59311139e-10
+25-th eig=3.93985183e-04, aresi = 1.05814937e-09
+26-th eig=4.03838562e-04, aresi = 1.32296246e-09
+27-th eig=4.03838562e-04, aresi = 1.44028531e-09
+28-th eig=4.43234131e-04, aresi = 1.75387834e-09
+29-th eig=4.43234131e-04, aresi = 1.94291980e-09
+30-th eig=4.92475318e-04, aresi = 1.62659365e-09
+31-th eig=4.92475318e-04, aresi = 6.73048047e-10
+32-th eig=4.92484632e-04, aresi = 3.32535879e-10
+33-th eig=5.12181980e-04, aresi = 2.27110824e-09
+34-th eig=5.12181980e-04, aresi = 1.39932997e-09
+35-th eig=5.22024881e-04, aresi = 7.54619960e-10
+36-th eig=5.22024881e-04, aresi = 1.50894420e-09
+37-th eig=5.71273829e-04, aresi = 2.02988417e-09
+38-th eig=5.71273829e-04, aresi = 2.24962575e-09
+39-th eig=6.00828049e-04, aresi = 4.10406579e-09
+40-th eig=6.00828049e-04, aresi = 3.80400940e-09
+41-th eig=6.40210036e-04, aresi = 7.02653881e-09
+42-th eig=6.40210036e-04, aresi = 9.51010297e-09
+43-th eig=6.40221678e-04, aresi = 9.41522980e-09
+44-th eig=6.40221678e-04, aresi = 1.57050219e-08
+45-th eig=6.69759599e-04, aresi = 1.94168368e-08
+46-th eig=6.69759599e-04, aresi = 2.42634633e-08
+47-th eig=7.09171467e-04, aresi = 8.73993050e-08
+48-th eig=7.19008547e-04, aresi = 4.21460493e-08
+49-th eig=7.19008547e-04, aresi = 5.41463316e-08
+50-th eig=7.28867747e-04, aresi = 4.52275329e-08
+51-th eig=7.28867748e-04, aresi = 2.73200169e-07
+=============================================================
+set up time       = 58.190000 seconds
+smooth time       = 77.690000 seconds
+set aux time      = 260.550000 seconds
+prolong time      = 21.390000 seconds
+direct solve time = 29.460000 seconds
+total solve time  = 0.000000 seconds
+cycle = 6, nconv = 47, residual of the first unconverged = 3.968059e-08
+
+=============================================================
+0-th eig=1.96997734e-05, aresi = 1.76859098e-09
+1-th eig=4.92493364e-05, aresi = 3.67002224e-09
+2-th eig=4.92493364e-05, aresi = 3.69936414e-09
+3-th eig=7.87988994e-05, aresi = 5.01957118e-09
+4-th eig=9.84982846e-05, aresi = 6.59197307e-09
+5-th eig=9.84982846e-05, aresi = 5.88693924e-09
+6-th eig=1.28047848e-04, aresi = 8.34727520e-09
+7-th eig=1.28047848e-04, aresi = 8.25850098e-09
+8-th eig=1.67446133e-04, aresi = 9.27941032e-09
+9-th eig=1.67446133e-04, aresi = 8.73537121e-09
+10-th eig=1.77296796e-04, aresi = 2.58742949e-10
+11-th eig=1.96995696e-04, aresi = 3.40523978e-10
+12-th eig=1.96995696e-04, aresi = 3.05111599e-10
+13-th eig=2.46244644e-04, aresi = 4.00717882e-10
+14-th eig=2.46244644e-04, aresi = 4.17073626e-10
+15-th eig=2.56092203e-04, aresi = 7.00940133e-10
+16-th eig=2.56092203e-04, aresi = 4.25919380e-10
+17-th eig=2.85641766e-04, aresi = 5.89408115e-10
+18-th eig=2.85641766e-04, aresi = 4.92433189e-10
+19-th eig=3.15192493e-04, aresi = 6.25348289e-10
+20-th eig=3.34890714e-04, aresi = 8.40531914e-10
+21-th eig=3.34890714e-04, aresi = 5.96223637e-10
+22-th eig=3.64435620e-04, aresi = 6.55303410e-10
+23-th eig=3.64435620e-04, aresi = 7.16900102e-10
+24-th eig=3.93985183e-04, aresi = 9.59311139e-10
+25-th eig=3.93985183e-04, aresi = 1.05814937e-09
+26-th eig=4.03838562e-04, aresi = 1.32296246e-09
+27-th eig=4.03838562e-04, aresi = 1.44028531e-09
+28-th eig=4.43234131e-04, aresi = 1.75387834e-09
+29-th eig=4.43234131e-04, aresi = 1.94291980e-09
+30-th eig=4.92475318e-04, aresi = 1.62659365e-09
+31-th eig=4.92475318e-04, aresi = 6.73048047e-10
+32-th eig=4.92484632e-04, aresi = 3.32535879e-10
+33-th eig=5.12181980e-04, aresi = 2.27110824e-09
+34-th eig=5.12181980e-04, aresi = 1.39932997e-09
+35-th eig=5.22024881e-04, aresi = 7.54619960e-10
+36-th eig=5.22024881e-04, aresi = 1.50894420e-09
+37-th eig=5.71273829e-04, aresi = 2.02988417e-09
+38-th eig=5.71273829e-04, aresi = 2.24962575e-09
+39-th eig=6.00828049e-04, aresi = 4.10406579e-09
+40-th eig=6.00828049e-04, aresi = 3.80400940e-09
+41-th eig=6.40210036e-04, aresi = 7.02653881e-09
+42-th eig=6.40210036e-04, aresi = 9.51010297e-09
+43-th eig=6.40221678e-04, aresi = 3.22922934e-09
+44-th eig=6.40221678e-04, aresi = 2.21168259e-09
+45-th eig=6.69759599e-04, aresi = 5.76855527e-09
+46-th eig=6.69759599e-04, aresi = 6.07782907e-09
+47-th eig=7.09171467e-04, aresi = 3.96805903e-08
+48-th eig=7.19008547e-04, aresi = 1.56969355e-08
+49-th eig=7.19008547e-04, aresi = 2.36702363e-08
+50-th eig=7.28867747e-04, aresi = 1.54054318e-08
+51-th eig=7.28867748e-04, aresi = 1.53047173e-07
+=============================================================
+set up time       = 58.190000 seconds
+smooth time       = 80.860000 seconds
+set aux time      = 283.410000 seconds
+prolong time      = 22.270000 seconds
+direct solve time = 32.880000 seconds
+total solve time  = 0.000000 seconds
+cycle = 7, nconv = 47, residual of the first unconverged = 1.722924e-08
+
+=============================================================
+0-th eig=1.96997734e-05, aresi = 1.76859098e-09
+1-th eig=4.92493364e-05, aresi = 3.67002224e-09
+2-th eig=4.92493364e-05, aresi = 3.69936414e-09
+3-th eig=7.87988994e-05, aresi = 5.01957118e-09
+4-th eig=9.84982846e-05, aresi = 6.59197307e-09
+5-th eig=9.84982846e-05, aresi = 5.88693924e-09
+6-th eig=1.28047848e-04, aresi = 8.34727520e-09
+7-th eig=1.28047848e-04, aresi = 8.25850098e-09
+8-th eig=1.67446133e-04, aresi = 9.27941032e-09
+9-th eig=1.67446133e-04, aresi = 8.73537121e-09
+10-th eig=1.77296796e-04, aresi = 2.58742949e-10
+11-th eig=1.96995696e-04, aresi = 3.40523978e-10
+12-th eig=1.96995696e-04, aresi = 3.05111599e-10
+13-th eig=2.46244644e-04, aresi = 4.00717882e-10
+14-th eig=2.46244644e-04, aresi = 4.17073626e-10
+15-th eig=2.56092203e-04, aresi = 7.00940133e-10
+16-th eig=2.56092203e-04, aresi = 4.25919380e-10
+17-th eig=2.85641766e-04, aresi = 5.89408115e-10
+18-th eig=2.85641766e-04, aresi = 4.92433189e-10
+19-th eig=3.15192493e-04, aresi = 6.25348289e-10
+20-th eig=3.34890714e-04, aresi = 8.40531914e-10
+21-th eig=3.34890714e-04, aresi = 5.96223637e-10
+22-th eig=3.64435620e-04, aresi = 6.55303410e-10
+23-th eig=3.64435620e-04, aresi = 7.16900102e-10
+24-th eig=3.93985183e-04, aresi = 9.59311139e-10
+25-th eig=3.93985183e-04, aresi = 1.05814937e-09
+26-th eig=4.03838562e-04, aresi = 1.32296246e-09
+27-th eig=4.03838562e-04, aresi = 1.44028531e-09
+28-th eig=4.43234131e-04, aresi = 1.75387834e-09
+29-th eig=4.43234131e-04, aresi = 1.94291980e-09
+30-th eig=4.92475318e-04, aresi = 1.62659365e-09
+31-th eig=4.92475318e-04, aresi = 6.73048047e-10
+32-th eig=4.92484632e-04, aresi = 3.32535879e-10
+33-th eig=5.12181980e-04, aresi = 2.27110824e-09
+34-th eig=5.12181980e-04, aresi = 1.39932997e-09
+35-th eig=5.22024881e-04, aresi = 7.54619960e-10
+36-th eig=5.22024881e-04, aresi = 1.50894420e-09
+37-th eig=5.71273829e-04, aresi = 2.02988417e-09
+38-th eig=5.71273829e-04, aresi = 2.24962575e-09
+39-th eig=6.00828049e-04, aresi = 4.10406579e-09
+40-th eig=6.00828049e-04, aresi = 3.80400940e-09
+41-th eig=6.40210036e-04, aresi = 7.02653881e-09
+42-th eig=6.40210036e-04, aresi = 9.51010297e-09
+43-th eig=6.40221678e-04, aresi = 3.22922934e-09
+44-th eig=6.40221678e-04, aresi = 2.21168259e-09
+45-th eig=6.69759599e-04, aresi = 5.76855527e-09
+46-th eig=6.69759599e-04, aresi = 6.07782907e-09
+47-th eig=7.09171467e-04, aresi = 1.72292406e-08
+48-th eig=7.19008547e-04, aresi = 5.55274172e-09
+49-th eig=7.19008547e-04, aresi = 9.97479218e-09
+50-th eig=7.28867747e-04, aresi = 6.16854227e-09
+51-th eig=7.28867747e-04, aresi = 8.39563564e-08
+=============================================================
+set up time       = 58.190000 seconds
+smooth time       = 82.630000 seconds
+set aux time      = 292.790000 seconds
+prolong time      = 22.750000 seconds
+direct solve time = 36.400000 seconds
+total solve time  = 0.000000 seconds
+cycle = 8, nconv = 50, residual of the first unconverged = 2.022708e-09
+
+=============================================================
+0-th eig=1.96997734e-05, aresi = 1.76859098e-09
+1-th eig=4.92493364e-05, aresi = 3.67002224e-09
+2-th eig=4.92493364e-05, aresi = 3.69936414e-09
+3-th eig=7.87988994e-05, aresi = 5.01957118e-09
+4-th eig=9.84982846e-05, aresi = 6.59197307e-09
+5-th eig=9.84982846e-05, aresi = 5.88693924e-09
+6-th eig=1.28047848e-04, aresi = 8.34727520e-09
+7-th eig=1.28047848e-04, aresi = 8.25850098e-09
+8-th eig=1.67446133e-04, aresi = 9.27941032e-09
+9-th eig=1.67446133e-04, aresi = 8.73537121e-09
+10-th eig=1.77296796e-04, aresi = 2.58742949e-10
+11-th eig=1.96995696e-04, aresi = 3.40523978e-10
+12-th eig=1.96995696e-04, aresi = 3.05111599e-10
+13-th eig=2.46244644e-04, aresi = 4.00717882e-10
+14-th eig=2.46244644e-04, aresi = 4.17073626e-10
+15-th eig=2.56092203e-04, aresi = 7.00940133e-10
+16-th eig=2.56092203e-04, aresi = 4.25919380e-10
+17-th eig=2.85641766e-04, aresi = 5.89408115e-10
+18-th eig=2.85641766e-04, aresi = 4.92433189e-10
+19-th eig=3.15192493e-04, aresi = 6.25348289e-10
+20-th eig=3.34890714e-04, aresi = 8.40531914e-10
+21-th eig=3.34890714e-04, aresi = 5.96223637e-10
+22-th eig=3.64435620e-04, aresi = 6.55303410e-10
+23-th eig=3.64435620e-04, aresi = 7.16900102e-10
+24-th eig=3.93985183e-04, aresi = 9.59311139e-10
+25-th eig=3.93985183e-04, aresi = 1.05814937e-09
+26-th eig=4.03838562e-04, aresi = 1.32296246e-09
+27-th eig=4.03838562e-04, aresi = 1.44028531e-09
+28-th eig=4.43234131e-04, aresi = 1.75387834e-09
+29-th eig=4.43234131e-04, aresi = 1.94291980e-09
+30-th eig=4.92475318e-04, aresi = 1.62659365e-09
+31-th eig=4.92475318e-04, aresi = 6.73048047e-10
+32-th eig=4.92484632e-04, aresi = 3.32535879e-10
+33-th eig=5.12181980e-04, aresi = 2.27110824e-09
+34-th eig=5.12181980e-04, aresi = 1.39932997e-09
+35-th eig=5.22024881e-04, aresi = 7.54619960e-10
+36-th eig=5.22024881e-04, aresi = 1.50894420e-09
+37-th eig=5.71273829e-04, aresi = 2.02988417e-09
+38-th eig=5.71273829e-04, aresi = 2.24962575e-09
+39-th eig=6.00828049e-04, aresi = 4.10406579e-09
+40-th eig=6.00828049e-04, aresi = 3.80400940e-09
+41-th eig=6.40210036e-04, aresi = 7.02653881e-09
+42-th eig=6.40210036e-04, aresi = 9.51010297e-09
+43-th eig=6.40221678e-04, aresi = 3.22922934e-09
+44-th eig=6.40221678e-04, aresi = 2.21168259e-09
+45-th eig=6.69759599e-04, aresi = 5.76855527e-09
+46-th eig=6.69759599e-04, aresi = 6.07782907e-09
+47-th eig=7.09171467e-04, aresi = 5.09877210e-09
+48-th eig=7.19008547e-04, aresi = 2.05567245e-09
+49-th eig=7.19008547e-04, aresi = 2.61525978e-09
+50-th eig=7.28867747e-04, aresi = 2.02270799e-09
+51-th eig=7.28867747e-04, aresi = 2.90135150e-08
+=============================================================
+set up time       = 58.190000 seconds
+smooth time       = 84.390000 seconds
+set aux time      = 297.990000 seconds
+prolong time      = 23.240000 seconds
+direct solve time = 39.940000 seconds
+total solve time  = 0.000000 seconds
+
+=============================================================
+0-th eig=1.96997734e-05, aresi = 1.76859098e-09
+1-th eig=4.92493364e-05, aresi = 3.67002224e-09
+2-th eig=4.92493364e-05, aresi = 3.69936414e-09
+3-th eig=7.87988994e-05, aresi = 5.01957118e-09
+4-th eig=9.84982846e-05, aresi = 6.59197307e-09
+5-th eig=9.84982846e-05, aresi = 5.88693924e-09
+6-th eig=1.28047848e-04, aresi = 8.34727520e-09
+7-th eig=1.28047848e-04, aresi = 8.25850098e-09
+8-th eig=1.67446133e-04, aresi = 9.27941032e-09
+9-th eig=1.67446133e-04, aresi = 8.73537121e-09
+10-th eig=1.77296796e-04, aresi = 2.58742949e-10
+11-th eig=1.96995696e-04, aresi = 3.40523978e-10
+12-th eig=1.96995696e-04, aresi = 3.05111599e-10
+13-th eig=2.46244644e-04, aresi = 4.00717882e-10
+14-th eig=2.46244644e-04, aresi = 4.17073626e-10
+15-th eig=2.56092203e-04, aresi = 7.00940133e-10
+16-th eig=2.56092203e-04, aresi = 4.25919380e-10
+17-th eig=2.85641766e-04, aresi = 5.89408115e-10
+18-th eig=2.85641766e-04, aresi = 4.92433189e-10
+19-th eig=3.15192493e-04, aresi = 6.25348289e-10
+20-th eig=3.34890714e-04, aresi = 8.40531914e-10
+21-th eig=3.34890714e-04, aresi = 5.96223637e-10
+22-th eig=3.64435620e-04, aresi = 6.55303410e-10
+23-th eig=3.64435620e-04, aresi = 7.16900102e-10
+24-th eig=3.93985183e-04, aresi = 9.59311139e-10
+25-th eig=3.93985183e-04, aresi = 1.05814937e-09
+26-th eig=4.03838562e-04, aresi = 1.32296246e-09
+27-th eig=4.03838562e-04, aresi = 1.44028531e-09
+28-th eig=4.43234131e-04, aresi = 1.75387834e-09
+29-th eig=4.43234131e-04, aresi = 1.94291980e-09
+30-th eig=4.92475318e-04, aresi = 1.62659365e-09
+31-th eig=4.92475318e-04, aresi = 6.73048047e-10
+32-th eig=4.92484632e-04, aresi = 3.32535879e-10
+33-th eig=5.12181980e-04, aresi = 2.27110824e-09
+34-th eig=5.12181980e-04, aresi = 1.39932997e-09
+35-th eig=5.22024881e-04, aresi = 7.54619960e-10
+36-th eig=5.22024881e-04, aresi = 1.50894420e-09
+37-th eig=5.71273829e-04, aresi = 2.02988417e-09
+38-th eig=5.71273829e-04, aresi = 2.24962575e-09
+39-th eig=6.00828049e-04, aresi = 4.10406579e-09
+40-th eig=6.00828049e-04, aresi = 3.80400940e-09
+41-th eig=6.40210036e-04, aresi = 7.02653881e-09
+42-th eig=6.40210036e-04, aresi = 9.51010297e-09
+43-th eig=6.40221678e-04, aresi = 3.22922934e-09
+44-th eig=6.40221678e-04, aresi = 2.21168259e-09
+45-th eig=6.69759599e-04, aresi = 5.76855527e-09
+46-th eig=6.69759599e-04, aresi = 6.07782907e-09
+47-th eig=7.09171467e-04, aresi = 5.09877210e-09
+48-th eig=7.19008547e-04, aresi = 2.05567245e-09
+49-th eig=7.19008547e-04, aresi = 2.61525978e-09
+50-th eig=7.28867747e-04, aresi = 2.02270799e-09
+51-th eig=7.28867747e-04, aresi = 2.90135150e-08
+=============================================================
+set up time       = 58.190000 seconds
+smooth time       = 84.390000 seconds
+set aux time      = 297.990000 seconds
+prolong time      = 23.240000 seconds
+direct solve time = 39.940000 seconds
+total solve time  = 449.280000 seconds

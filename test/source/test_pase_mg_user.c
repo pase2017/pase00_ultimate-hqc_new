@@ -51,16 +51,17 @@ PASE_INT main(PASE_INT argc, char *argv[])
 
   PASE_INT  n             = 200;
   PASE_INT  block_size    = 5;
-  PASE_INT  max_cycle     = 50;
+  PASE_INT  max_block_size= ((2*block_size)<(block_size+5))?(2*block_size):(block_size+5);
+  PASE_INT  max_cycle     = 100;
   PASE_INT  max_pre_iter  = 1;
   PASE_INT  max_post_iter = 1;
   PASE_REAL atol          = 1e-8;
   PASE_REAL rtol          = 1e-6;
   PASE_INT  print_level   = 1;
-  PASE_INT  max_level     = 6;
+  PASE_INT  max_level     = 20;
   GetCommandLineInfo(argc, argv, &n, &block_size, &atol, &max_pre_iter);
   //PASE_INT  min_coarse_size = block_size * 30;
-  PASE_INT  min_coarse_size = 200;
+  PASE_INT  min_coarse_size = 500;
 
   HYPRE_IJMatrix A, B;
   HYPRE_ParCSRMatrix parcsr_A, parcsr_B;
@@ -79,6 +80,7 @@ PASE_INT main(PASE_INT argc, char *argv[])
   PASE_Printf(MPI_COMM_WORLD, "Set parameters:\n");
   PASE_Printf(MPI_COMM_WORLD, "dimension       = %d\n", n*n);
   PASE_Printf(MPI_COMM_WORLD, "block size      = %d\n", block_size);
+  PASE_Printf(MPI_COMM_WORLD, "max block size  = %d\n", max_block_size);
   PASE_Printf(MPI_COMM_WORLD, "max pre iter    = %d\n", max_pre_iter);
   PASE_Printf(MPI_COMM_WORLD, "atol            = %e\n", atol);
   PASE_Printf(MPI_COMM_WORLD, "max cycle       = %d\n", max_cycle);
@@ -99,6 +101,7 @@ PASE_INT main(PASE_INT argc, char *argv[])
 
   //Set up
   PASE_Mg_set_block_size(solver, block_size);
+  PASE_Mg_set_max_block_size(solver, max_block_size);
   PASE_Mg_set_max_cycle(solver, max_cycle);
   PASE_Mg_set_max_pre_iteration(solver, max_pre_iter);
   PASE_Mg_set_max_post_iteration(solver, max_post_iter);

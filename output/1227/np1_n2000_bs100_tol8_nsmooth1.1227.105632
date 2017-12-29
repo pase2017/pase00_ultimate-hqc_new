@@ -1,0 +1,87 @@
+PASE (Parallel Auxiliary Space Eigen-solver), parallel version
+Please contact liyu@lsec.cc.ac.cn, if there is any bugs.
+=============================================================
+
+Set parameters:
+dimension       = 4000000
+block size      = 100
+max pre iter    = 1
+atol            = 1.000000e-08
+max cycle       = 30
+max level       = 20
+min coarse size = 5000
+
+
+
+ Num MPI tasks = 1
+
+ Num OpenMP threads = 1
+
+
+BoomerAMG SETUP PARAMETERS:
+
+ Max levels = 20
+ Num levels = 6
+
+ Strength Threshold = 0.250000
+ Interpolation Truncation Factor = 0.000000
+ Maximum Row Sum Threshold for Dependency Weakening = 0.900000
+
+ Coarsening Type = Falgout-CLJP 
+ measures are determined locally
+
+
+ No global partition option chosen.
+
+ Interpolation = modified classical interpolation
+
+Operator Matrix Information:
+
+            nonzero         entries per row        row sums
+lev   rows  entries  sparse  min  max   avg       min         max
+===================================================================
+ 0 4000000 19992000  0.000     3    5   5.0   0.000e+00   2.000e+00
+ 1 2000000 17984002  0.000     4    9   9.0   0.000e+00   2.500e+00
+ 2  500998  4504978  0.000     4   12   9.0   0.000e+00   3.020e+00
+ 3  125500  1127504  0.000     5   11   9.0  -1.110e-16   2.660e+00
+ 4   31377   281883  0.000     5   13   9.0  -9.368e-16   2.987e+00
+ 5    7875    70855  0.001     4   14   9.0  -1.991e-15   2.974e+00
+
+
+Interpolation Matrix Information:
+                 entries/row    min     max         row sums
+lev  rows cols    min max     weight   weight     min       max 
+=================================================================
+ 0 4000000 x 2000000   1   4   2.500e-01 2.500e-01 5.000e-01 1.000e+00
+ 1 2000000 x 500998   1   4   7.692e-02 5.000e-01 2.857e-01 1.000e+00
+ 2 500998 x 125500   1   4   6.950e-02 5.503e-01 1.110e-01 1.000e+00
+ 3 125500 x 31377   1   4   7.307e-02 5.388e-01 1.243e-01 1.000e+00
+ 4 31377 x 7875    0   4   6.100e-02 5.284e-01 0.000e+00 1.000e+00
+
+
+     Complexity:    grid = 1.666438
+                operator = 2.198941
+                memory = 2.997872
+
+
+
+
+BoomerAMG SOLVER PARAMETERS:
+
+  Maximum number of cycles:         1 
+  Stopping Tolerance:               1.000000e-07 
+  Cycle type (1 = V, 2 = W, etc.):  1
+
+  Relaxation Parameters:
+   Visiting Grid:                     down   up  coarse
+            Number of sweeps:            1    1     1 
+   Type 0=Jac, 3=hGS, 6=hSGS, 9=GE:      3    3     3 
+   Point types, partial sweeps (1=C, -1=F):
+                  Pre-CG relaxation (down):   1  -1
+                   Post-CG relaxation (up):  -1   1
+                             Coarsest grid:   0
+
+The number of levels = 6
+The dim of the coarsest space is 7875.
+modified block_size = 104
+

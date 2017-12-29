@@ -27,6 +27,7 @@ PASE_Multigrid_get_amg_array_hypre
   HYPRE_BoomerAMGSetRelaxOrder(amg_solver, 1);         /* uses C/F relaxation */
   HYPRE_BoomerAMGSetNumSweeps(amg_solver, 1);          /* Sweeeps on each level */
   HYPRE_BoomerAMGSetTol(amg_solver, 1e-7);             /* conv. tolerance */
+  HYPRE_BoomerAMGSetMaxIter(amg_solver, 1);
   HYPRE_BoomerAMGSetMinCoarseSize(amg_solver, param->min_coarse_size);
 
   /* Now setup */
