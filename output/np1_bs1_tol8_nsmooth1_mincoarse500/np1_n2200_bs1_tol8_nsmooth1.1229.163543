@@ -1,0 +1,102 @@
+PASE (Parallel Auxiliary Space Eigen-solver), parallel version
+Please contact liyu@lsec.cc.ac.cn, if there is any bugs.
+=============================================================
+
+Set parameters:
+dimension       = 4840000
+block size      = 1
+max block size  = 2
+max pre iter    = 1
+atol            = 1.000000e-08
+max cycle       = 100
+max level       = 20
+min coarse size = 1000
+
+
+
+ Num MPI tasks = 1
+
+ Num OpenMP threads = 1
+
+
+BoomerAMG SETUP PARAMETERS:
+
+ Max levels = 20
+ Num levels = 7
+
+ Strength Threshold = 0.250000
+ Interpolation Truncation Factor = 0.000000
+ Maximum Row Sum Threshold for Dependency Weakening = 0.900000
+
+ Coarsening Type = Falgout-CLJP 
+ measures are determined locally
+
+
+ No global partition option chosen.
+
+ Interpolation = modified classical interpolation
+
+Operator Matrix Information:
+
+            nonzero         entries per row        row sums
+lev   rows  entries  sparse  min  max   avg       min         max
+===================================================================
+ 0 4840000 24191200  0.000     3    5   5.0   0.000e+00   2.000e+00
+ 1 2420000 21762402  0.000     4    9   9.0   0.000e+00   2.500e+00
+ 2  606098  5450478  0.000     4   12   9.0   0.000e+00   3.020e+00
+ 3  151800  1364004  0.000     5   11   9.0  -1.110e-16   2.660e+00
+ 4   37953   341017  0.000     5   13   9.0  -9.368e-16   2.894e+00
+ 5    9522    86096  0.001     5   14   9.0  -1.991e-15   2.404e+00
+ 6    2415    22043  0.004     5   16   9.1  -4.144e-15   2.635e+00
+
+
+Interpolation Matrix Information:
+                 entries/row    min     max         row sums
+lev  rows cols    min max     weight   weight     min       max 
+=================================================================
+ 0 4840000 x 2420000   1   4   2.500e-01 2.500e-01 5.000e-01 1.000e+00
+ 1 2420000 x 606098   1   4   7.692e-02 5.000e-01 2.857e-01 1.000e+00
+ 2 606098 x 151800   1   4   6.950e-02 5.503e-01 1.110e-01 1.000e+00
+ 3 151800 x 37953   1   4   7.307e-02 5.162e-01 1.243e-01 1.000e+00
+ 4 37953 x 9522    0   4   6.483e-02 5.284e-01 0.000e+00 1.000e+00
+ 5  9522 x 2415    1   4   5.949e-02 5.489e-01 1.424e-01 1.000e+00
+
+
+     Complexity:    grid = 1.666898
+                operator = 2.199859
+                memory = 2.999660
+
+
+
+
+BoomerAMG SOLVER PARAMETERS:
+
+  Maximum number of cycles:         1 
+  Stopping Tolerance:               1.000000e-07 
+  Cycle type (1 = V, 2 = W, etc.):  1
+
+  Relaxation Parameters:
+   Visiting Grid:                     down   up  coarse
+            Number of sweeps:            1    1     1 
+   Type 0=Jac, 3=hGS, 6=hSGS, 9=GE:      3    3     3 
+   Point types, partial sweeps (1=C, -1=F):
+                  Pre-CG relaxation (down):   1  -1
+                   Post-CG relaxation (up):  -1   1
+                             Coarsest grid:   0
+
+The number of levels = 7
+The dim of the coarsest space is 2415.
+modified block_size = 1
+
+cycle = 1, nconv = 0, residual of the first unconverged = 8.239977e-08
+cycle = 2, nconv = 1, all the wanted eigenpairs have converged.
+
+=============================================================
+0-th eig=4.07464317e-06, aresi = 2.90950866e-09
+=============================================================
+set up time       = 0.130000 seconds
+smooth time       = 7.270000 seconds
+set aux time      = 0.560000 seconds
+prolong time      = 0.160000 seconds
+direct solve time = 0.000000 seconds
+total solve time  = 8.150000 seconds

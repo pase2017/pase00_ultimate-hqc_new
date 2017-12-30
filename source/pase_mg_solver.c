@@ -87,6 +87,7 @@ PASE_Mg_solver_create_by_multigrid(PASE_MULTIGRID multigrid)
   solver->prolong_time        = 0.0;
   solver->direct_solve_time   = 0.0;
   solver->total_solve_time    = 0.0;
+  solver->total_time          = 0.0;
   solver->eigenvalues         = NULL;
   solver->exact_eigenvalues   = NULL;
   solver->u                   = NULL;
@@ -217,6 +218,7 @@ PASE_Mg_solve(PASE_MG_SOLVER solver)
   } while( solver->max_cycle > solver->ncycl && solver->nconv < solver->actual_block_size);
   end = clock();
   solver->total_solve_time += ((double)(end-start))/CLK_TCK;
+  solver->total_time        = solver->total_solve_time + solver->set_up_time;
   PASE_Mg_print(solver);
 
   return 0;
@@ -483,6 +485,7 @@ PASE_Mg_print(PASE_MG_SOLVER solver)
     PASE_Printf(MPI_COMM_WORLD, "prolong time      = %f seconds\n", solver->prolong_time);
     PASE_Printf(MPI_COMM_WORLD, "direct solve time = %f seconds\n", solver->direct_solve_time);
     PASE_Printf(MPI_COMM_WORLD, "total solve time  = %f seconds\n", solver->total_solve_time);
+    PASE_Printf(MPI_COMM_WORLD, "total time        = %f seconds\n", solver->total_time);
   }	
   return 0;
 }
@@ -1278,7 +1281,7 @@ PASE_Mg_direct_solve_by_gcg(void *mg_solver)
   PASE_INT         max_iter    = 10;
   PASE_REAL        tol         = solver->atol;
 
-#if 1
+#if 0
   PASE_INT        i      = 0;
   PASE_REAL       r_norm = 0;
   PASE_AUX_VECTOR tmp    = PASE_Aux_vector_create_by_aux_vector(aux_u[0]);
@@ -1292,13 +1295,16 @@ PASE_Mg_direct_solve_by_gcg(void *mg_solver)
   PASE_Printf(MPI_COMM_WORLD, "\n");
 #endif
 
+#if 1
+#endif
+
   PASE_Printf(MPI_COMM_WORLD, "Begin: solve directly by gcg\n");
   PASE_Printf(MPI_COMM_WORLD, "\n");
   GCG_Eigen(aux_A, aux_B, eigenvalues, aux_u, block_size, tol, tol, max_iter, 100, solver->nconv);
   PASE_Printf(MPI_COMM_WORLD, "\n");
   PASE_Printf(MPI_COMM_WORLD, "Done: solve directly by gcg\n");
 
-#if 1
+#if 0
   for(i = 0; i < block_size; i++) {
     PASE_Aux_matrix_multiply_aux_vector(aux_A, aux_u[i], tmp);
     PASE_Aux_matrix_multiply_aux_vector_general(-eigenvalues[i], aux_B, aux_u[i], 1.0, tmp);

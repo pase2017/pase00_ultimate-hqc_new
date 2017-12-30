@@ -30,7 +30,7 @@ void SmallAXPBY(PASE_REAL alpha, PASE_REAL *a, PASE_REAL beta, PASE_REAL *b, PAS
 //Petsc CG算法
 
 void GetLAPACKMatrix(PASE_AUX_MATRIX A, PASE_AUX_VECTOR *V, PASE_REAL *AA, PASE_REAL *AA_sub, PASE_INT start, PASE_INT last_dim, PASE_INT dim, PASE_REAL *AA_copy, PASE_AUX_VECTOR tmp, PASE_REAL *small_tmp);
-void GetWinV(PASE_INT nev, PASE_INT nunlock, PASE_INT *unlock, PASE_AUX_VECTOR *V, PASE_REAL *approx_eval, PASE_AUX_MATRIX A, PASE_AUX_MATRIX B, PASE_REAL cg_tol, PASE_INT nsmooth, PASE_AUX_VECTOR rhs, PASE_AUX_VECTOR tmp);
+void GetWinV(PASE_INT nev, PASE_INT nunlock, PASE_INT *unlock, PASE_AUX_VECTOR *V, PASE_REAL *approx_eval, PASE_AUX_MATRIX A, PASE_AUX_MATRIX B, PASE_REAL cg_tol, PASE_INT nsmooth, PASE_AUX_VECTOR rhs);
 void CheckConvergence(PASE_AUX_MATRIX A, PASE_AUX_MATRIX B, PASE_INT *unlock, PASE_INT *nunlock, PASE_INT start, PASE_INT nev, PASE_AUX_VECTOR *X_tmp, PASE_REAL *approx_eval, PASE_REAL abs_tol, PASE_AUX_VECTOR *V_tmp, PASE_INT iter, PASE_REAL *RRes);
 void GetPinV(PASE_REAL *AA, PASE_AUX_VECTOR *V, PASE_INT dim_x, PASE_INT *dim_xp, PASE_INT dim_xpw, PASE_INT nunlock, PASE_INT *unlock, PASE_AUX_VECTOR *V_tmp, PASE_AUX_VECTOR *Orth_tmp, PASE_INT *Ind);
 void GetXinV(PASE_AUX_VECTOR *V, PASE_AUX_VECTOR *X_tmp, PASE_AUX_VECTOR *tmp, PASE_INT dim_x);

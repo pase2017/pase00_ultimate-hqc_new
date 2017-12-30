@@ -1,0 +1,157 @@
+PASE (Parallel Auxiliary Space Eigen-solver), parallel version
+Please contact liyu@lsec.cc.ac.cn, if there is any bugs.
+=============================================================
+
+Set parameters:
+dimension       = 2560000
+block size      = 50
+max block size  = 55
+max pre iter    = 1
+atol            = 1.000000e-08
+max cycle       = 100
+max level       = 20
+min coarse size = 1000
+
+
+
+ Num MPI tasks = 1
+
+ Num OpenMP threads = 1
+
+
+BoomerAMG SETUP PARAMETERS:
+
+ Max levels = 20
+ Num levels = 7
+
+ Strength Threshold = 0.250000
+ Interpolation Truncation Factor = 0.000000
+ Maximum Row Sum Threshold for Dependency Weakening = 0.900000
+
+ Coarsening Type = Falgout-CLJP 
+ measures are determined locally
+
+
+ No global partition option chosen.
+
+ Interpolation = modified classical interpolation
+
+Operator Matrix Information:
+
+            nonzero         entries per row        row sums
+lev   rows  entries  sparse  min  max   avg       min         max
+===================================================================
+ 0 2560000 12793600  0.000     3    5   5.0   0.000e+00   2.000e+00
+ 1 1280000 11507202  0.000     4    9   9.0   0.000e+00   2.500e+00
+ 2  320798  2883978  0.000     4   12   9.0   0.000e+00   3.020e+00
+ 3   80400   722004  0.000     5   11   9.0  -1.110e-16   2.660e+00
+ 4   20102   180508  0.000     5   13   9.0  -9.368e-16   2.987e+00
+ 5    5050    45638  0.002     4   15   9.0  -1.031e-15   2.570e+00
+ 6    1276    11470  0.007     5   13   9.0  -2.437e-15   2.572e+00
+
+
+Interpolation Matrix Information:
+                 entries/row    min     max         row sums
+lev  rows cols    min max     weight   weight     min       max 
+=================================================================
+ 0 2560000 x 1280000   1   4   2.500e-01 2.500e-01 5.000e-01 1.000e+00
+ 1 1280000 x 320798   1   4   7.692e-02 5.000e-01 2.857e-01 1.000e+00
+ 2 320798 x 80400   1   4   6.950e-02 5.503e-01 1.110e-01 1.000e+00
+ 3 80400 x 20102   1   4   7.307e-02 5.388e-01 1.243e-01 1.000e+00
+ 4 20102 x 5050    0   4   6.429e-02 5.240e-01 0.000e+00 1.000e+00
+ 5  5050 x 1276    0   4   2.370e-02 5.255e-01 0.000e+00 1.000e+00
+
+
+     Complexity:    grid = 1.667041
+                operator = 2.199881
+                memory = 2.999710
+
+
+
+
+BoomerAMG SOLVER PARAMETERS:
+
+  Maximum number of cycles:         1 
+  Stopping Tolerance:               1.000000e-07 
+  Cycle type (1 = V, 2 = W, etc.):  1
+
+  Relaxation Parameters:
+   Visiting Grid:                     down   up  coarse
+            Number of sweeps:            1    1     1 
+   Type 0=Jac, 3=hGS, 6=hSGS, 9=GE:      3    3     3 
+   Point types, partial sweeps (1=C, -1=F):
+                  Pre-CG relaxation (down):   1  -1
+                   Post-CG relaxation (up):  -1   1
+                             Coarsest grid:   0
+
+The number of levels = 7
+The dim of the coarsest space is 1276.
+modified block_size = 52
+
+cycle = 1, nconv = 0, residual of the first unconverged = 1.259119e-07
+cycle = 2, nconv = 26, residual of the first unconverged = 1.016895e-08
+cycle = 3, nconv = 43, residual of the first unconverged = 7.021896e-09
+cycle = 4, nconv = 47, residual of the first unconverged = 1.678717e-08
+cycle = 5, nconv = 50, residual of the first unconverged = 3.546288e-09
+
+=============================================================
+0-th eig=7.70099671e-06, aresi = 3.40186953e-10
+1-th eig=1.92524769e-05, aresi = 3.52875579e-10
+2-th eig=1.92524769e-05, aresi = 6.95743540e-10
+3-th eig=3.08039572e-05, aresi = 8.69877013e-10
+4-th eig=3.85048946e-05, aresi = 6.27605876e-10
+5-th eig=3.85048946e-05, aresi = 1.27579748e-09
+6-th eig=5.00563748e-05, aresi = 1.12332336e-09
+7-th eig=5.00563748e-05, aresi = 1.63870859e-09
+8-th eig=6.54581755e-05, aresi = 1.67596039e-09
+9-th eig=6.54581755e-05, aresi = 2.08023173e-09
+10-th eig=6.93087925e-05, aresi = 2.26387475e-09
+11-th eig=7.70096557e-05, aresi = 2.14088992e-09
+12-th eig=7.70096557e-05, aresi = 2.65987885e-09
+13-th eig=9.62620734e-05, aresi = 3.25415407e-09
+14-th eig=9.62620734e-05, aresi = 4.32015801e-09
+15-th eig=1.00112216e-04, aresi = 2.58161947e-09
+16-th eig=1.00112216e-04, aresi = 3.44734929e-09
+17-th eig=1.11663696e-04, aresi = 3.88093677e-09
+18-th eig=1.11663696e-04, aresi = 4.53918422e-09
+19-th eig=1.23215354e-04, aresi = 6.06834688e-09
+20-th eig=1.30916114e-04, aresi = 6.62173795e-09
+21-th eig=1.30916114e-04, aresi = 7.47851134e-09
+22-th eig=1.42466882e-04, aresi = 4.46040987e-09
+23-th eig=1.42466882e-04, aresi = 5.59412446e-09
+24-th eig=1.54018363e-04, aresi = 6.82654725e-09
+25-th eig=1.54018363e-04, aresi = 8.14370655e-09
+26-th eig=1.57869395e-04, aresi = 3.58282255e-10
+27-th eig=1.57869395e-04, aresi = 3.84467384e-10
+28-th eig=1.73270780e-04, aresi = 3.87410294e-10
+29-th eig=1.73270780e-04, aresi = 5.43516165e-10
+30-th eig=1.92522012e-04, aresi = 5.01138703e-10
+31-th eig=1.92522012e-04, aresi = 7.07376961e-10
+32-th eig=1.92523435e-04, aresi = 1.05602710e-09
+33-th eig=2.00224061e-04, aresi = 9.48482563e-10
+34-th eig=2.00224061e-04, aresi = 1.17021563e-09
+35-th eig=2.04073492e-04, aresi = 7.36136638e-10
+36-th eig=2.04073492e-04, aresi = 8.95610957e-10
+37-th eig=2.23325910e-04, aresi = 2.92240536e-09
+38-th eig=2.23325910e-04, aresi = 3.59730375e-09
+39-th eig=2.34878102e-04, aresi = 4.75318065e-09
+40-th eig=2.34878102e-04, aresi = 5.83188425e-09
+41-th eig=2.50277411e-04, aresi = 2.44680872e-09
+42-th eig=2.50277411e-04, aresi = 3.52573981e-09
+43-th eig=2.50279191e-04, aresi = 8.69336460e-10
+44-th eig=2.50279191e-04, aresi = 1.69643064e-09
+45-th eig=2.61828892e-04, aresi = 7.75046539e-10
+46-th eig=2.61828892e-04, aresi = 1.06737888e-09
+47-th eig=2.77232768e-04, aresi = 4.28028004e-09
+48-th eig=2.81081309e-04, aresi = 1.40810551e-09
+49-th eig=2.81081309e-04, aresi = 2.17190045e-09
+50-th eig=2.84933231e-04, aresi = 3.54628777e-09
+51-th eig=2.84933231e-04, aresi = 1.49688859e-08
+=============================================================
+set up time       = 6.720000 seconds
+smooth time       = 262.160000 seconds
+set aux time      = 70.720000 seconds
+prolong time      = 37.900000 seconds
+direct solve time = 4.840000 seconds
+total solve time  = 381.350000 seconds
+total time        = 388.070000 seconds

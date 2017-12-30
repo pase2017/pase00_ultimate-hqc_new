@@ -12,14 +12,14 @@ void
 GCG_Eigen(PASE_AUX_MATRIX A, PASE_AUX_MATRIX B, PASE_REAL *eval, PASE_AUX_VECTOR *evec, PASE_INT nev, PASE_REAL abs_tol, PASE_REAL cg_tol, PASE_INT max_iter, PASE_INT nsmooth, PASE_INT start)
 {
   //--------------------定义变量--------------------------------------------
-  PASE_INT       i, max_dim_x = nev*5/4;//最大是1.25×nev
+  PASE_INT        i, max_dim_x = nev*5/4;//最大是1.25×nev
   //unlock用来记录没有收敛的特征值和特征向量在V中的编号,nunlock为未收敛的特征对个数
   //dim_xpw表示V的长度,dim_xp表示[X,P]的向量个数,dim_x表示X中的向量个数
-  PASE_INT       *unlock, nunlock, dim_xpw, last_dim_xpw, dim_xp, dim_x = nev, iter = 0, *Ind;
+  PASE_INT        *unlock, nunlock, dim_xpw, last_dim_xpw, dim_xp, dim_x = nev, iter = 0, *Ind;
   //AA_copy用来存储矩阵AA的备份，为了下次计算做准备
   //AA_sub用来存储小规模矩阵AA中与[X,P]对应的对角部分
-  PASE_REAL      *AA, *approx_eval, *AA_copy, *AA_sub, *small_tmp, *RRes;
-  PASE_AUX_VECTOR            *V, *V_tmp, *X_tmp, *Orth_tmp;
+  PASE_REAL       *AA, *approx_eval, *AA_copy, *AA_sub, *small_tmp, *RRes;
+  PASE_AUX_VECTOR *V, *V_tmp, *X_tmp, *Orth_tmp;
 
   //--------------------分配空间--------------------------------------------
   //给V，Vtmp,x2分配空间,V用于存储[X,d,W],Vtmp是临时存储空间,x2用于存储近似Ritz向量
@@ -39,15 +39,15 @@ GCG_Eigen(PASE_AUX_MATRIX A, PASE_AUX_MATRIX B, PASE_REAL *eval, PASE_AUX_VECTOR
   //GetRandomInitValue(V, dim_x);//krylovschur怎么取的随机初值
   //ReadVec("randx_5.txt", V, nev, 1089);
   //对初值做一次B正交化,暂时默认初值不会有线性相关的向量，即nev不会被修改
-  //GCG_Orthogonal(V, B, 0, &dim_x, V_tmp, Orth_tmp, Ind);
   //计算得到小规模特征值计算的矩阵AA,BB并保存备份AAt
   //RayleighRitz(A, V, AA, approx_eval, NULL, AA_copy, 0, 0, dim_x, V_tmp[0], NULL);
   //计算初始近似特征向量并正交化
   //GetRitzVectors(AA, V, X_tmp, dim_x, dim_x);
   //ChangeVecPointer(V, X_tmp, Orth_tmp, dim_x);
+  GCG_Orthogonal(V, B, 0, &dim_x, V_tmp, Orth_tmp, Ind);
   CheckConvergence(A, B, unlock, &nunlock, start, nev, V, approx_eval, abs_tol, V_tmp, -2, RRes);
   //用CG迭代获取W向量
-  GetWinV(dim_x, nunlock, unlock, V, approx_eval, A, B, cg_tol, nsmooth, V_tmp[0], V_tmp[1]);
+  GetWinV(dim_x, nunlock, unlock, V, approx_eval, A, B, cg_tol, nsmooth, V_tmp[0]);
   //对V进行正交化,并计算evec=V^T*A*V,B1=V^T*B*V
   dim_xpw = 2*dim_x;
   GCG_Orthogonal(V, B, dim_x, &dim_xpw, V_tmp, Orth_tmp, Ind);
@@ -67,7 +67,7 @@ GCG_Eigen(PASE_AUX_MATRIX A, PASE_AUX_MATRIX B, PASE_REAL *eval, PASE_AUX_VECTOR
     last_dim_xpw = dim_xpw;
     dim_xpw = dim_xp+nunlock;
     //对unlock的x2进行CG迭代得到w,V的前nev列为x2,dim_xp列之后是w
-    GetWinV(dim_xp, nunlock, unlock, V, approx_eval, A, B, cg_tol, nsmooth, V_tmp[0], V_tmp[1]);
+    GetWinV(dim_xp, nunlock, unlock, V, approx_eval, A, B, cg_tol, nsmooth, V_tmp[0]);
     //对W与前dim_xp个向量进行正交化,Ind记录W中的非零向量的列号
     GCG_Orthogonal(V, B, dim_xp, &dim_xpw, V_tmp, Orth_tmp, Ind);
     //PrintVec(V+dim_xp, dim_xpw-dim_xp);
@@ -170,7 +170,7 @@ GetLAPACKMatrix(PASE_AUX_MATRIX A, PASE_AUX_VECTOR *V, PASE_REAL *AA, PASE_REAL 
 
 //用CG迭代得到向量W
 void 
-GetWinV(PASE_INT start, PASE_INT nunlock, PASE_INT *unlock, PASE_AUX_VECTOR *V, PASE_REAL *approx_eval, PASE_AUX_MATRIX A, PASE_AUX_MATRIX B, PASE_REAL cg_tol, PASE_INT nsmooth, PASE_AUX_VECTOR rhs, PASE_AUX_VECTOR tmp)
+GetWinV(PASE_INT start, PASE_INT nunlock, PASE_INT *unlock, PASE_AUX_VECTOR *V, PASE_REAL *approx_eval, PASE_AUX_MATRIX A, PASE_AUX_MATRIX B, PASE_REAL cg_tol, PASE_INT nsmooth, PASE_AUX_VECTOR rhs)
 {
   PASE_INT       i, j;
   for(i = 0; i < nunlock; i++) {
@@ -196,10 +196,6 @@ CheckConvergence(PASE_AUX_MATRIX A, PASE_AUX_MATRIX B, PASE_INT *unlock, PASE_IN
     PASE_Aux_matrix_multiply_aux_vector(A, X_tmp[i], V_tmp[0]); 
     PASE_Aux_matrix_multiply_aux_vector(B, X_tmp[i], V_tmp[1]); 
     PASE_Aux_vector_axpy(-approx_eval[i], V_tmp[1], V_tmp[0]); 
-    //||Au-\lambdaBu||/||Au||/\lambda
-    //VecNorm(Vtmp[0], Norm_2, norm_2); 
-    //res  = norm_1/norm_2/eval[i];
-    //Norm_2=1
     PASE_Aux_vector_norm(V_tmp[1], &res_norm); 
     PASE_Aux_vector_norm(X_tmp[i], &evec_norm); 
     res  = res_norm/evec_norm;
@@ -221,7 +217,7 @@ CheckConvergence(PASE_AUX_MATRIX A, PASE_AUX_MATRIX B, PASE_INT *unlock, PASE_IN
     }
   }
   *nunlock = nunlocktmp;
-  PASE_Printf(MPI_COMM_WORLD,"nunlock(%d)= %d; max_res(%d)= %e; min_res(%d)= %e\n", iter+1, nunlocktmp, iter+1, max_res, iter+1, min_res);
+  //PASE_Printf(MPI_COMM_WORLD,"nunlock(%d)= %d; max_res(%d)= %e; min_res(%d)= %e\n", iter+1, nunlocktmp, iter+1, max_res, iter+1, min_res);
 }
 
 //获取d

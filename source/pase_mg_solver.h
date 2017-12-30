@@ -37,6 +37,7 @@ typedef struct PASE_MG_SOLVER_PRIVATE_ {
   PASE_REAL    prolong_time;
   PASE_REAL    direct_solve_time;
   PASE_REAL    total_solve_time;
+  PASE_REAL    total_time;
 
   PASE_SCALAR *eigenvalues;
   PASE_SCALAR *exact_eigenvalues;

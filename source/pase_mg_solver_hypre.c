@@ -13,10 +13,10 @@ PASE_Mg_get_initial_vector_by_coarse_grid_hypre(void *mg_solver)
 {
   PASE_MG_SOLVER solver        = (PASE_MG_SOLVER)mg_solver;
   HYPRE_Solver   lobpcg_solver = NULL; 
-  PASE_INT       maxIterations = 100; 	        /* maximum number of iterations */
+  PASE_INT       maxIterations = 50; 	        /* maximum number of iterations */
   PASE_INT       pcgMode       = 1;    	        /* use rhs as initial guess for inner pcg iterations */
   PASE_INT       verbosity     = 0;    	        /* print iterations info */
-  PASE_REAL      atol 	       = solver->atol * 1e-2;	/* absolute tolerance (all eigenvalues) */
+  PASE_REAL      atol 	       = solver->atol;	/* absolute tolerance (all eigenvalues) */
   PASE_REAL      rtol          = 1e-50;
   PASE_INT       lobpcgSeed    = 77;
 
