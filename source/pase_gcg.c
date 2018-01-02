@@ -34,6 +34,9 @@ GCG_Eigen(PASE_AUX_MATRIX A, PASE_AUX_MATRIX B, PASE_REAL *eval, PASE_AUX_VECTOR
   Ind         = calloc(3*max_dim_x, sizeof(PASE_INT));
   RRes        = (PASE_REAL*)calloc(nev, sizeof(PASE_REAL));
   Orth_tmp    = (PASE_AUX_VECTOR*)PASE_Malloc(max_dim_x*sizeof(PASE_AUX_VECTOR));
+  for(i = 0 ; i < nev; i++) {
+    approx_eval[i] = eval[i];
+  }
 
   //------------------开始CGC计算特征值--------------------------------
   //GetRandomInitValue(V, dim_x);//krylovschur怎么取的随机初值
@@ -81,6 +84,7 @@ GCG_Eigen(PASE_AUX_MATRIX A, PASE_AUX_MATRIX B, PASE_REAL *eval, PASE_AUX_VECTOR
 
     iter += 1;
   }
+  PASE_Printf(MPI_COMM_WORLD, "iter = %d\n", iter);
   //PrintSmallEigen(iter, nev, approx_eval, NULL, 0, RRes);
   //eval,evec是大规模矩阵的近似特征对
   memcpy(eval, approx_eval, nev*sizeof(PASE_REAL));
@@ -196,7 +200,7 @@ CheckConvergence(PASE_AUX_MATRIX A, PASE_AUX_MATRIX B, PASE_INT *unlock, PASE_IN
     PASE_Aux_matrix_multiply_aux_vector(A, X_tmp[i], V_tmp[0]); 
     PASE_Aux_matrix_multiply_aux_vector(B, X_tmp[i], V_tmp[1]); 
     PASE_Aux_vector_axpy(-approx_eval[i], V_tmp[1], V_tmp[0]); 
-    PASE_Aux_vector_norm(V_tmp[1], &res_norm); 
+    PASE_Aux_vector_norm(V_tmp[0], &res_norm); 
     PASE_Aux_vector_norm(X_tmp[i], &evec_norm); 
     res  = res_norm/evec_norm;
     RRes[i] = res;
@@ -370,7 +374,7 @@ GCG_Orthogonal(PASE_AUX_VECTOR *V, PASE_AUX_MATRIX B, PASE_INT start, PASE_INT *
 	  PASE_Aux_vector_scale(1.0/vout, V[i]); 
 	  Ind[n_nonzero++] = i;
 	} else {
-	  PASE_Printf(MPI_COMM_WORLD, "In GCG_Orthogonal, there is a zero vector! i = %d, start = %d, end: %d\n", i, start, *end);
+	  //PASE_Printf(MPI_COMM_WORLD, "In GCG_Orthogonal, there is a zero vector! i = %d, start = %d, end: %d\n", i, start, *end);
 	  Nonzero_Vec[n_zero++] = V[i];
 	}
       }
@@ -412,7 +416,7 @@ GCG_Orthogonal(PASE_AUX_VECTOR *V, PASE_AUX_MATRIX B, PASE_INT start, PASE_INT *
 	  PASE_Aux_matrix_multiply_aux_vector(B, V[i], V_tmp[start+n_nonzero]); 
 	  Ind[n_nonzero++] = i;
 	} else {
-	  PASE_Printf(MPI_COMM_WORLD, "In GCG_Orthogonal, there is a zero vector! i = %d, start = %d, end: %d\n", i, start, *end);
+	  //PASE_Printf(MPI_COMM_WORLD, "In GCG_Orthogonal, there is a zero vector! i = %d, start = %d, end: %d\n", i, start, *end);
 	  Nonzero_Vec[n_zero++] = V[i];
 	}
       }
@@ -460,7 +464,7 @@ OrthogonalSmall(PASE_REAL *V, PASE_REAL **B, PASE_INT dim_xpw, PASE_INT dim_x, P
 	ScalVecSmall(1.0/vout, V+i*dim_xpw, dim_xpw);
 	Ind[n_nonzero++] = i;
       } else {
-	PASE_Printf(MPI_COMM_WORLD, "in OrthogonalSmall, there appears a zero vector! i: %d\n", i);
+	//PASE_Printf(MPI_COMM_WORLD, "in OrthogonalSmall, there appears a zero vector! i: %d\n", i);
       }
     }
   }

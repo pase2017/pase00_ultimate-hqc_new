@@ -68,5 +68,5 @@ target_link_libraries(${BIN_TEST_MG_USER_NAME} ${LIB_PASE} ${LIB_HYPRE} ${LIB_LA
 file(GLOB_RECURSE TEST_MG_HYPRE_SRC ${PROJECT_SOURCE_DIR}/test/source/test_pase_mg_hypre.c)
 set(BIN_TEST_MG_HYPRE_NAME "test_mg_hypre.exe")
 add_executable(${BIN_TEST_MG_HYPRE_NAME} ${TEST_MG_HYPRE_SRC})
-target_link_libraries(${BIN_TEST_MG_HYPRE_NAME} ${LIB_PASE} ${LIB_HYPRE} ${LIB_LAPACKE} ${LIB_LAPACK} ${LIB_BLAS} "-lm" "-lgfortran")
+target_link_libraries(${BIN_TEST_MG_HYPRE_NAME} ${LIB_PASE} ${LIB_HYPRE} ${LIB_LAPACKE} ${LIB_LAPACK} ${LIB_BLAS} "-lm""-lgfortran")
 

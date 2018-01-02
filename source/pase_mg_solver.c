@@ -57,8 +57,8 @@ PASE_Mg_solver_create_by_multigrid(PASE_MULTIGRID multigrid)
   solver->multigrid          = multigrid;
   solver->function           = PASE_Mg_function_create(PASE_Mg_get_initial_vector_by_coarse_grid_hypre,
                                                        //PASE_Mg_solve_directly_by_IRA,
-                                                       PASE_Mg_direct_solve_by_lobpcg_aux_hypre,
-						       //PASE_Mg_direct_solve_by_gcg, 
+                                                       //PASE_Mg_direct_solve_by_lobpcg_aux_hypre,
+						       PASE_Mg_direct_solve_by_gcg, 
                                                        //PASE_Mg_presmoothing_by_cg,
                                                        //PASE_Mg_presmoothing_by_cg,
 						       PASE_Mg_presmoothing_by_pcg_amg_hypre, 
@@ -1300,7 +1300,7 @@ PASE_Mg_direct_solve_by_gcg(void *mg_solver)
 
   PASE_Printf(MPI_COMM_WORLD, "Begin: solve directly by gcg\n");
   PASE_Printf(MPI_COMM_WORLD, "\n");
-  GCG_Eigen(aux_A, aux_B, eigenvalues, aux_u, block_size, tol, tol, max_iter, 100, solver->nconv);
+  GCG_Eigen(aux_A, aux_B, eigenvalues, aux_u, block_size, tol*1e-2, tol, max_iter, 10, solver->nconv);
   PASE_Printf(MPI_COMM_WORLD, "\n");
   PASE_Printf(MPI_COMM_WORLD, "Done: solve directly by gcg\n");
 
