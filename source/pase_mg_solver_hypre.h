@@ -7,6 +7,8 @@
 #if PASE_USE_HYPRE
 
 PASE_INT PASE_Mg_get_initial_vector_by_coarse_grid_hypre(void *mg_solver);
+PASE_INT PASE_Mg_get_initial_vector_by_coarse_grid_lobpcg_amg_hypre(void *mg_solver);
+PASE_INT PASE_Mg_get_initial_vector_by_full_multigrid_hypre(void *mg_solver);
 PASE_INT PASE_Mg_presmoothing_by_pcg_hypre(void *mg_solver);
 PASE_INT PASE_Mg_presmoothing_by_pcg_amg_hypre(void *mg_solver);
 PASE_INT PASE_Mg_presmoothing_by_pcg_aux_hypre(void *mg_solver);

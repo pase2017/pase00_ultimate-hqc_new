@@ -55,10 +55,10 @@ PASE_Mg_solver_create_by_multigrid(PASE_MULTIGRID multigrid)
   PASE_MG_SOLVER solver      = (PASE_MG_SOLVER)PASE_Malloc(sizeof(PASE_MG_SOLVER_PRIVATE));
 
   solver->multigrid          = multigrid;
-  solver->function           = PASE_Mg_function_create(PASE_Mg_get_initial_vector_by_coarse_grid_hypre,
-                                                       //PASE_Mg_solve_directly_by_IRA,
-                                                       //PASE_Mg_direct_solve_by_lobpcg_aux_hypre,
-						       PASE_Mg_direct_solve_by_gcg, 
+  solver->function           = PASE_Mg_function_create(//PASE_Mg_get_initial_vector_by_coarse_grid_hypre,
+                                                       PASE_Mg_get_initial_vector_by_coarse_grid_lobpcg_amg_hypre, 
+                                                       PASE_Mg_direct_solve_by_lobpcg_aux_hypre,
+						       //PASE_Mg_direct_solve_by_gcg, 
                                                        //PASE_Mg_presmoothing_by_cg,
                                                        //PASE_Mg_presmoothing_by_cg,
 						       PASE_Mg_presmoothing_by_pcg_amg_hypre, 

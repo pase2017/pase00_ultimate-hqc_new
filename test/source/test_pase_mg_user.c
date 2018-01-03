@@ -52,7 +52,7 @@ PASE_INT main(PASE_INT argc, char *argv[])
   PASE_INT  n             = 200;
   PASE_INT  block_size    = 5;
   PASE_INT  max_cycle     = 100;
-  PASE_INT  max_pre_iter  = 4;
+  PASE_INT  max_pre_iter  = 3;
   PASE_INT  max_post_iter = 1;
   PASE_REAL atol          = 1e-8;
   PASE_REAL rtol          = 1e-6;
@@ -60,7 +60,7 @@ PASE_INT main(PASE_INT argc, char *argv[])
   PASE_INT  max_level     = 20;
   GetCommandLineInfo(argc, argv, &n, &block_size, &atol, &max_pre_iter);
   //PASE_INT  min_coarse_size = block_size * 30;
-  PASE_INT  min_coarse_size = 6000;
+  PASE_INT  min_coarse_size = 4000;
   PASE_INT  max_block_size= ((2*block_size)<(block_size+5))?(2*block_size):(block_size+5);
 
   HYPRE_IJMatrix A, B;
