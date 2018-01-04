@@ -106,6 +106,9 @@ PASE_INT PASE_Mg_print_eigenvalue_of_current_level(PASE_MG_SOLVER solver);
 
 PASE_INT PASE_Mg_direct_solve_by_gcg(void *mg_solver);
 
+PASE_INT PASE_Mg_set_pase_aux_matrix_by_pase_matrix(PASE_MG_SOLVER solver, PASE_INT i, PASE_INT j, PASE_VECTOR *u_j);
+PASE_INT PASE_Mg_pase_aux_matrix_create(PASE_MG_SOLVER solver, PASE_INT i);
+PASE_INT PASE_Mg_prolong_from_pase_aux_vector_to_pase_vector(PASE_MG_SOLVER solver, PASE_INT i, PASE_AUX_VECTOR *aux_u_i, PASE_INT j, PASE_VECTOR *u_j);
 
 
 #endif

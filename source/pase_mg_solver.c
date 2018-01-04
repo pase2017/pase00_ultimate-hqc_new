@@ -56,9 +56,10 @@ PASE_Mg_solver_create_by_multigrid(PASE_MULTIGRID multigrid)
 
   solver->multigrid          = multigrid;
   solver->function           = PASE_Mg_function_create(//PASE_Mg_get_initial_vector_by_coarse_grid_hypre,
-                                                       PASE_Mg_get_initial_vector_by_coarse_grid_lobpcg_amg_hypre, 
-                                                       PASE_Mg_direct_solve_by_lobpcg_aux_hypre,
-						       //PASE_Mg_direct_solve_by_gcg, 
+                                                       //PASE_Mg_get_initial_vector_by_coarse_grid_lobpcg_amg_hypre, 
+						       PASE_Mg_get_initial_vector_by_full_multigrid_hypre, 
+                                                       //PASE_Mg_direct_solve_by_lobpcg_aux_hypre,
+						       PASE_Mg_direct_solve_by_gcg, 
                                                        //PASE_Mg_presmoothing_by_cg,
                                                        //PASE_Mg_presmoothing_by_cg,
 						       PASE_Mg_presmoothing_by_pcg_amg_hypre, 
@@ -207,6 +208,8 @@ PASE_Mg_set_up(PASE_MG_SOLVER solver, PASE_VECTOR x)
 PASE_INT 
 PASE_Mg_solve(PASE_MG_SOLVER solver)
 {
+  PASE_Mg_error_estimate(solver);
+  PASE_Mg_print(solver);
   clock_t start, end;
   start = clock();
   do {
@@ -277,7 +280,7 @@ PASE_Mg_iteration(PASE_MG_SOLVER solver)
 PASE_INT
 PASE_Mg_iteration_two_gird(PASE_MG_SOLVER solver)
 {
-  PASE_Mg_presmoothing(solver);
+  //PASE_Mg_presmoothing(solver);
   //限制到粗空间
   PASE_Mg_set_aux_matrix_two_grid(solver);
   //在粗空间解特征值问题
@@ -1299,9 +1302,9 @@ PASE_Mg_direct_solve_by_gcg(void *mg_solver)
 #endif
 
   PASE_Printf(MPI_COMM_WORLD, "Begin: solve directly by gcg\n");
-  PASE_Printf(MPI_COMM_WORLD, "\n");
+  //PASE_Printf(MPI_COMM_WORLD, "\n");
   GCG_Eigen(aux_A, aux_B, eigenvalues, aux_u, block_size, tol*1e-2, tol, max_iter, 10, solver->nconv);
-  PASE_Printf(MPI_COMM_WORLD, "\n");
+  //PASE_Printf(MPI_COMM_WORLD, "\n");
   PASE_Printf(MPI_COMM_WORLD, "Done: solve directly by gcg\n");
 
 #if 0
@@ -1317,3 +1320,90 @@ PASE_Mg_direct_solve_by_gcg(void *mg_solver)
 #endif
   return 0;
 }
+
+PASE_INT
+PASE_Mg_set_pase_aux_matrix_by_pase_matrix(PASE_MG_SOLVER solver, PASE_INT i, PASE_INT j, PASE_VECTOR *u_j)
+{
+  PASE_INT block_size = solver->block_size;
+  PASE_INT idx_block  = 0;
+  PASE_MATRIX *A = solver->multigrid->A;
+  PASE_MATRIX *B = solver->multigrid->B;
+  PASE_Mg_pase_aux_matrix_create(solver, i);
+  PASE_AUX_MATRIX aux_A = solver->multigrid->aux_A[i];
+  PASE_AUX_MATRIX aux_B = solver->multigrid->aux_B[i];
+  
+  PASE_VECTOR Au = NULL;
+  for(idx_block = 0; idx_block < block_size; idx_block++) {
+    Au = PASE_Vector_create_by_vector(u_j[0]);
+    PASE_Matrix_multiply_vector(A[j], u_j[idx_block], Au);
+    PASE_Mg_restrict(solver, j, Au, i, aux_A->vec[idx_block]);
+    PASE_Matrix_multiply_vector(B[j], u_j[idx_block], Au);
+    PASE_Mg_restrict(solver, j, Au, i, aux_B->vec[idx_block]);
+    PASE_Vector_destroy(Au);
+  }
+  PASE_Aux_matrix_set_block_some(aux_A, 0, block_size-1, A[j], u_j);
+  PASE_Aux_matrix_set_block_some(aux_B, 0, block_size-1, B[j], u_j);
+  return 0;
+}
+
+PASE_INT
+PASE_Mg_pase_aux_matrix_create(PASE_MG_SOLVER solver, PASE_INT i)
+{
+  PASE_INT         block_size = solver->block_size;
+  PASE_INT         idx_block  = 0;
+  PASE_MATRIX     *A     = solver->multigrid->A;
+  PASE_MATRIX     *B     = solver->multigrid->B;
+  PASE_AUX_MATRIX *aux_A = solver->multigrid->aux_A;
+  PASE_AUX_MATRIX *aux_B = solver->multigrid->aux_B;
+  if(NULL == aux_A[i]) {
+    aux_A[i] = (PASE_AUX_MATRIX)PASE_Malloc(sizeof(PASE_AUX_MATRIX_PRIVATE));
+    aux_A[i]->mat = A[i];
+    aux_A[i]->is_mat_owner = PASE_NO;
+    aux_A[i]->block_size   = block_size;
+
+    aux_A[i]->vec = (PASE_VECTOR*)PASE_Malloc(block_size*sizeof(PASE_VECTOR));
+    aux_A[i]->block = (PASE_SCALAR**)PASE_Malloc(block_size*sizeof(PASE_SCALAR*));
+    for(idx_block = 0; idx_block < block_size; idx_block++) {
+      aux_A[i]->vec[idx_block] = PASE_Vector_create_by_matrix_and_vector_data_operator(A[i], solver->u[0]->ops);
+      aux_A[i]->block[idx_block] = (PASE_SCALAR*)PASE_Malloc(block_size*sizeof(PASE_SCALAR));
+    }
+  }
+  if(NULL == aux_B[i]) {
+    aux_B[i] = (PASE_AUX_MATRIX)PASE_Malloc(sizeof(PASE_AUX_MATRIX_PRIVATE));
+    aux_B[i]->mat = B[i];
+    aux_B[i]->is_mat_owner = PASE_NO;
+    aux_B[i]->block_size   = block_size;
+
+    aux_B[i]->vec = (PASE_VECTOR*)PASE_Malloc(block_size*sizeof(PASE_VECTOR));
+    aux_B[i]->block = (PASE_SCALAR**)PASE_Malloc(block_size*sizeof(PASE_SCALAR*));
+    for(idx_block = 0; idx_block < block_size; idx_block++) {
+      aux_B[i]->vec[idx_block] = PASE_Vector_create_by_matrix_and_vector_data_operator(B[i], solver->u[0]->ops);
+      aux_B[i]->block[idx_block] = (PASE_SCALAR*)PASE_Malloc(block_size*sizeof(PASE_SCALAR));
+    }
+  }
+  return 0;
+}
+
+PASE_INT
+PASE_Mg_prolong_from_pase_aux_vector_to_pase_vector(PASE_MG_SOLVER solver, PASE_INT i, PASE_AUX_VECTOR *aux_u_i, PASE_INT j, PASE_VECTOR *u_j)
+{
+  PASE_INT idx_block = 0;
+  PASE_INT jdx_block = 0;
+  PASE_INT block_size = solver->block_size;
+  PASE_VECTOR *u_h = (PASE_VECTOR*)PASE_Malloc(block_size*sizeof(PASE_VECTOR));
+  for(idx_block = 0; idx_block < block_size; idx_block++) {
+    u_h[idx_block] = PASE_Vector_create_by_vector(u_j[0]);
+    PASE_Mg_prolong_general(solver, i, aux_u_i[idx_block]->vec, j, u_h[idx_block]);
+    for(jdx_block = 0; jdx_block < block_size; jdx_block++) {
+      PASE_Vector_axpy(aux_u_i[idx_block]->block[jdx_block], u_j[jdx_block], u_h[idx_block]);
+    }
+  }
+  for(idx_block = 0; idx_block < block_size; idx_block++) {
+    PASE_Vector_copy(u_h[idx_block], u_j[idx_block]);
+    PASE_Vector_destroy(u_h[idx_block]);
+  }
+  PASE_Free(u_h);
+
+  return 0;
+}
+

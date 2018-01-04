@@ -9,7 +9,7 @@ max block size  = 55
 max pre iter    = 3
 atol            = 1.000000e-08
 max cycle       = 100
-max level       = 20
+max level       = 3
 min coarse size = 4000
 
 
@@ -21,8 +21,8 @@ min coarse size = 4000
 
 BoomerAMG SETUP PARAMETERS:
 
- Max levels = 20
- Num levels = 6
+ Max levels = 3
+ Num levels = 3
 
  Strength Threshold = 0.250000
  Interpolation Truncation Factor = 0.000000
@@ -44,9 +44,6 @@ lev   rows  entries  sparse  min  max   avg       min         max
  0 1000000  4996000  0.000     3    5   5.0   0.000e+00   2.000e+00
  1  504000  4512002  0.000     4    9   9.0   0.000e+00   2.500e+00
  2  135676  1379922  0.000     4   21  10.2  -1.693e-15   3.020e+00
- 3   38344   516868  0.000     4   31  13.5  -2.214e-15   3.293e+00
- 4   12046   210756  0.001     4   35  17.5  -2.193e-15   2.934e+00
- 5    4158    93074  0.005     4   42  22.4  -2.810e-15   3.044e+00
 
 
 Interpolation Matrix Information:
@@ -55,14 +52,11 @@ lev  rows cols    min max     weight   weight     min       max
 =================================================================
  0 1000000 x 504000   1   4   2.500e-01 2.500e-01 5.000e-01 1.000e+00
  1 504000 x 135676   1   7   7.143e-02 5.000e-01 2.857e-01 1.000e+00
- 2 135676 x 38344   1   9   2.798e-02 1.000e+00 1.977e-01 1.000e+00
- 3 38344 x 12046   0   8   1.920e-02 1.000e+00 0.000e+00 1.000e+00
- 4 12046 x 4158    0   8   1.561e-02 1.000e+00 0.000e+00 1.000e+00
 
 
-     Complexity:    grid = 1.694224
-                operator = 2.343599
-                memory = 3.156565
+     Complexity:    grid = 1.639676
+                operator = 2.179328
+                memory = 2.904699
 
 
 
@@ -82,5 +76,5 @@ BoomerAMG SOLVER PARAMETERS:
                    Post-CG relaxation (up):  -1   1
                              Coarsest grid:   0
 
-The number of levels = 6
-The dim of the coarsest space is 4158.
+The number of levels = 3
+The dim of the coarsest space is 135676.

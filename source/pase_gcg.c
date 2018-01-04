@@ -6,7 +6,7 @@
 #include "string.h"
 
 #define EPS 2.220446e-16
-#define REORTH_TOL 0.1 
+#define REORTH_TOL 0.75 
 
 void 
 GCG_Eigen(PASE_AUX_MATRIX A, PASE_AUX_MATRIX B, PASE_REAL *eval, PASE_AUX_VECTOR *evec, PASE_INT nev, PASE_REAL abs_tol, PASE_REAL cg_tol, PASE_INT max_iter, PASE_INT nsmooth, PASE_INT start)
