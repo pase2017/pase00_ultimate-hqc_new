@@ -26,6 +26,7 @@ PASE_Mg_get_initial_vector_by_coarse_grid_hypre(void *mg_solver)
     verbosity = 0;
   }
 
+  PASE_INT     i              = 0;
   PASE_INT     max_level      = solver->max_level;        
   PASE_INT     block_size     = solver->block_size;       
   PASE_MATRIX  A              = solver->multigrid->A[max_level];
@@ -56,11 +57,11 @@ PASE_Mg_get_initial_vector_by_coarse_grid_hypre(void *mg_solver)
   hypre_LOBPCGSetupB(lobpcg_solver, B, u_temp);
   HYPRE_LOBPCGSolve(lobpcg_solver, constraints_Hh, eigenvectors_Hh, eigenvalues);
 
+#if 0
   /* 根据初始的特征值分布，调整实际求解的特征值个数来提高收敛速度 */
   PASE_REAL *rate     = (PASE_REAL*)PASE_Malloc((max_block_size-block_size)*sizeof(PASE_REAL));
   PASE_INT   index    = 0;
   PASE_REAL  max_rate = 1.0;
-  PASE_INT   i        = 0;
   while(i < (max_block_size-block_size) && index > -1) {
     rate[i] = fabs(eigenvalues[i+block_size-1]/eigenvalues[i+block_size]);
     if(rate[i] < 0.9) {
@@ -76,30 +77,17 @@ PASE_Mg_get_initial_vector_by_coarse_grid_hypre(void *mg_solver)
   if(index > 0) {
     solver->block_size = block_size + index;
   }
-  PASE_Printf(MPI_COMM_WORLD, "modified block_size = %d\n\n", solver->block_size);
-
-#if 0
-  if(solver->block_size != block_size) {
-    PASE_VECTOR *u = (PASE_VECTOR*)PASE_Malloc(solver->block_size*sizeof(PASE_VECTOR));
-    for(i = 0; i < solver->block_size; i++) {
-      if(i < block_size) {
-	u[i] = solver->u[i];
-      } else {
-	u[i] = PASE_Vector_create_by_vector(solver->u[0]);
-      }
-    }
-    PASE_Free(solver->u);
-    solver->u = u;
-    PASE_Free(solver->eigenvalues);
-    solver->eigenvalues = (PASE_SCALAR*)PASE_Malloc(solver->block_size*sizeof(PASE_SCALAR));
-  }
+  PASE_Free(rate);
+#else
+  solver->block_size = max_block_size;
 #endif
+  PASE_Printf(MPI_COMM_WORLD, "modified block_size = %d\n\n", solver->block_size);
 
   block_size              = solver->block_size;
   mv_TempMultiVector *tmp = (mv_TempMultiVector*) mv_MultiVectorGetData(eigenvectors_Hh);
   PASE_VECTOR        *u_H = (PASE_VECTOR*)(tmp->vector);
   for(i = 0; i < block_size; i++) {
-    PASE_Mg_prolong_general(solver, max_level, u_H[i], 0, solver->u[i]);
+    PASE_Mg_prolong(solver, max_level, u_H[i], 0, solver->u[i]);
     solver->eigenvalues[i] = eigenvalues[i];
     PASE_Vector_destroy(u_H[i]);
   }
@@ -113,7 +101,6 @@ PASE_Mg_get_initial_vector_by_coarse_grid_hypre(void *mg_solver)
   }
   PASE_Mg_print_eigenvalue_of_current_level(solver);
 
-  PASE_Free(rate);
   free((mv_TempMultiVector*)mv_MultiVectorGetData(eigenvectors_Hh));
   PASE_Free(eigenvectors_Hh);
   PASE_Free(interpreter_Hh);
@@ -145,6 +132,7 @@ PASE_Mg_get_initial_vector_by_coarse_grid_lobpcg_amg_hypre(void *mg_solver)
     verbosity = 0;
   }
 
+  PASE_INT     i              = 0;
   PASE_INT     max_level      = solver->max_level;        
   PASE_INT     block_size     = solver->block_size;       
   PASE_MATRIX  A              = solver->multigrid->A[max_level];
@@ -166,7 +154,7 @@ PASE_Mg_get_initial_vector_by_coarse_grid_lobpcg_amg_hypre(void *mg_solver)
 
   HYPRE_BoomerAMGCreate(&precond);
   HYPRE_BoomerAMGSetPrintLevel(precond, 0); /* print amg solution info */
-  HYPRE_BoomerAMGSetNumSweeps(precond, 2); /* 2 sweeps of smoothing */
+  HYPRE_BoomerAMGSetNumSweeps(precond, 1); /* 2 sweeps of smoothing */
   HYPRE_BoomerAMGSetTol(precond, 0.0); /* conv. tolerance zero */
   //HYPRE_BoomerAMGSetCoarsenType(precond, 6);
   HYPRE_BoomerAMGSetMaxIter(precond, 1); /* do only one iteration! */
@@ -183,11 +171,11 @@ PASE_Mg_get_initial_vector_by_coarse_grid_lobpcg_amg_hypre(void *mg_solver)
   hypre_LOBPCGSetupB(lobpcg_solver, (HYPRE_ParCSRMatrix)B->matrix_data, (HYPRE_ParVector)u_temp->vector_data);
   HYPRE_LOBPCGSolve(lobpcg_solver, constraints_Hh, eigenvectors_Hh, eigenvalues);
 
+#if 0
   /* 根据初始的特征值分布，调整实际求解的特征值个数来提高收敛速度 */
   PASE_REAL *rate     = (PASE_REAL*)PASE_Malloc((max_block_size-block_size)*sizeof(PASE_REAL));
   PASE_INT   index    = 0;
   PASE_REAL  max_rate = 1.0;
-  PASE_INT   i        = 0;
   while(i < (max_block_size-block_size) && index > -1) {
     rate[i] = fabs(eigenvalues[i+block_size-1]/eigenvalues[i+block_size]);
     if(rate[i] < 0.9) {
@@ -199,24 +187,28 @@ PASE_Mg_get_initial_vector_by_coarse_grid_lobpcg_amg_hypre(void *mg_solver)
     }
     i++;
   }
-
   if(index > 0) {
     solver->block_size = block_size + index;
   }
+  PASE_Free(rate);
+#else
+  solver->block_size      = max_block_size;
+#endif
   PASE_Printf(MPI_COMM_WORLD, "modified block_size = %d\n\n", solver->block_size);
 
-  //solver->block_size      = max_block_size;
   block_size              = solver->block_size;
   mv_TempMultiVector *tmp = (mv_TempMultiVector*) mv_MultiVectorGetData(eigenvectors_Hh);
   HYPRE_ParVector    *u_H = (HYPRE_ParVector*)(tmp->vector);
   PASE_VECTOR         pase_u_H = NULL;
   for(i = 0; i < block_size; i++) {
     pase_u_H = PASE_Vector_assign(u_H[i], u_temp->ops);
-    PASE_Mg_prolong_general(solver, max_level, pase_u_H, 0, solver->u[i]);
+    PASE_Mg_prolong(solver, max_level, pase_u_H, 0, solver->u[i]);
     solver->eigenvalues[i] = eigenvalues[i];
     PASE_Vector_destroy(pase_u_H);
     HYPRE_ParVectorDestroy(u_H[i]);
   }
+  PASE_Mg_print_eigenvalue_of_current_level(solver);
+
   for(i = block_size; i < max_block_size; i++) {
     PASE_Vector_destroy(solver->u[i]);
     HYPRE_ParVectorDestroy(u_H[i]);
@@ -226,9 +218,7 @@ PASE_Mg_get_initial_vector_by_coarse_grid_lobpcg_amg_hypre(void *mg_solver)
   if(solver->print_level > 1) {
     PASE_Printf(MPI_COMM_WORLD, "Get initial vector: ");
   }
-  PASE_Mg_print_eigenvalue_of_current_level(solver);
 
-  PASE_Free(rate);
   free((mv_TempMultiVector*)mv_MultiVectorGetData(eigenvectors_Hh));
   PASE_Free(eigenvectors_Hh);
   PASE_Free(interpreter_Hh);
@@ -261,6 +251,7 @@ PASE_Mg_get_initial_vector_by_full_multigrid_hypre(void *mg_solver)
     verbosity = 0;
   }
 
+  PASE_INT     i              = 0;
   PASE_INT     max_level      = solver->max_level;        
   PASE_INT     block_size     = solver->block_size;       
   PASE_MATRIX *A              = solver->multigrid->A;
@@ -282,9 +273,11 @@ PASE_Mg_get_initial_vector_by_full_multigrid_hypre(void *mg_solver)
 
   HYPRE_BoomerAMGCreate(&precond);
   HYPRE_BoomerAMGSetPrintLevel(precond, 0); /* print amg solution info */
-  HYPRE_BoomerAMGSetNumSweeps(precond, 2); /* 2 sweeps of smoothing */
+  HYPRE_BoomerAMGSetInterpType( precond,  0 );
+  HYPRE_BoomerAMGSetPMaxElmts( precond,  0 );
+  HYPRE_BoomerAMGSetNumSweeps(precond, 1); /* 2 sweeps of smoothing */
   HYPRE_BoomerAMGSetTol(precond, 0.0); /* conv. tolerance zero */
-  //HYPRE_BoomerAMGSetCoarsenType(precond, 6);
+  HYPRE_BoomerAMGSetCoarsenType(precond, 6);
   HYPRE_BoomerAMGSetMaxIter(precond, 1); /* do only one iteration! */
 
   HYPRE_LOBPCGCreate(interpreter_Hh, &matvec_fn_Hh, &lobpcg_solver);
@@ -299,11 +292,11 @@ PASE_Mg_get_initial_vector_by_full_multigrid_hypre(void *mg_solver)
   hypre_LOBPCGSetupB(lobpcg_solver, (HYPRE_ParCSRMatrix)B[max_level]->matrix_data, (HYPRE_ParVector)u_temp->vector_data);
   HYPRE_LOBPCGSolve(lobpcg_solver, constraints_Hh, eigenvectors_Hh, eigenvalues);
 
+#if 0
   /* 根据初始的特征值分布，调整实际求解的特征值个数来提高收敛速度 */
   PASE_REAL *rate     = (PASE_REAL*)PASE_Malloc((max_block_size-block_size)*sizeof(PASE_REAL));
   PASE_INT   index    = 0;
   PASE_REAL  max_rate = 1.0;
-  PASE_INT   i        = 0;
   while(i < (max_block_size-block_size) && index > -1) {
     rate[i] = fabs(eigenvalues[i+block_size-1]/eigenvalues[i+block_size]);
     if(rate[i] < 0.9) {
@@ -315,13 +308,15 @@ PASE_Mg_get_initial_vector_by_full_multigrid_hypre(void *mg_solver)
     }
     i++;
   }
-
   if(index > 0) {
     solver->block_size = block_size + index;
   }
+  PASE_Free(rate);
+#else
+  solver->block_size      = max_block_size;
+#endif
   PASE_Printf(MPI_COMM_WORLD, "modified block_size = %d\n\n", solver->block_size);
 
-  solver->block_size      = max_block_size;
   block_size              = solver->block_size;
   mv_TempMultiVector *tmp = (mv_TempMultiVector*) mv_MultiVectorGetData(eigenvectors_Hh);
   HYPRE_ParVector    *u_H = (HYPRE_ParVector*)(tmp->vector);
@@ -330,7 +325,7 @@ PASE_Mg_get_initial_vector_by_full_multigrid_hypre(void *mg_solver)
   for(i = 0; i < block_size; i++) {
     pase_u_H = PASE_Vector_assign(u_H[i], u_temp->ops);
     pase_u_h[i] = PASE_Vector_create_by_matrix_and_vector_data_operator(A[max_level-1], u_temp->ops);
-    PASE_Mg_prolong_general(solver, max_level, pase_u_H, max_level-1, pase_u_h[i]);
+    PASE_Mg_prolong(solver, max_level, pase_u_H, max_level-1, pase_u_h[i]);
     solver->eigenvalues[i] = eigenvalues[i];
     PASE_Vector_destroy(pase_u_H);
     HYPRE_ParVectorDestroy(u_H[i]);
@@ -341,18 +336,20 @@ PASE_Mg_get_initial_vector_by_full_multigrid_hypre(void *mg_solver)
   PASE_INT idx_level = 0;
   for(idx_level = max_level-1; idx_level > 0; idx_level--) {
     rhs = PASE_Vector_create_by_vector(pase_u_h[0]);
-#if 0
+#if 1
     //解问题
     HYPRE_BoomerAMGCreate(&ksp_solver);
     HYPRE_BoomerAMGSetPrintLevel(ksp_solver, 0); /* print amg solution info */
+    HYPRE_BoomerAMGSetInterpType(ksp_solver, 0);
+    HYPRE_BoomerAMGSetPMaxElmts(ksp_solver, 0);
     HYPRE_BoomerAMGSetOldDefault(ksp_solver); /* Falgout coarsening with modified classical interpolaiton */
-    HYPRE_BoomerAMGSetRelaxType(solver, 3);   /* G-S/Jacobi hybrid relaxation */
-    HYPRE_BoomerAMGSetRelaxOrder(solver, 1);   /* uses C/F relaxation */
-    HYPRE_BoomerAMGSetNumSweeps(ksp_solver, 2); /* 2 sweeps of smoothing */
-    HYPRE_BoomerAMGSetTol(ksp_solver, solver->atol); /* conv. tolerance zero */
-    HYPRE_BoomerAMGSetCoarsenType(, 6);
+    HYPRE_BoomerAMGSetRelaxType(ksp_solver, 3);   /* G-S/Jacobi hybrid relaxation */
+    HYPRE_BoomerAMGSetRelaxOrder(ksp_solver, 1);   /* uses C/F relaxation */
+    HYPRE_BoomerAMGSetNumSweeps(ksp_solver, 1); /* 2 sweeps of smoothing */
+    HYPRE_BoomerAMGSetTol(ksp_solver, 0.0); /* conv. tolerance zero */
+    HYPRE_BoomerAMGSetCoarsenType(ksp_solver, 6);
     HYPRE_BoomerAMGSetMaxIter(ksp_solver, 1); /* do only one iteration! */
-    //HYPRE_BoomerAMGSetup(ksp_solver, (HYPRE_ParCSRMatrix)A[idx_level]->matrix_data, (HYPRE_ParVector)rhs[0]->vector_data, (HYPRE_ParVector)pase_u_h[0]->vector_data);
+    HYPRE_BoomerAMGSetup(ksp_solver, (HYPRE_ParCSRMatrix)A[idx_level]->matrix_data, (HYPRE_ParVector)rhs->vector_data, (HYPRE_ParVector)pase_u_h[0]->vector_data);
 #else
     HYPRE_ParCSRPCGCreate(MPI_COMM_WORLD, &ksp_solver);
     HYPRE_PCGSetMaxIter(ksp_solver, 2); /* max iterations */
@@ -367,8 +364,8 @@ PASE_Mg_get_initial_vector_by_full_multigrid_hypre(void *mg_solver)
 
     for(i = 0; i < block_size; i++) {
       PASE_Matrix_multiply_vector_general(solver->eigenvalues[i], B[idx_level], pase_u_h[i], 0.0, rhs);
-      //HYPRE_BoomerAMGSolve(ksp_solver, (HYPRE_ParCSRMatrix)A[idx_level]->matrix_data, (HYPRE_ParVector)rhs->vector_data, (HYPRE_ParVector)pase_u_h[i]->vector_data);
-      hypre_PCGSolve(ksp_solver, (HYPRE_ParCSRMatrix)A[idx_level]->matrix_data, (HYPRE_ParVector)rhs->vector_data, (HYPRE_ParVector)pase_u_h[i]->vector_data);
+      HYPRE_BoomerAMGSolve(ksp_solver, (HYPRE_ParCSRMatrix)A[idx_level]->matrix_data, (HYPRE_ParVector)rhs->vector_data, (HYPRE_ParVector)pase_u_h[i]->vector_data);
+      //hypre_PCGSolve(ksp_solver, (HYPRE_ParCSRMatrix)A[idx_level]->matrix_data, (HYPRE_ParVector)rhs->vector_data, (HYPRE_ParVector)pase_u_h[i]->vector_data);
     }
     //HYPRE_BoomerAMGDestroy(ksp_solver);
 
@@ -394,7 +391,7 @@ PASE_Mg_get_initial_vector_by_full_multigrid_hypre(void *mg_solver)
     PASE_Mg_prolong_from_pase_aux_vector_to_pase_vector(solver, max_level, solver->aux_u[max_level], idx_level, pase_u_h);
     for(i = 0; i < block_size; i++) {
       pase_u_H = PASE_Vector_create_by_matrix_and_vector_data_operator(A[idx_level-1], u_temp->ops);
-      PASE_Mg_prolong_general(solver, idx_level, pase_u_h[i], idx_level-1, pase_u_H);
+      PASE_Mg_prolong(solver, idx_level, pase_u_h[i], idx_level-1, pase_u_H);
       PASE_Vector_destroy(pase_u_h[i]);
       pase_u_h[i] = pase_u_H;
     }
@@ -415,16 +412,18 @@ PASE_Mg_get_initial_vector_by_full_multigrid_hypre(void *mg_solver)
   }
   PASE_Mg_print_eigenvalue_of_current_level(solver);
 
-  PASE_Free(rate);
   free((mv_TempMultiVector*)mv_MultiVectorGetData(eigenvectors_Hh));
   PASE_Free(eigenvectors_Hh);
   PASE_Free(interpreter_Hh);
   PASE_Vector_destroy(u_temp);
   PASE_Vector_destroy(x);
+  PASE_Vector_destroy(rhs);
 
   PASE_Free(eigenvalues);
   PASE_Free(u_H);
+  PASE_Free(pase_u_h);
   HYPRE_BoomerAMGDestroy(precond);
+  HYPRE_BoomerAMGDestroy(ksp_solver);
   HYPRE_LOBPCGDestroy( lobpcg_solver);
   return 0;
 }
@@ -509,6 +508,49 @@ PASE_Mg_presmoothing_by_pcg_amg_hypre(void *mg_solver)
 
   PASE_Vector_destroy(rhs);
   HYPRE_ParCSRPCGDestroy(cg_solver);
+  return 0;
+}
+
+PASE_INT 
+PASE_Mg_presmoothing_by_amg_hypre(void *mg_solver)
+{
+  PASE_SCALAR     inner_A, inner_B;
+  PASE_MG_SOLVER  solver        = (PASE_MG_SOLVER)mg_solver;
+  HYPRE_Solver    amg_solver     = NULL;
+  PASE_INT        block_size	= solver->block_size;
+  PASE_INT        nconv         = solver->nconv; 
+  PASE_INT        i		= 0;
+
+  PASE_MATRIX     A             = solver->multigrid->A[0];            
+  PASE_MATRIX     B             = solver->multigrid->B[0];            
+  PASE_VECTOR    *u             = solver->u;
+  PASE_SCALAR    *eigenvalues   = solver->eigenvalues;
+  PASE_VECTOR     rhs 	        = PASE_Vector_create_by_vector(u[0]);
+
+  HYPRE_BoomerAMGCreate(&amg_solver);
+  HYPRE_BoomerAMGSetPrintLevel(amg_solver, 0); /* print amg solution info */
+  HYPRE_BoomerAMGSetOldDefault(amg_solver); /* Falgout coarsening with modified classical interpolaiton */
+  HYPRE_BoomerAMGSetRelaxType(amg_solver, 3);   /* G-S/Jacobi hybrid relaxation */
+  HYPRE_BoomerAMGSetRelaxOrder(amg_solver, 1);   /* uses C/F relaxation */
+  HYPRE_BoomerAMGSetNumSweeps(amg_solver, 1); /* 2 sweeps of smoothing */
+  HYPRE_BoomerAMGSetTol(amg_solver, solver->atol); /* conv. tolerance zero */
+  HYPRE_BoomerAMGSetCoarsenType(amg_solver, 6);
+  HYPRE_BoomerAMGSetMaxIter(amg_solver, 1); /* do only one iteration! */
+  HYPRE_BoomerAMGSetup(amg_solver, (HYPRE_ParCSRMatrix)A->matrix_data, (HYPRE_ParVector)rhs->vector_data, (HYPRE_ParVector)u[0]->vector_data);
+
+  for(i = nconv; i < block_size; i++) {
+    PASE_Matrix_multiply_vector(B, u[i], rhs);
+    PASE_Vector_scale(eigenvalues[i], rhs);
+    HYPRE_BoomerAMGSolve(amg_solver, (HYPRE_ParCSRMatrix)(A->matrix_data), (HYPRE_ParVector)(rhs->vector_data), (HYPRE_ParVector)(u[i]->vector_data));
+
+    PASE_Vector_inner_product_general(rhs, u[i], A, &inner_A);
+    PASE_Vector_inner_product_general(rhs, u[i], B, &inner_B);
+    eigenvalues[i] = inner_A / inner_B;
+  }
+  PASE_Mg_print_eigenvalue_of_current_level(solver);
+
+  PASE_Vector_destroy(rhs);
+  HYPRE_BoomerAMGDestroy(amg_solver);
   return 0;
 }
 

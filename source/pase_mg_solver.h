@@ -15,19 +15,26 @@ typedef struct PASE_MG_FUNCTION_PRIVATE_ {
 typedef PASE_MG_FUNCTION_PRIVATE * PASE_MG_FUNCTION;
 
 typedef struct PASE_MG_SOLVER_PRIVATE_ {
+  PASE_INT     solver_type;       /* 0. two-grid (default): solve eigenvalue problem on coarsest grid and solve linear problem on finest grid */
+                                  /* 1. multigrid: solve eigenvalue problem on coarsest grid and solve linear problem on finer grid */
+  PASE_INT    *idx_cycle_level;
+  PASE_INT     num_cycle_level;
+
   PASE_INT     block_size;
   PASE_INT     max_block_size;
   PASE_INT     actual_block_size;
+
   PASE_INT     max_pre_iter;
   PASE_INT     max_post_iter;
-  PASE_INT     max_cycle;
   PASE_INT     max_level;
   PASE_INT     cur_level;
+
   PASE_REAL    rtol;
   PASE_REAL    atol;
   PASE_REAL   *r_norm;
   PASE_INT     nconv;
   PASE_INT     nlock;
+  PASE_INT     max_cycle;
   PASE_INT     ncycl;
   PASE_INT     print_level; 
 
@@ -55,19 +62,20 @@ PASE_MG_SOLVER PASE_Mg_solver_create_by_multigrid(PASE_MULTIGRID multigrid);
 PASE_INT PASE_Mg_solver_destroy(PASE_MG_SOLVER solver);
 PASE_INT PASE_Mg_set_up(PASE_MG_SOLVER solver, PASE_VECTOR x);
 PASE_INT PASE_Mg_solve(PASE_MG_SOLVER solver);
-PASE_INT PASE_Mg_iteration(PASE_MG_SOLVER solver);
-PASE_INT PASE_Mg_iteration_two_gird(PASE_MG_SOLVER solver);
-PASE_INT PASE_Mg_set_aux_matrix_two_grid(PASE_MG_SOLVER solver);
+PASE_INT PASE_Mg_cycle(PASE_MG_SOLVER solver);
+PASE_INT PASE_Mg_cycle_multigrid(PASE_MG_SOLVER solver);
+PASE_INT PASE_Mg_cycle_two_gird(PASE_MG_SOLVER solver);
+PASE_INT PASE_Mg_set_aux_space_two_grid(PASE_MG_SOLVER solver);
 PASE_INT PASE_Mg_prolong_two_grid(PASE_MG_SOLVER solver);
-PASE_INT PASE_Mg_prolong_general(PASE_MG_SOLVER solver,  PASE_INT i, PASE_VECTOR u_i, PASE_INT j, PASE_VECTOR u_j);
+PASE_INT PASE_Mg_prolong(PASE_MG_SOLVER solver,  PASE_INT i, PASE_VECTOR u_i, PASE_INT j, PASE_VECTOR u_j);
 PASE_INT PASE_Mg_error_estimate(PASE_MG_SOLVER solver);
 PASE_INT PASE_Mg_print(PASE_MG_SOLVER solver);
 PASE_INT PASE_Mg_presmoothing(PASE_MG_SOLVER solver);
-PASE_INT PASE_Mg_pre_set_up(PASE_MG_SOLVER solver);
+PASE_INT PASE_Mg_set_aux_space_multigrid(PASE_MG_SOLVER solver);
 PASE_INT PASE_Mg_postsmoothing(PASE_MG_SOLVER solver);
 PASE_INT PASE_Mg_direct_solve(PASE_MG_SOLVER solver);
-PASE_INT PASE_Mg_prolong(PASE_MG_SOLVER solver);
-PASE_INT PASE_Mg_set_aux_matrix(PASE_MG_SOLVER solver);
+PASE_INT PASE_Mg_prolong_multigrid(PASE_MG_SOLVER solver);
+PASE_INT PASE_Mg_set_aux_matrix_multigrid(PASE_MG_SOLVER solver);
 PASE_INT PASE_Mg_orthogonalize(PASE_MG_SOLVER solver);
 PASE_INT PASE_Mg_set_exact_eigenvalues(PASE_MG_SOLVER solver, PASE_SCALAR *exact_eigenvalues);
 
