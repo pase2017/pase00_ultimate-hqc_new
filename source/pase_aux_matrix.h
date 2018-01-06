@@ -145,6 +145,8 @@ void PASE_Aux_matrix_set_aux_space_some_by_aux_matrix(PASE_AUX_MATRIX aux_A, PAS
  */
 void PASE_Aux_matrix_set_aux_space_by_aux_matrix(PASE_AUX_MATRIX aux_A, PASE_MATRIX R_hH, PASE_AUX_MATRIX aux_A_h, PASE_AUX_VECTOR *aux_u_h);
 
+void PASE_Aux_matrix_set_block_some_by_aux_matrix(PASE_AUX_MATRIX aux_A, PASE_INT i, PASE_INT j, PASE_AUX_MATRIX aux_A_h, PASE_AUX_VECTOR *aux_u_h);
+
 /**
  * @brief 销毁辅助矩阵
  */

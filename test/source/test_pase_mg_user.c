@@ -40,7 +40,7 @@ Author:       Li Yu (liyu@lsec.cc.ac.cn).
 
 static PASE_INT cmp( const void *a ,  const void *b );
 void GetEigenProblem(HYPRE_IJMatrix *A, HYPRE_IJMatrix *B, PASE_INT n);
-void GetCommandLineInfo(PASE_INT argc, char **argv, PASE_INT *n, PASE_INT *block_size, PASE_REAL *atol, PASE_INT *nsmooth);
+void GetCommandLineInfo(PASE_INT argc, char **argv, PASE_INT *n, PASE_INT *block_size, PASE_REAL *atol, PASE_INT *max_pre_iter, PASE_INT *max_post_iter, PASE_INT *max_level);
 void GetExactEigenvalues(PASE_REAL **exact_eigenvalues, PASE_INT n, PASE_INT block_size);
 
 PASE_INT main(PASE_INT argc, char *argv[])
@@ -50,15 +50,16 @@ PASE_INT main(PASE_INT argc, char *argv[])
   MPI_Comm_rank(MPI_COMM_WORLD, &myid);
 
   PASE_INT  n             = 200;
+  PASE_INT  cycle_type    = 1;
   PASE_INT  block_size    = 5;
   PASE_INT  max_cycle     = 100;
-  PASE_INT  max_pre_iter  = 3;
+  PASE_INT  max_pre_iter  = 1;
   PASE_INT  max_post_iter = 1;
   PASE_REAL atol          = 1e-8;
   PASE_REAL rtol          = 1e-6;
   PASE_INT  print_level   = 1;
   PASE_INT  max_level     = 20;
-  GetCommandLineInfo(argc, argv, &n, &block_size, &atol, &max_pre_iter);
+  GetCommandLineInfo(argc, argv, &n, &block_size, &atol, &max_pre_iter, &max_post_iter, &max_level);
   //PASE_INT  min_coarse_size = block_size * 30;
   PASE_INT  min_coarse_size = 4000;
   PASE_INT  max_block_size= ((2*block_size)<(block_size+5))?(2*block_size):(block_size+5);
@@ -82,6 +83,7 @@ PASE_INT main(PASE_INT argc, char *argv[])
   PASE_Printf(MPI_COMM_WORLD, "block size      = %d\n", block_size);
   PASE_Printf(MPI_COMM_WORLD, "max block size  = %d\n", max_block_size);
   PASE_Printf(MPI_COMM_WORLD, "max pre iter    = %d\n", max_pre_iter);
+  PASE_Printf(MPI_COMM_WORLD, "max post iter   = %d\n", max_post_iter);
   PASE_Printf(MPI_COMM_WORLD, "atol            = %e\n", atol);
   PASE_Printf(MPI_COMM_WORLD, "max cycle       = %d\n", max_cycle);
   PASE_Printf(MPI_COMM_WORLD, "max level       = %d\n", max_level);
@@ -100,6 +102,7 @@ PASE_INT main(PASE_INT argc, char *argv[])
   PASE_MG_SOLVER solver    = PASE_Mg_solver_create_by_multigrid(multigrid);
 
   //Set up
+  PASE_Mg_set_cycle_type(solver, cycle_type);
   PASE_Mg_set_block_size(solver, block_size);
   PASE_Mg_set_max_block_size(solver, max_block_size);
   PASE_Mg_set_max_cycle(solver, max_cycle);
@@ -252,7 +255,7 @@ void GetEigenProblem(HYPRE_IJMatrix *A, HYPRE_IJMatrix *B, PASE_INT n)
   HYPRE_IJMatrixAssemble(*B);
 }
 
-void GetCommandLineInfo(PASE_INT argc, char **argv, PASE_INT *n, PASE_INT *block_size, PASE_REAL *atol, PASE_INT *nsmooth)
+void GetCommandLineInfo(PASE_INT argc, char **argv, PASE_INT *n, PASE_INT *block_size, PASE_REAL *atol, PASE_INT *max_pre_iter, PASE_INT *max_post_iter, PASE_INT *max_level)
 {
   PASE_INT arg_index = 0;
   PASE_INT print_usage = 0;
@@ -269,9 +272,15 @@ void GetCommandLineInfo(PASE_INT argc, char **argv, PASE_INT *n, PASE_INT *block
     } else if(strcmp(argv[arg_index], "-atol") == 0) {
       arg_index++;
       *atol= pow(10, atoi(argv[arg_index++]));
-    } else if(strcmp(argv[arg_index], "-nsmooth") == 0) {
+    } else if(strcmp(argv[arg_index], "-max_pre_iter") == 0) {
       arg_index++;
-      *nsmooth= atoi(argv[arg_index++]);
+      *max_pre_iter = atoi(argv[arg_index++]);
+    } else if(strcmp(argv[arg_index], "-max_post_iter") == 0) {
+      arg_index++;
+      *max_post_iter = atoi(argv[arg_index++]);
+    } else if(strcmp(argv[arg_index], "-max_levels") == 0) {
+      arg_index++;
+      *max_level = atoi(argv[arg_index++]);
     } else if(strcmp(argv[arg_index], "-help") == 0) {
       print_usage = 1;
       break;
@@ -284,9 +293,11 @@ void GetCommandLineInfo(PASE_INT argc, char **argv, PASE_INT *n, PASE_INT *block
     PASE_Printf(MPI_COMM_WORLD, "\n");
     PASE_Printf(MPI_COMM_WORLD, "Usage: %s [<options>]\n", argv[0]);
     PASE_Printf(MPI_COMM_WORLD, "\n");
-    PASE_Printf(MPI_COMM_WORLD, "  -n <n>               : problem size in each direction (default: 33)\n");
-    PASE_Printf(MPI_COMM_WORLD, "  -block_size <n>      : eigenproblem block size (default: 3)\n");
-    PASE_Printf(MPI_COMM_WORLD, "  -max_levels <n>      : max levels of AMG (default: 5)\n");
+    PASE_Printf(MPI_COMM_WORLD, "  -n <n>               : problem size in each direction (default: 200)\n");
+    PASE_Printf(MPI_COMM_WORLD, "  -block_size <n>      : eigenproblem block size (default: 5)\n");
+    PASE_Printf(MPI_COMM_WORLD, "  -max_pre_iter <n>    : (default: 0)\n");
+    PASE_Printf(MPI_COMM_WORLD, "  -max_post_iter <n>   : (default: 1)\n");
+    PASE_Printf(MPI_COMM_WORLD, "  -max_levels <n>      : max levels of AMG (default: 10)\n");
     PASE_Printf(MPI_COMM_WORLD, "\n");
     exit(-1);
   }

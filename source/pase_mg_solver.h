@@ -15,10 +15,13 @@ typedef struct PASE_MG_FUNCTION_PRIVATE_ {
 typedef PASE_MG_FUNCTION_PRIVATE * PASE_MG_FUNCTION;
 
 typedef struct PASE_MG_SOLVER_PRIVATE_ {
-  PASE_INT     solver_type;       /* 0. two-grid (default): solve eigenvalue problem on coarsest grid and solve linear problem on finest grid */
+  PASE_INT     cycle_type;       /* 0. two-grid (default): solve eigenvalue problem on coarsest grid and solve linear problem on finest grid */
                                   /* 1. multigrid: solve eigenvalue problem on coarsest grid and solve linear problem on finer grid */
   PASE_INT    *idx_cycle_level;
   PASE_INT     num_cycle_level;
+  PASE_INT     max_cycle_level;
+  PASE_INT     cur_cycle_level;
+  PASE_INT     nleve;
 
   PASE_INT     block_size;
   PASE_INT     max_block_size;
@@ -26,8 +29,6 @@ typedef struct PASE_MG_SOLVER_PRIVATE_ {
 
   PASE_INT     max_pre_iter;
   PASE_INT     max_post_iter;
-  PASE_INT     max_level;
-  PASE_INT     cur_level;
 
   PASE_REAL    rtol;
   PASE_REAL    atol;
@@ -39,6 +40,7 @@ typedef struct PASE_MG_SOLVER_PRIVATE_ {
   PASE_INT     print_level; 
 
   PASE_REAL    set_up_time;
+  PASE_REAL    get_initvec_time;
   PASE_REAL    smooth_time;
   PASE_REAL    set_aux_time;
   PASE_REAL    prolong_time;
@@ -54,6 +56,13 @@ typedef struct PASE_MG_SOLVER_PRIVATE_ {
 
   PASE_MULTIGRID    multigrid;
   PASE_MG_FUNCTION  function;
+
+  char *method_init;
+  char *method_pre;
+  char *method_post;
+  char *method_pre_aux;
+  char *method_post_aux;
+  char *method_dire;
 } PASE_MG_SOLVER_PRIVATE; 
 typedef PASE_MG_SOLVER_PRIVATE * PASE_MG_SOLVER;
 
@@ -63,22 +72,29 @@ PASE_INT PASE_Mg_solver_destroy(PASE_MG_SOLVER solver);
 PASE_INT PASE_Mg_set_up(PASE_MG_SOLVER solver, PASE_VECTOR x);
 PASE_INT PASE_Mg_solve(PASE_MG_SOLVER solver);
 PASE_INT PASE_Mg_cycle(PASE_MG_SOLVER solver);
-PASE_INT PASE_Mg_cycle_multigrid(PASE_MG_SOLVER solver);
-PASE_INT PASE_Mg_cycle_two_gird(PASE_MG_SOLVER solver);
-PASE_INT PASE_Mg_set_aux_space_two_grid(PASE_MG_SOLVER solver);
-PASE_INT PASE_Mg_prolong_two_grid(PASE_MG_SOLVER solver);
+
+PASE_INT PASE_Mg_set_aux_space(PASE_MG_SOLVER solver);
+PASE_INT PASE_Mg_set_pase_aux_matrix(PASE_MG_SOLVER solver, PASE_INT cur_level, PASE_INT last_level);
+PASE_INT PASE_Mg_set_pase_aux_matrix_by_pase_matrix(PASE_MG_SOLVER solver, PASE_INT i, PASE_INT j, PASE_VECTOR *u_j);
+PASE_INT PASE_Mg_set_pase_aux_matrix_by_pase_aux_matrix(PASE_MG_SOLVER solver, PASE_INT i, PASE_INT j, PASE_AUX_VECTOR *aux_u_j);
+PASE_INT PASE_Mg_pase_aux_matrix_create(PASE_MG_SOLVER solver, PASE_INT i);
+PASE_INT PASE_Mg_set_pase_aux_vector(PASE_MG_SOLVER solver, PASE_INT cur_level);
+
+PASE_INT PASE_Mg_prolong_from_pase_aux_vector(PASE_MG_SOLVER solver);
+PASE_INT PASE_Mg_prolong_from_pase_aux_vector_to_pase_vector(PASE_MG_SOLVER solver, PASE_INT i, PASE_AUX_VECTOR *aux_u_i, PASE_INT j, PASE_VECTOR *u_j);
+PASE_INT PASE_Mg_prolong_from_pase_aux_vector_to_pase_aux_vector(PASE_MG_SOLVER solver, PASE_INT i, PASE_AUX_VECTOR *aux_u_i, PASE_INT j, PASE_AUX_VECTOR *aux_u_j);
 PASE_INT PASE_Mg_prolong(PASE_MG_SOLVER solver,  PASE_INT i, PASE_VECTOR u_i, PASE_INT j, PASE_VECTOR u_j);
+PASE_INT PASE_Mg_restrict(PASE_MG_SOLVER solver, PASE_INT i, PASE_VECTOR u_i, PASE_INT j, PASE_VECTOR u_j);
+
 PASE_INT PASE_Mg_error_estimate(PASE_MG_SOLVER solver);
-PASE_INT PASE_Mg_print(PASE_MG_SOLVER solver);
+PASE_INT PASE_Mg_get_initial_vector(PASE_MG_SOLVER solver);
 PASE_INT PASE_Mg_presmoothing(PASE_MG_SOLVER solver);
-PASE_INT PASE_Mg_set_aux_space_multigrid(PASE_MG_SOLVER solver);
 PASE_INT PASE_Mg_postsmoothing(PASE_MG_SOLVER solver);
 PASE_INT PASE_Mg_direct_solve(PASE_MG_SOLVER solver);
-PASE_INT PASE_Mg_prolong_multigrid(PASE_MG_SOLVER solver);
-PASE_INT PASE_Mg_set_aux_matrix_multigrid(PASE_MG_SOLVER solver);
 PASE_INT PASE_Mg_orthogonalize(PASE_MG_SOLVER solver);
-PASE_INT PASE_Mg_set_exact_eigenvalues(PASE_MG_SOLVER solver, PASE_SCALAR *exact_eigenvalues);
 
+PASE_INT PASE_Mg_set_exact_eigenvalues(PASE_MG_SOLVER solver, PASE_SCALAR *exact_eigenvalues);
+PASE_INT PASE_Mg_set_cycle_type(PASE_MG_SOLVER solver, PASE_INT cycle_type);
 PASE_INT PASE_Mg_set_block_size(PASE_MG_SOLVER solver, PASE_INT block_size);
 PASE_INT PASE_Mg_set_max_block_size(PASE_MG_SOLVER solver, PASE_INT max_block_size);
 PASE_INT PASE_Mg_set_max_cycle(PASE_MG_SOLVER solver, PASE_INT max_iter);
@@ -88,15 +104,15 @@ PASE_INT PASE_Mg_set_atol(PASE_MG_SOLVER solver, PASE_REAL atol);
 PASE_INT PASE_Mg_set_rtol(PASE_MG_SOLVER solver, PASE_REAL rtol);
 PASE_INT PASE_Mg_set_print_level(PASE_MG_SOLVER solver, PASE_INT print_level);
 
+PASE_INT PASE_Mg_smoothing_by_cg(void *mg_solver, char *PreOrPost);
+PASE_INT PASE_Mg_smoothing_by_cg_aux(void *mg_solver, char *PreOrPost);
 PASE_INT PASE_Mg_presmoothing_by_cg(void *mg_solver);
+PASE_INT PASE_Mg_postsmoothing_by_cg(void *mg_solver);
 PASE_INT PASE_Mg_presmoothing_by_cg_aux(void *mg_solver);
+PASE_INT PASE_Mg_postsmoothing_by_cg_aux(void *mg_solver);
 PASE_INT PASE_Linear_solve_by_cg(PASE_MATRIX A, PASE_VECTOR b, PASE_VECTOR x, PASE_REAL tol, PASE_INT max_iter);
 PASE_INT PASE_Linear_solve_by_cg_aux(PASE_AUX_MATRIX aux_A, PASE_AUX_VECTOR aux_b, PASE_AUX_VECTOR aux_x, PASE_REAL tol, PASE_INT max_iter);
-//PASE_INT PASE_Mg_solve_directly_by_IRA(void *mg_solver);
-
-PASE_INT PASE_Mg_coarsest_aux_matrix_set(PASE_MG_SOLVER solver);
-PASE_INT PASE_Mg_coarsest_aux_matrix_create(PASE_MG_SOLVER solver, PASE_AUX_MATRIX *aux_A, PASE_MATRIX A_H);
-PASE_INT PASE_Mg_restrict(PASE_MG_SOLVER solver, PASE_INT i, PASE_VECTOR u_i, PASE_INT j, PASE_VECTOR u_j);
+PASE_INT PASE_Mg_direct_solve_by_gcg(void *mg_solver);
 
 /**
  * @brief 
@@ -110,13 +126,7 @@ PASE_INT PASE_Mg_restrict(PASE_MG_SOLVER solver, PASE_INT i, PASE_VECTOR u_i, PA
  */
 PASE_INT PASE_EigenSolver(PASE_MATRIX A, PASE_MATRIX B, PASE_SCALAR *eval, PASE_VECTOR *evec, PASE_INT block_size, PASE_PARAMETER param);
 
+PASE_INT PASE_Mg_print(PASE_MG_SOLVER solver);
 PASE_INT PASE_Mg_print_eigenvalue_of_current_level(PASE_MG_SOLVER solver);
-
-PASE_INT PASE_Mg_direct_solve_by_gcg(void *mg_solver);
-
-PASE_INT PASE_Mg_set_pase_aux_matrix_by_pase_matrix(PASE_MG_SOLVER solver, PASE_INT i, PASE_INT j, PASE_VECTOR *u_j);
-PASE_INT PASE_Mg_pase_aux_matrix_create(PASE_MG_SOLVER solver, PASE_INT i);
-PASE_INT PASE_Mg_prolong_from_pase_aux_vector_to_pase_vector(PASE_MG_SOLVER solver, PASE_INT i, PASE_AUX_VECTOR *aux_u_i, PASE_INT j, PASE_VECTOR *u_j);
-
 
 #endif

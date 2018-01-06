@@ -84,7 +84,7 @@ GCG_Eigen(PASE_AUX_MATRIX A, PASE_AUX_MATRIX B, PASE_REAL *eval, PASE_AUX_VECTOR
 
     iter += 1;
   }
-  PASE_Printf(MPI_COMM_WORLD, "iter = %d\n", iter);
+  //PASE_Printf(MPI_COMM_WORLD, "iter = %d\n", iter);
   //PrintSmallEigen(iter, nev, approx_eval, NULL, 0, RRes);
   //eval,evec是大规模矩阵的近似特征对
   memcpy(eval, approx_eval, nev*sizeof(PASE_REAL));

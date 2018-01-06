@@ -305,8 +305,8 @@ PASE_Aux_matrix_create_by_aux_matrix(PASE_MATRIX A_H, PASE_MATRIX R_hH, PASE_AUX
  *        即 vec[i],...,vec[j], 以及 block[i][:],...,block[j][:],
  *        使其成为 V_H + span{ aux_u_h[0], ..., aux_u_h[aux_A->block_size-1]} 对应的矩阵.
  *
- *        其中, vec[k]      = R_hH * A_h * u_h[k],     i <= k <= j,
- *              block[k][l] = u_h[k]^T * A_h * u_h[l], i <= k <= j, 0 <= l <= (aux_A->block_size-1).
+ *        其中, vec[k]      = R_hH * (aux_A_h*aux_u_h[k])->vec,     i <= k <= j,
+ *              block[k][l] = aux_u_h[k]^T * aux_A_h * aux_u_h[l], i <= k <= j, 0 <= l <= (aux_A->block_size-1).
  *
  *        通常用于 1. 初次创建 aux_A (i=0, j=aux_A->block_size-1), 
  *                 2. 更新 aux_A 的部分辅助空间 (比如, i>0).
@@ -340,31 +340,18 @@ PASE_Aux_matrix_set_aux_space_some_by_aux_matrix(PASE_AUX_MATRIX aux_A, PASE_INT
   }
 #endif 
 
-  PASE_INT k, l;
+  PASE_Aux_matrix_set_block_some_by_aux_matrix(aux_A, i, j, aux_A_h, aux_u_h);
+  PASE_INT k;
   if(NULL == aux_A->vec) {
     aux_A->vec = (PASE_VECTOR*)PASE_Malloc(aux_A->block_size*sizeof(PASE_VECTOR));
     for(k = 0; k < aux_A->block_size; k++) {
       aux_A->vec[k] = PASE_Vector_create_by_matrix_and_vector_data_operator(aux_A->mat, aux_A_h->vec[0]->ops);
     }
   }
-  if(NULL == aux_A->block) {
-    aux_A->block = (PASE_SCALAR**)PASE_Malloc(aux_A->block_size*sizeof(PASE_SCALAR*));
-    for(k = 0; k < aux_A->block_size; k++) {
-      aux_A->block[k] = (PASE_SCALAR*)PASE_Malloc(aux_A->block_size*sizeof(PASE_SCALAR));
-    }
-  }
   PASE_AUX_VECTOR aux_workspace_h = PASE_Aux_vector_create_by_aux_vector(aux_u_h[0]);
   for(k = i; k <= j; k++) {
     PASE_Aux_matrix_multiply_aux_vector(aux_A_h, aux_u_h[k], aux_workspace_h);
     PASE_Matrix_multiply_vector(R_hH, aux_workspace_h->vec, aux_A->vec[k]);
-    for(l = 0; l < aux_A->block_size; l++) {
-      if(l >= i && l <= j) {
-        PASE_Aux_vector_inner_product(aux_workspace_h, aux_u_h[l], &(aux_A->block[k][l]));
-      } else {
-        PASE_Aux_vector_inner_product(aux_workspace_h, aux_u_h[l], &(aux_A->block[l][k]));
-        PASE_Aux_vector_inner_product(aux_workspace_h, aux_u_h[l], &(aux_A->block[k][l]));
-      }
-    }
   }
   PASE_Aux_vector_destroy(aux_workspace_h);
 }
@@ -407,6 +394,32 @@ PASE_Aux_matrix_set_aux_space_by_aux_matrix(PASE_AUX_MATRIX aux_A, PASE_MATRIX R
 #endif 
 
   PASE_Aux_matrix_set_aux_space_some_by_aux_matrix(aux_A, 0, aux_A->block_size-1, R_hH, aux_A_h, aux_u_h);
+}
+
+void
+PASE_Aux_matrix_set_block_some_by_aux_matrix(PASE_AUX_MATRIX aux_A, PASE_INT i, PASE_INT j, PASE_AUX_MATRIX aux_A_h, PASE_AUX_VECTOR *aux_u_h)
+{
+  PASE_INT k = 0;
+  PASE_INT l = 0;
+  if(NULL == aux_A->block) {
+    aux_A->block = (PASE_SCALAR**)PASE_Malloc(aux_A->block_size*sizeof(PASE_SCALAR*));
+    for(k = 0; k < aux_A->block_size; k++) {
+      aux_A->block[k] = (PASE_SCALAR*)PASE_Malloc(aux_A->block_size*sizeof(PASE_SCALAR));
+    }
+  }
+  PASE_AUX_VECTOR aux_workspace_h = PASE_Aux_vector_create_by_aux_vector(aux_u_h[0]);
+  for(k = i; k <= j; k++) {
+    PASE_Aux_matrix_multiply_aux_vector(aux_A_h, aux_u_h[k], aux_workspace_h);
+    for(l = 0; l < aux_A->block_size; l++) {
+      if(l >= i && l <= j) {
+        PASE_Aux_vector_inner_product(aux_workspace_h, aux_u_h[l], &(aux_A->block[k][l]));
+      } else {
+        PASE_Aux_vector_inner_product(aux_workspace_h, aux_u_h[l], &(aux_A->block[l][k]));
+        PASE_Aux_vector_inner_product(aux_workspace_h, aux_u_h[l], &(aux_A->block[k][l]));
+      }
+    }
+  }
+  PASE_Aux_vector_destroy(aux_workspace_h);
 }
 
 #undef  __FUNCT__

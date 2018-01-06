@@ -17,6 +17,7 @@ typedef struct PASE_PARAMETER_PRIVATE_ {
   PASE_INT external_package; // 1: HYPRE
   
   /* mg_solver parameter */
+  PASE_INT  cycle_type;
   PASE_INT  block_size;
   PASE_INT  max_cycle;
   PASE_INT  max_pre_iter;

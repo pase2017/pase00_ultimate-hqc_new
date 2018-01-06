@@ -48,6 +48,7 @@ PASE_INT main(PASE_INT argc, char *argv[])
   MPI_Comm_rank(MPI_COMM_WORLD, &myid);
 
   PASE_PARAMETER param   = (PASE_PARAMETER) PASE_Malloc(sizeof(PASE_PARAMETER_PRIVATE));
+  param->cycle_type      = 0;
   param->block_size      = 5;
   param->max_cycle       = 50;
   param->max_pre_iter    = 1;
