@@ -448,7 +448,7 @@ PASE_Mg_direct_solve_by_lobpcg_aux_hypre(void *mg_solver)
   PASE_MG_SOLVER solver         = (PASE_MG_SOLVER)mg_solver;
   solver->method_dire = "lobpcg";
   HYPRE_Solver   lobpcg_solver 	= NULL; 
-  PASE_INT       maxIterations 	= 2; 	              /* maximum number of iterations */
+  PASE_INT       maxIterations 	= solver->max_direct_iter; 	              /* maximum number of iterations */
   PASE_INT       pcgMode        = 1;    	      /* use rhs as initial guess for inner pcg iterations */
   PASE_INT       verbosity 	= 0;    	      /* print iterations info */
   PASE_REAL      atol 		= solver->atol;  /* absolute tolerance (all eigenvalues) */

@@ -29,6 +29,7 @@ typedef struct PASE_MG_SOLVER_PRIVATE_ {
 
   PASE_INT     max_pre_iter;
   PASE_INT     max_post_iter;
+  PASE_INT     max_direct_iter;
 
   PASE_REAL    rtol;
   PASE_REAL    atol;
@@ -100,6 +101,7 @@ PASE_INT PASE_Mg_set_max_block_size(PASE_MG_SOLVER solver, PASE_INT max_block_si
 PASE_INT PASE_Mg_set_max_cycle(PASE_MG_SOLVER solver, PASE_INT max_iter);
 PASE_INT PASE_Mg_set_max_pre_iteration(PASE_MG_SOLVER solver, PASE_INT pre_iter);
 PASE_INT PASE_Mg_set_max_post_iteration(PASE_MG_SOLVER solver, PASE_INT post_iter);
+PASE_INT PASE_Mg_set_max_direct_iteration(PASE_MG_SOLVER solver, PASE_INT max_direct_iter);
 PASE_INT PASE_Mg_set_atol(PASE_MG_SOLVER solver, PASE_REAL atol);
 PASE_INT PASE_Mg_set_rtol(PASE_MG_SOLVER solver, PASE_REAL rtol);
 PASE_INT PASE_Mg_set_print_level(PASE_MG_SOLVER solver, PASE_INT print_level);

@@ -68,50 +68,51 @@ PASE_Mg_solver_create_by_multigrid(PASE_MULTIGRID multigrid)
 						       PASE_Mg_postsmoothing_by_amg_hypre, 
                                                        PASE_Mg_presmoothing_by_cg_aux,
                                                        PASE_Mg_postsmoothing_by_cg_aux);
-  solver->cycle_type          = 0;
+  solver->cycle_type                = 0;
 
-  solver->idx_cycle_level     = NULL;
-  solver->num_cycle_level     = 0;
-  solver->max_cycle_level     = 0;
-  solver->cur_cycle_level     = 0;
-  solver->nleve               = multigrid->actual_level;
+  solver->idx_cycle_level           = NULL;
+  solver->num_cycle_level           = 0;
+  solver->max_cycle_level           = 0;
+  solver->cur_cycle_level           = 0;
+  solver->nleve                     = multigrid->actual_level;
 
-  solver->block_size          = 1;
-  solver->max_block_size      = 1;
-  solver->actual_block_size   = 1;
+  solver->block_size                = 1;
+  solver->max_block_size            = 1;
+  solver->actual_block_size         = 1;
 
-  solver->max_pre_iter        = 1;
-  solver->max_post_iter       = 1;
-  solver->rtol                = 1e-8;
-  solver->atol                = 1e-8;
-  solver->r_norm              = NULL;
-  solver->nconv               = 0;
-  solver->nlock               = 0;
-  solver->ncycl               = 0;
-  solver->max_cycle           = 200;
+  solver->max_pre_iter              = 1;
+  solver->max_post_iter             = 1;
+  solver->max_direct_iter           = 1;
+  solver->rtol                      = 1e-8;
+  solver->atol                      = 1e-8;
+  solver->r_norm                    = NULL;
+  solver->nconv                     = 0;
+  solver->nlock                     = 0;
+  solver->ncycl                     = 0;
+  solver->max_cycle                 = 200;
 
-  solver->print_level         = 1;
-  solver->set_up_time         = 0.0;
-  solver->get_initvec_time    = 0.0;
-  solver->smooth_time         = 0.0;
-  solver->set_aux_time        = 0.0;
-  solver->prolong_time        = 0.0;
-  solver->direct_solve_time   = 0.0;
-  solver->total_solve_time    = 0.0;
-  solver->total_time          = 0.0;
+  solver->print_level               = 1;
+  solver->set_up_time               = 0.0;
+  solver->get_initvec_time          = 0.0;
+  solver->smooth_time               = 0.0;
+  solver->set_aux_time              = 0.0;
+  solver->prolong_time              = 0.0;
+  solver->direct_solve_time         = 0.0;
+  solver->total_solve_time          = 0.0;
+  solver->total_time                = 0.0;
 
-  solver->exact_eigenvalues   = NULL;
-  solver->eigenvalues         = NULL;
-  solver->u                   = NULL;
-  solver->is_u_owner          = PASE_YES;
-  solver->aux_u               = NULL;
+  solver->exact_eigenvalues         = NULL;
+  solver->eigenvalues               = NULL;
+  solver->u                         = NULL;
+  solver->is_u_owner                = PASE_YES;
+  solver->aux_u                     = NULL;
 
-  solver->method_init         = NULL;
-  solver->method_pre          = NULL;
-  solver->method_post         = NULL;
-  solver->method_pre_aux      = NULL;
-  solver->method_post_aux     = NULL;
-  solver->method_dire         = NULL;
+  solver->method_init               = NULL;
+  solver->method_pre                = NULL;
+  solver->method_post               = NULL;
+  solver->method_pre_aux            = NULL;
+  solver->method_post_aux           = NULL;
+  solver->method_dire               = NULL;
   return solver;
 }
 
@@ -668,18 +669,20 @@ PASE_INT
 PASE_Mg_presmoothing(PASE_MG_SOLVER solver)
 {
   clock_t start, end;
-  start = clock();
-  if(solver->cur_cycle_level == 0) {
-    solver->function->presmoothing(solver);
-  } else {
-    solver->function->presmoothing_aux(solver);
+  if(solver->max_pre_iter > 0) {
+    start = clock();
+    if(solver->cur_cycle_level == 0) {
+      solver->function->presmoothing(solver);
+    } else {
+      solver->function->presmoothing_aux(solver);
+    }
+    end = clock();
+    solver->smooth_time += ((double)(end-start))/CLK_TCK;
+    if(solver->print_level > 1) {
+      PASE_Printf(MPI_COMM_WORLD, "\nPresmoothing\t");
+    }
+    PASE_Mg_print_eigenvalue_of_current_level(solver);
   }
-  end = clock();
-  solver->smooth_time += ((double)(end-start))/CLK_TCK;
-  if(solver->print_level > 1) {
-    PASE_Printf(MPI_COMM_WORLD, "\nPresmoothing\t");
-  }
-  PASE_Mg_print_eigenvalue_of_current_level(solver);
 
   return 0;
 }
@@ -695,19 +698,21 @@ PASE_INT
 PASE_Mg_postsmoothing(PASE_MG_SOLVER solver)
 {
   clock_t start, end;
-  start = clock();
-  if(solver->cur_cycle_level == 0) {
-    solver->function->postsmoothing(solver);
-    //PASE_Mg_orthogonalize(solver);
-  } else {
-    solver->function->postsmoothing_aux(solver);
+  if(solver->max_post_iter > 0) {
+    start = clock();
+    if(solver->cur_cycle_level == 0) {
+      solver->function->postsmoothing(solver);
+      //PASE_Mg_orthogonalize(solver);
+    } else {
+      solver->function->postsmoothing_aux(solver);
+    }
+    end = clock();
+    solver->smooth_time += ((double)(end-start))/CLK_TCK;
+    if(solver->print_level > 1) {
+      PASE_Printf(MPI_COMM_WORLD, "\nPostsmoothing\t");
+    }
+    PASE_Mg_print_eigenvalue_of_current_level(solver);
   }
-  end = clock();
-  solver->smooth_time += ((double)(end-start))/CLK_TCK;
-  if(solver->print_level > 1) {
-    PASE_Printf(MPI_COMM_WORLD, "\nPostsmoothing\t");
-  }
-  PASE_Mg_print_eigenvalue_of_current_level(solver);
 
   return 0;
 }
@@ -723,14 +728,16 @@ PASE_INT
 PASE_Mg_direct_solve(PASE_MG_SOLVER solver)
 {
   clock_t start, end;
-  start = clock();
-  solver->function->direct_solve(solver);
-  end   = clock();
-  solver->direct_solve_time += ((double)(end-start))/CLK_TCK;
-  if(solver->print_level > 1) {
-    PASE_Printf(MPI_COMM_WORLD, "\nDirect solve\t");
+  if(solver->max_direct_iter> 0) {
+    start = clock();
+    solver->function->direct_solve(solver);
+    end   = clock();
+    solver->direct_solve_time += ((double)(end-start))/CLK_TCK;
+    if(solver->print_level > 1) {
+      PASE_Printf(MPI_COMM_WORLD, "\nDirect solve\t");
+    }
+    PASE_Mg_print_eigenvalue_of_current_level(solver);
   }
-  PASE_Mg_print_eigenvalue_of_current_level(solver);
   return 0;
 }
 
@@ -843,6 +850,13 @@ PASE_INT
 PASE_Mg_set_max_post_iteration(PASE_MG_SOLVER solver, PASE_INT max_post_iter)
 {
   solver->max_post_iter = max_post_iter;
+  return 0;
+}
+
+PASE_INT
+PASE_Mg_set_max_direct_iteration(PASE_MG_SOLVER solver, PASE_INT max_direct_iter)
+{
+  solver->max_direct_iter = max_direct_iter;
   return 0;
 }
 
@@ -1210,7 +1224,7 @@ PASE_Mg_direct_solve_by_gcg(void *mg_solver)
   PASE_AUX_VECTOR *aux_u       = solver->aux_u[cur_level];
   PASE_SCALAR     *eigenvalues = solver->eigenvalues;
 
-  PASE_INT         max_iter    = 10;
+  PASE_INT         max_iter    = solver->max_direct_iter;
   PASE_REAL        tol         = solver->atol;
 
 #if 0

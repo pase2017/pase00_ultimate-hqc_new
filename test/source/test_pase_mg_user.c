@@ -50,11 +50,12 @@ PASE_INT main(PASE_INT argc, char *argv[])
   MPI_Comm_rank(MPI_COMM_WORLD, &myid);
 
   PASE_INT  n             = 200;
-  PASE_INT  cycle_type    = 1;
+  PASE_INT  cycle_type    = 0;
   PASE_INT  block_size    = 5;
   PASE_INT  max_cycle     = 100;
-  PASE_INT  max_pre_iter  = 1;
+  PASE_INT  max_pre_iter  = 0;
   PASE_INT  max_post_iter = 1;
+  PASE_INT  max_direct_iter = 3;
   PASE_REAL atol          = 1e-8;
   PASE_REAL rtol          = 1e-6;
   PASE_INT  print_level   = 1;
@@ -80,10 +81,12 @@ PASE_INT main(PASE_INT argc, char *argv[])
   PASE_Printf(MPI_COMM_WORLD, "\n");
   PASE_Printf(MPI_COMM_WORLD, "Set parameters:\n");
   PASE_Printf(MPI_COMM_WORLD, "dimension       = %d\n", n*n);
+  PASE_Printf(MPI_COMM_WORLD, "cycle type      = %d\n", cycle_type);
   PASE_Printf(MPI_COMM_WORLD, "block size      = %d\n", block_size);
   PASE_Printf(MPI_COMM_WORLD, "max block size  = %d\n", max_block_size);
   PASE_Printf(MPI_COMM_WORLD, "max pre iter    = %d\n", max_pre_iter);
   PASE_Printf(MPI_COMM_WORLD, "max post iter   = %d\n", max_post_iter);
+  PASE_Printf(MPI_COMM_WORLD, "max direct iter = %d\n", max_direct_iter);
   PASE_Printf(MPI_COMM_WORLD, "atol            = %e\n", atol);
   PASE_Printf(MPI_COMM_WORLD, "max cycle       = %d\n", max_cycle);
   PASE_Printf(MPI_COMM_WORLD, "max level       = %d\n", max_level);
@@ -108,6 +111,7 @@ PASE_INT main(PASE_INT argc, char *argv[])
   PASE_Mg_set_max_cycle(solver, max_cycle);
   PASE_Mg_set_max_pre_iteration(solver, max_pre_iter);
   PASE_Mg_set_max_post_iteration(solver, max_post_iter);
+  PASE_Mg_set_max_direct_iteration(solver, max_direct_iter);
   PASE_Mg_set_atol(solver, atol);
   PASE_Mg_set_rtol(solver, rtol);
   PASE_Mg_set_print_level(solver, print_level);
