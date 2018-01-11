@@ -63,7 +63,7 @@ PASE_Mg_solver_create_by_multigrid(PASE_MULTIGRID multigrid)
                                                        //PASE_Mg_presmoothing_by_cg,
                                                        //PASE_Mg_presmoothing_by_cg,
 						       //PASE_Mg_presmoothing_by_pcg_amg_hypre, 
-						       //PASE_Mg_presmoothing_by_pcg_amg_hypre, 
+						       //PASE_Mg_postsmoothing_by_pcg_amg_hypre, 
 						       PASE_Mg_presmoothing_by_amg_hypre, 
 						       PASE_Mg_postsmoothing_by_amg_hypre, 
                                                        PASE_Mg_presmoothing_by_cg_aux,
@@ -244,7 +244,7 @@ PASE_Mg_set_up(PASE_MG_SOLVER solver, PASE_VECTOR x)
 PASE_INT 
 PASE_Mg_solve(PASE_MG_SOLVER solver)
 {
-  //PASE_Mg_error_estimate(solver);
+  PASE_Mg_error_estimate(solver);
   //PASE_Mg_print(solver);
   clock_t start, end;
   start = clock();
@@ -702,7 +702,9 @@ PASE_Mg_postsmoothing(PASE_MG_SOLVER solver)
     start = clock();
     if(solver->cur_cycle_level == 0) {
       solver->function->postsmoothing(solver);
-      //PASE_Mg_orthogonalize(solver);
+      if(1 == solver->cycle_type) {
+        PASE_Mg_orthogonalize(solver);
+      }
     } else {
       solver->function->postsmoothing_aux(solver);
     }

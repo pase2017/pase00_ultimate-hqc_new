@@ -342,11 +342,7 @@ PASE_Mg_get_initial_vector_by_full_multigrid_hypre(void *mg_solver)
   HYPRE_Solver ksp_solver = NULL;
   PASE_VECTOR  rhs = NULL;
   PASE_INT idx_level = 0;
-  for(idx_level = cur_level-1; idx_level > 0; idx_level--) {
-    start = clock();
-    rhs = PASE_Vector_create_by_vector(pase_u_h[0]);
 #if 1
-    //解问题
     HYPRE_BoomerAMGCreate(&ksp_solver);
     HYPRE_BoomerAMGSetPrintLevel(ksp_solver, 0); /* print amg solution info */
     HYPRE_BoomerAMGSetInterpType(ksp_solver, 0);
@@ -358,7 +354,6 @@ PASE_Mg_get_initial_vector_by_full_multigrid_hypre(void *mg_solver)
     HYPRE_BoomerAMGSetTol(ksp_solver, 0.0); /* conv. tolerance zero */
     HYPRE_BoomerAMGSetCoarsenType(ksp_solver, 6);
     HYPRE_BoomerAMGSetMaxIter(ksp_solver, 1); /* do only one iteration! */
-    HYPRE_BoomerAMGSetup(ksp_solver, (HYPRE_ParCSRMatrix)A[idx_level]->matrix_data, (HYPRE_ParVector)rhs->vector_data, (HYPRE_ParVector)pase_u_h[0]->vector_data);
 #else
     HYPRE_ParCSRPCGCreate(MPI_COMM_WORLD, &ksp_solver);
     HYPRE_PCGSetMaxIter(ksp_solver, 2); /* max iterations */
@@ -370,6 +365,11 @@ PASE_Mg_get_initial_vector_by_full_multigrid_hypre(void *mg_solver)
     hypre_PCGSetup(ksp_solver, (HYPRE_ParCSRMatrix)A[idx_level]->matrix_data, (HYPRE_ParVector)rhs->vector_data, (HYPRE_ParVector)pase_u_h[0]->vector_data);
 
 #endif
+  for(idx_level = cur_level-1; idx_level > 0; idx_level--) {
+    start = clock();
+    //解问题
+    rhs = PASE_Vector_create_by_vector(pase_u_h[0]);
+    HYPRE_BoomerAMGSetup(ksp_solver, (HYPRE_ParCSRMatrix)A[idx_level]->matrix_data, (HYPRE_ParVector)rhs->vector_data, (HYPRE_ParVector)pase_u_h[0]->vector_data);
 
     for(i = 0; i < block_size; i++) {
       PASE_Matrix_multiply_vector_general(solver->eigenvalues[i], B[idx_level], pase_u_h[i], 0.0, rhs);
@@ -617,7 +617,6 @@ PASE_Mg_smoothing_by_amg_hypre(void *mg_solver, char *PreOrPost)
 {
   PASE_SCALAR     inner_A, inner_B;
   PASE_MG_SOLVER  solver        = (PASE_MG_SOLVER)mg_solver;
-  HYPRE_Solver    amg_solver     = NULL;
   PASE_INT        block_size	= solver->block_size;
   PASE_INT        nconv         = solver->nconv; 
   PASE_INT        i		= 0;
@@ -640,6 +639,8 @@ PASE_Mg_smoothing_by_amg_hypre(void *mg_solver, char *PreOrPost)
   PASE_SCALAR    *eigenvalues   = solver->eigenvalues;
   PASE_VECTOR     rhs 	        = PASE_Vector_create_by_vector(u[0]);
 
+#if 0
+  HYPRE_Solver    amg_solver     = NULL;
   HYPRE_BoomerAMGCreate(&amg_solver);
   HYPRE_BoomerAMGSetPrintLevel(amg_solver, 0); /* print amg solution info */
   HYPRE_BoomerAMGSetOldDefault(amg_solver); /* Falgout coarsening with modified classical interpolaiton */
@@ -650,11 +651,16 @@ PASE_Mg_smoothing_by_amg_hypre(void *mg_solver, char *PreOrPost)
   HYPRE_BoomerAMGSetCoarsenType(amg_solver, 6);
   HYPRE_BoomerAMGSetMaxIter(amg_solver, max_iter); 
   HYPRE_BoomerAMGSetup(amg_solver, (HYPRE_ParCSRMatrix)A->matrix_data, (HYPRE_ParVector)rhs->vector_data, (HYPRE_ParVector)u[0]->vector_data);
+#endif
+
+  HYPRE_BoomerAMGSetTol((HYPRE_Solver)solver->multigrid->amg_data, solver->atol); /* conv. tolerance zero */
+  HYPRE_BoomerAMGSetMaxIter((HYPRE_Solver)solver->multigrid->amg_data, max_iter); 
 
   for(i = nconv; i < block_size; i++) {
     PASE_Matrix_multiply_vector(B, u[i], rhs);
     PASE_Vector_scale(eigenvalues[i], rhs);
-    HYPRE_BoomerAMGSolve(amg_solver, (HYPRE_ParCSRMatrix)(A->matrix_data), (HYPRE_ParVector)(rhs->vector_data), (HYPRE_ParVector)(u[i]->vector_data));
+    //HYPRE_BoomerAMGSolve(amg_solver, (HYPRE_ParCSRMatrix)(A->matrix_data), (HYPRE_ParVector)(rhs->vector_data), (HYPRE_ParVector)(u[i]->vector_data));
+    HYPRE_BoomerAMGSolve((HYPRE_Solver)solver->multigrid->amg_data, (HYPRE_ParCSRMatrix)(A->matrix_data), (HYPRE_ParVector)(rhs->vector_data), (HYPRE_ParVector)(u[i]->vector_data));
 
     PASE_Vector_inner_product_general(rhs, u[i], A, &inner_A);
     PASE_Vector_inner_product_general(rhs, u[i], B, &inner_B);
@@ -662,7 +668,7 @@ PASE_Mg_smoothing_by_amg_hypre(void *mg_solver, char *PreOrPost)
   }
 
   PASE_Vector_destroy(rhs);
-  HYPRE_BoomerAMGDestroy(amg_solver);
+  //HYPRE_BoomerAMGDestroy(amg_solver);
   return 0;
 }
 

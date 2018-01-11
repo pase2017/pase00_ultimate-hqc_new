@@ -472,7 +472,7 @@ OrthogonalSmall(PASE_REAL *V, PASE_REAL **B, PASE_INT dim_xpw, PASE_INT dim_x, P
   if(n_nonzero < (*dim_xp-dim_x)) {
     *dim_xp = dim_x + n_nonzero;
     for(i = 0; i < n_nonzero; i++) {
-      memcpy(V+i*dim_xpw, V+Ind[i]*dim_xpw, dim_xpw*sizeof(PASE_REAL));
+      memcpy(V+(dim_x+i)*dim_xpw, V+Ind[i]*dim_xpw, dim_xpw*sizeof(PASE_REAL));
     }
   }
 }

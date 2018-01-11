@@ -54,7 +54,7 @@ PASE_INT main(PASE_INT argc, char *argv[])
   PASE_INT  block_size    = 5;
   PASE_INT  max_cycle     = 100;
   PASE_INT  max_pre_iter  = 0;
-  PASE_INT  max_post_iter = 1;
+  PASE_INT  max_post_iter = 2;
   PASE_INT  max_direct_iter = 3;
   PASE_REAL atol          = 1e-8;
   PASE_REAL rtol          = 1e-6;
