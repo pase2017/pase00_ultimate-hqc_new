@@ -342,6 +342,7 @@ PASE_Mg_get_initial_vector_by_full_multigrid_hypre(void *mg_solver)
   HYPRE_Solver ksp_solver = NULL;
   PASE_VECTOR  rhs = NULL;
   PASE_INT idx_level = 0;
+  PASE_INT max_iter_smooth = 2;
 #if 1
     HYPRE_BoomerAMGCreate(&ksp_solver);
     HYPRE_BoomerAMGSetPrintLevel(ksp_solver, 0); /* print amg solution info */
@@ -353,7 +354,7 @@ PASE_Mg_get_initial_vector_by_full_multigrid_hypre(void *mg_solver)
     HYPRE_BoomerAMGSetNumSweeps(ksp_solver, 1); /* 2 sweeps of smoothing */
     HYPRE_BoomerAMGSetTol(ksp_solver, 0.0); /* conv. tolerance zero */
     HYPRE_BoomerAMGSetCoarsenType(ksp_solver, 6);
-    HYPRE_BoomerAMGSetMaxIter(ksp_solver, 2); /* do only one iteration! */
+    HYPRE_BoomerAMGSetMaxIter(ksp_solver, max_iter_smooth); /* do only one iteration! */
 #else
     HYPRE_ParCSRPCGCreate(MPI_COMM_WORLD, &ksp_solver);
     HYPRE_PCGSetMaxIter(ksp_solver, 2); /* max iterations */
@@ -388,7 +389,7 @@ PASE_Mg_get_initial_vector_by_full_multigrid_hypre(void *mg_solver)
     start = clock();
 
     //特征值问题
-    PASE_Mg_direct_solve_by_lobpcg_aux_hypre(solver);
+    PASE_Mg_direct_solve_by_gcg(solver);
     end = clock();
     aux_direct_time += ((double)(end-start))/CLK_TCK;
     start = clock();
@@ -419,11 +420,13 @@ PASE_Mg_get_initial_vector_by_full_multigrid_hypre(void *mg_solver)
   end = clock();
   smooth_time += ((double)(end-start))/CLK_TCK;
   PASE_Printf(MPI_COMM_WORLD, "\n");
-  PASE_Printf(MPI_COMM_WORLD, "direct solve time      = %.6f\n", direct_time);
-  PASE_Printf(MPI_COMM_WORLD, "aux direct solve time  = %.6f\n", aux_direct_time);
-  PASE_Printf(MPI_COMM_WORLD, "smooth time            = %.6f\n", smooth_time);
-  PASE_Printf(MPI_COMM_WORLD, "set aux time           = %.6f\n", set_aux_time);
-  PASE_Printf(MPI_COMM_WORLD, "prolong time           = %.6f\n", prolong_time);
+  PASE_Printf(MPI_COMM_WORLD, "max iter of direct solve = %.6f\n", maxIterations);
+  PASE_Printf(MPI_COMM_WORLD, "max iter of smooth       = %.6f\n", max_iter_smooth);
+  PASE_Printf(MPI_COMM_WORLD, "direct solve time        = %.6f\n", direct_time);
+  PASE_Printf(MPI_COMM_WORLD, "aux direct solve time    = %.6f\n", aux_direct_time);
+  PASE_Printf(MPI_COMM_WORLD, "smooth time              = %.6f\n", smooth_time);
+  PASE_Printf(MPI_COMM_WORLD, "set aux time             = %.6f\n", set_aux_time);
+  PASE_Printf(MPI_COMM_WORLD, "prolong time             = %.6f\n", prolong_time);
   PASE_Printf(MPI_COMM_WORLD, "\n");
 
   free((mv_TempMultiVector*)mv_MultiVectorGetData(eigenvectors_Hh));
