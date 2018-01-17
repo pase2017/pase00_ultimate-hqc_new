@@ -10,49 +10,10 @@
 #define CLK_TCK 1000000
 
 PASE_MG_SOLVER
-PASE_Mg_solver_create(PASE_MATRIX A, PASE_MATRIX B, PASE_PARAMETER param, PASE_MULTIGRID_OPERATOR ops)
-{
-  PASE_MULTIGRID multigrid = PASE_Multigrid_create(A, B, param, ops);
-  PASE_MG_SOLVER solver = PASE_Mg_solver_create_by_multigrid(multigrid);
-  return solver;
-}
-
-/**
- * @brief PASE_MG_FUNCTION 的创建
- *
- * @param solver  输入/输出参数
- *
- * @return PASE_MG_FUNCTION
- */
-PASE_MG_FUNCTION
-PASE_Mg_function_create(PASE_INT (*get_initial_vector) (void *solver),
-    PASE_INT (*direct_solve)       (void *solver),
-    PASE_INT (*presmoothing)       (void *solver), 
-    PASE_INT (*postsmoothing)      (void *solver), 
-    PASE_INT (*presmoothing_aux)   (void *solver), 
-    PASE_INT (*postsmoothing_aux)  (void *solver)) 
-{
-  PASE_MG_FUNCTION function    = (PASE_MG_FUNCTION)PASE_Malloc(sizeof(PASE_MG_FUNCTION_PRIVATE));
-  function->get_initial_vector = get_initial_vector;
-  function->direct_solve       = direct_solve;
-  function->presmoothing       = presmoothing;
-  function->postsmoothing      = postsmoothing;
-  function->presmoothing_aux   = presmoothing_aux;
-  function->postsmoothing_aux  = postsmoothing_aux;
-  return function;
-}
-
-/**
- * @brief 依据给定的 PASE_MULTIGRID 创建 PASE_MG_SOLVER, 并对其中一些成员赋予默认的初始值.
- *
- * @param solver  输入/输出参数
- *
- * @return PASE_MG_SOLVER
- */
-PASE_MG_SOLVER
-PASE_Mg_solver_create_by_multigrid(PASE_MULTIGRID multigrid)
+PASE_Mg_solver_create(PASE_MATRIX A, PASE_MATRIX B, PASE_PARAMETER param)
 {
   PASE_MG_SOLVER solver      = (PASE_MG_SOLVER)PASE_Malloc(sizeof(PASE_MG_SOLVER_PRIVATE));
+  PASE_MULTIGRID multigrid   = PASE_Multigrid_create(A, B, param, NULL);
 
   solver->multigrid          = multigrid;
   solver->function           = PASE_Mg_function_create(//PASE_Mg_get_initial_vector_by_coarse_grid_hypre,
@@ -74,7 +35,7 @@ PASE_Mg_solver_create_by_multigrid(PASE_MULTIGRID multigrid)
   solver->num_cycle_level           = 0;
   solver->max_cycle_level           = 0;
   solver->cur_cycle_level           = 0;
-  solver->nleve                     = multigrid->actual_level;
+  solver->nleve                     = param->max_level;
 
   solver->block_size                = 1;
   solver->max_block_size            = 1;
@@ -114,6 +75,31 @@ PASE_Mg_solver_create_by_multigrid(PASE_MULTIGRID multigrid)
   solver->method_post_aux           = NULL;
   solver->method_dire               = NULL;
   return solver;
+}
+
+/**
+ * @brief PASE_MG_FUNCTION 的创建
+ *
+ * @param solver  输入/输出参数
+ *
+ * @return PASE_MG_FUNCTION
+ */
+PASE_MG_FUNCTION
+PASE_Mg_function_create(PASE_INT (*get_initial_vector) (void *solver),
+    PASE_INT (*direct_solve)       (void *solver),
+    PASE_INT (*presmoothing)       (void *solver), 
+    PASE_INT (*postsmoothing)      (void *solver), 
+    PASE_INT (*presmoothing_aux)   (void *solver), 
+    PASE_INT (*postsmoothing_aux)  (void *solver)) 
+{
+  PASE_MG_FUNCTION function    = (PASE_MG_FUNCTION)PASE_Malloc(sizeof(PASE_MG_FUNCTION_PRIVATE));
+  function->get_initial_vector = get_initial_vector;
+  function->direct_solve       = direct_solve;
+  function->presmoothing       = presmoothing;
+  function->postsmoothing      = postsmoothing;
+  function->presmoothing_aux   = presmoothing_aux;
+  function->postsmoothing_aux  = postsmoothing_aux;
+  return function;
 }
 
 /**
@@ -185,11 +171,13 @@ PASE_Mg_solver_destroy(PASE_MG_SOLVER solver)
  * @return 
  */
 PASE_INT
-PASE_Mg_set_up(PASE_MG_SOLVER solver, PASE_VECTOR x)
+PASE_Mg_set_up(PASE_MG_SOLVER solver, PASE_MATRIX A, PASE_MATRIX B, PASE_VECTOR x, PASE_PARAMETER param)
 {
   clock_t start, end;
   start = clock();
   PASE_INT i = 0;
+  PASE_Multigrid_set_up(solver->multigrid, A, B, param);
+  solver->nleve = solver->multigrid->actual_level;
   if(NULL == solver->eigenvalues) {
     solver->eigenvalues = (PASE_SCALAR*)PASE_Malloc(solver->max_block_size*sizeof(PASE_SCALAR));
   }
@@ -201,7 +189,7 @@ PASE_Mg_set_up(PASE_MG_SOLVER solver, PASE_VECTOR x)
       }
     } else {
       //缺省情况, 依据 A0 创建 u[0], 再依据 u[0] 创建 u[i] (i>0).
-      //对于基于 hypre 的向量结构, 特征值求解个数多的时候, 所有向量公用一个partitioning, 节省内存消耗
+      //对于基于 hypre 的向量结构, 特征值求解个数多的时候, 所有向量共用一个partitioning, 节省内存消耗
       solver->u[0] = PASE_Vector_create_by_matrix_and_vector_data_operator(solver->multigrid->A[0], NULL);
       for(i = 1; i < solver->max_block_size; i++) {
         solver->u[i] = PASE_Vector_create_by_vector(solver->u[0]);
@@ -228,7 +216,6 @@ PASE_Mg_set_up(PASE_MG_SOLVER solver, PASE_VECTOR x)
     solver->aux_u[i] = NULL;
   }
 
-  PASE_Mg_get_initial_vector(solver);
   end = clock();
   solver->set_up_time += ((double)(end-start))/CLK_TCK;
   return 0;
@@ -244,15 +231,16 @@ PASE_Mg_set_up(PASE_MG_SOLVER solver, PASE_VECTOR x)
 PASE_INT 
 PASE_Mg_solve(PASE_MG_SOLVER solver)
 {
-  PASE_Mg_error_estimate(solver);
-  //PASE_Mg_print(solver);
   clock_t start, end;
   start = clock();
+  PASE_Mg_get_initial_vector(solver);
+  PASE_Mg_error_estimate(solver);
+  //PASE_Mg_print(solver);
   do {
     solver->ncycl++;
     PASE_Mg_cycle(solver);
     PASE_Mg_error_estimate(solver);
-  } while( solver->max_cycle > solver->ncycl && solver->nconv < solver->actual_block_size);
+  } while(solver->max_cycle > solver->ncycl && solver->nconv < solver->actual_block_size);
   end = clock();
   solver->total_solve_time += ((double)(end-start))/CLK_TCK;
   solver->total_time        = solver->total_solve_time + solver->set_up_time;
@@ -777,6 +765,23 @@ PASE_Mg_orthogonalize(PASE_MG_SOLVER solver)
   return 0;
 }
 
+/**
+ * @brief 
+ *
+ * @param solver  输入/输出参数
+ *
+ * @return PASE_MG_SOLVER
+ */
+PASE_INT
+PASE_Mg_solver_set_multigrid(PASE_MG_SOLVER solver, PASE_MULTIGRID multigrid)
+{
+  if(NULL != solver->multigrid) {
+    PASE_Multigrid_destroy(solver->multigrid);
+  }
+  solver->multigrid          = multigrid;
+  return 0;
+}
+
 PASE_INT
 PASE_Mg_set_cycle_type(PASE_MG_SOLVER solver, PASE_INT cycle_type)
 {
@@ -1189,7 +1194,7 @@ PASE_EigenSolver(PASE_MATRIX A, PASE_MATRIX B, PASE_SCALAR *eval, PASE_VECTOR *e
 {
   PASE_INT i              = 0;
   PASE_INT max_block_size = ((2*block_size)<(block_size+5))?(2*block_size):(block_size+5);
-  PASE_MG_SOLVER solver   = PASE_Mg_solver_create(A, B, param, NULL);
+  PASE_MG_SOLVER solver   = PASE_Mg_solver_create(A, B, param);
 
   PASE_Mg_set_cycle_type(solver, param->cycle_type);
   PASE_Mg_set_block_size(solver, block_size);
@@ -1211,7 +1216,7 @@ PASE_EigenSolver(PASE_MATRIX A, PASE_MATRIX B, PASE_SCALAR *eval, PASE_VECTOR *e
     }
     solver->is_u_owner = PASE_NO;
   }
-  PASE_Mg_set_up(solver, NULL);
+  PASE_Mg_set_up(solver, A, B, evec[0], param);
   PASE_Mg_solve(solver);
   PASE_Mg_solver_destroy(solver);
   return 0;

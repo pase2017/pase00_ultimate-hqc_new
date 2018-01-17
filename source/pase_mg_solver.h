@@ -67,10 +67,15 @@ typedef struct PASE_MG_SOLVER_PRIVATE_ {
 } PASE_MG_SOLVER_PRIVATE; 
 typedef PASE_MG_SOLVER_PRIVATE * PASE_MG_SOLVER;
 
-PASE_MG_SOLVER PASE_Mg_solver_create(PASE_MATRIX A, PASE_MATRIX B, PASE_PARAMETER param, PASE_MULTIGRID_OPERATOR ops);
-PASE_MG_SOLVER PASE_Mg_solver_create_by_multigrid(PASE_MULTIGRID multigrid);
+PASE_MG_SOLVER PASE_Mg_solver_create(PASE_MATRIX A, PASE_MATRIX B, PASE_PARAMETER param);
+PASE_MG_FUNCTION PASE_Mg_function_create(PASE_INT (*get_initial_vector) (void *solver),
+    PASE_INT (*direct_solve)       (void *solver),
+    PASE_INT (*presmoothing)       (void *solver), 
+    PASE_INT (*postsmoothing)      (void *solver), 
+    PASE_INT (*presmoothing_aux)   (void *solver), 
+    PASE_INT (*postsmoothing_aux)  (void *solver));
 PASE_INT PASE_Mg_solver_destroy(PASE_MG_SOLVER solver);
-PASE_INT PASE_Mg_set_up(PASE_MG_SOLVER solver, PASE_VECTOR x);
+PASE_INT PASE_Mg_set_up(PASE_MG_SOLVER solver, PASE_MATRIX A, PASE_MATRIX B, PASE_VECTOR x, PASE_PARAMETER param);
 PASE_INT PASE_Mg_solve(PASE_MG_SOLVER solver);
 PASE_INT PASE_Mg_cycle(PASE_MG_SOLVER solver);
 
@@ -95,6 +100,7 @@ PASE_INT PASE_Mg_direct_solve(PASE_MG_SOLVER solver);
 PASE_INT PASE_Mg_orthogonalize(PASE_MG_SOLVER solver);
 
 PASE_INT PASE_Mg_set_exact_eigenvalues(PASE_MG_SOLVER solver, PASE_SCALAR *exact_eigenvalues);
+PASE_INT PASE_Mg_solver_set_multigrid(PASE_MG_SOLVER solver, PASE_MULTIGRID multigrid);
 PASE_INT PASE_Mg_set_cycle_type(PASE_MG_SOLVER solver, PASE_INT cycle_type);
 PASE_INT PASE_Mg_set_block_size(PASE_MG_SOLVER solver, PASE_INT block_size);
 PASE_INT PASE_Mg_set_max_block_size(PASE_MG_SOLVER solver, PASE_INT max_block_size);

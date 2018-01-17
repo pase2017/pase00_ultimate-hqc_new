@@ -101,8 +101,7 @@ PASE_INT main(PASE_INT argc, char *argv[])
   PASE_PARAMETER param     = (PASE_PARAMETER) PASE_Malloc(sizeof(PASE_PARAMETER_PRIVATE));
   param->max_level         = max_level;
   param->min_coarse_size   = min_coarse_size;;
-  PASE_MULTIGRID multigrid = PASE_Multigrid_create(pase_A, pase_B, param, NULL);
-  PASE_MG_SOLVER solver    = PASE_Mg_solver_create_by_multigrid(multigrid);
+  PASE_MG_SOLVER solver    = PASE_Mg_solver_create(pase_A, pase_B, param);
 
   //Set up
   PASE_Mg_set_cycle_type(solver, cycle_type);
@@ -116,7 +115,7 @@ PASE_INT main(PASE_INT argc, char *argv[])
   PASE_Mg_set_rtol(solver, rtol);
   PASE_Mg_set_print_level(solver, print_level);
   PASE_Mg_set_exact_eigenvalues(solver, exact_eigenvalues);
-  PASE_Mg_set_up(solver, pase_x);
+  PASE_Mg_set_up(solver, pase_A, pase_B, pase_x, param);
 
   //Solve
   PASE_Mg_solve(solver);

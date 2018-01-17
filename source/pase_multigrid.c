@@ -29,7 +29,7 @@ PASE_Multigrid_create(PASE_MATRIX A, PASE_MATRIX B, PASE_PARAMETER param, PASE_M
     multigrid->ops = PASE_Multigrid_operator_create(A->data_form);
   }
 
-  PASE_Multigrid_get_amg_array(multigrid, A, B, param);
+  //PASE_Multigrid_set_up(multigrid, A, B, param);
 
   return multigrid;
 }
@@ -45,7 +45,7 @@ PASE_Multigrid_create(PASE_MATRIX A, PASE_MATRIX B, PASE_PARAMETER param, PASE_M
  * @param param      输入参数, 包含 AMG 分层的各个参数
  */
 void
-PASE_Multigrid_get_amg_array(PASE_MULTIGRID multigrid, PASE_MATRIX A, PASE_MATRIX B, PASE_PARAMETER param)
+PASE_Multigrid_set_up(PASE_MULTIGRID multigrid, PASE_MATRIX A, PASE_MATRIX B, PASE_PARAMETER param)
 {
   void **A_array, **P_array, **R_array; 
   PASE_INT    level = 0;

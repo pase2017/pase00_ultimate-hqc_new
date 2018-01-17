@@ -510,7 +510,7 @@ PASE_Mg_direct_solve_by_lobpcg_aux_hypre(void *mg_solver)
 PASE_INT 
 PASE_Mg_smoothing_by_pcg_hypre(void *mg_solver, char *PreOrPost)
 {
-  PASE_SCALAR    inner_A, inner_B;
+  //PASE_SCALAR    inner_A, inner_B;
   PASE_MG_SOLVER solver      = (PASE_MG_SOLVER)mg_solver;
   PASE_INT       cur_level   = solver->idx_cycle_level[solver->cur_cycle_level];
   PASE_INT       block_size  = solver->block_size;
@@ -549,9 +549,9 @@ PASE_Mg_smoothing_by_pcg_hypre(void *mg_solver, char *PreOrPost)
     PASE_Vector_scale(eigenvalues[i], rhs);
     hypre_PCGSolve(cg_solver, A, rhs, u[i]);
 
-    PASE_Vector_inner_product_general(u[i], u[i], A, &inner_A);
-    PASE_Vector_inner_product_general(u[i], u[i], B, &inner_B);
-    eigenvalues[i] = inner_A / inner_B;
+    //PASE_Vector_inner_product_general(u[i], u[i], A, &inner_A);
+    //PASE_Vector_inner_product_general(u[i], u[i], B, &inner_B);
+    //eigenvalues[i] = inner_A / inner_B;
   }
 
   PASE_Vector_destroy(rhs);
@@ -562,7 +562,7 @@ PASE_Mg_smoothing_by_pcg_hypre(void *mg_solver, char *PreOrPost)
 PASE_INT 
 PASE_Mg_smoothing_by_pcg_amg_hypre(void *mg_solver, char *PreOrPost)
 {
-  PASE_SCALAR     inner_A, inner_B;
+  //PASE_SCALAR     inner_A, inner_B;
   PASE_MG_SOLVER  solver        = (PASE_MG_SOLVER)mg_solver;
   HYPRE_Solver    cg_solver     = NULL;
   PASE_INT        block_size	= solver->block_size;
@@ -602,9 +602,9 @@ PASE_Mg_smoothing_by_pcg_amg_hypre(void *mg_solver, char *PreOrPost)
     PASE_Vector_scale(eigenvalues[i], rhs);
     HYPRE_ParCSRPCGSolve(cg_solver, (HYPRE_ParCSRMatrix)(A->matrix_data), (HYPRE_ParVector)(rhs->vector_data), (HYPRE_ParVector)(u[i]->vector_data));
 
-    PASE_Vector_inner_product_general(u[i], u[i], A, &inner_A);
-    PASE_Vector_inner_product_general(u[i], u[i], B, &inner_B);
-    eigenvalues[i] = inner_A / inner_B;
+    //PASE_Vector_inner_product_general(u[i], u[i], A, &inner_A);
+    //PASE_Vector_inner_product_general(u[i], u[i], B, &inner_B);
+    //eigenvalues[i] = inner_A / inner_B;
   }
 
   PASE_Vector_destroy(rhs);
@@ -615,7 +615,7 @@ PASE_Mg_smoothing_by_pcg_amg_hypre(void *mg_solver, char *PreOrPost)
 PASE_INT 
 PASE_Mg_smoothing_by_amg_hypre(void *mg_solver, char *PreOrPost)
 {
-  PASE_SCALAR     inner_A, inner_B;
+  //PASE_SCALAR     inner_A, inner_B;
   PASE_MG_SOLVER  solver        = (PASE_MG_SOLVER)mg_solver;
   PASE_INT        block_size	= solver->block_size;
   PASE_INT        nconv         = solver->nconv; 
