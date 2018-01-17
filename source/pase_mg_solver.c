@@ -601,6 +601,7 @@ PASE_Mg_error_estimate(PASE_MG_SOLVER solver)
   PASE_REAL       *check_multi   = (PASE_REAL*)PASE_Malloc((block_size-1)*sizeof(PASE_REAL));
   PASE_INT         i		 = 0;
   PASE_REAL        r_norm        = 1e+5;
+  PASE_REAL        u_Bnorm       = 0.0;
   PASE_VECTOR      r             = PASE_Vector_create_by_vector(u0[0]);
   solver->nlock                  = nconv;
 
@@ -609,10 +610,13 @@ PASE_Mg_error_estimate(PASE_MG_SOLVER solver)
   }
 
   for(i = nconv; i < block_size; i++) {
-    PASE_Matrix_multiply_vector(A0, u0[i], r);
-    PASE_Matrix_multiply_vector_general(-eigenvalues[i], B0, u0[i], 1.0, r); 
+    PASE_Vector_inner_product_general(u0[i], u0[i], B0, &u_Bnorm);
+    u_Bnorm = sqrt(u_Bnorm);
+    //PASE_Printf(MPI_COMM_WORLD, "bnrm = %f\n", u_Bnorm);
+    PASE_Matrix_multiply_vector(B0, u0[i], r);
+    PASE_Matrix_multiply_vector_general(1.0, A0, u0[i], -eigenvalues[i], r); 
     PASE_Vector_inner_product(r, r, &r_norm);
-    r_norm	      = sqrt(r_norm);
+    r_norm	      = sqrt(r_norm)/u_Bnorm;
     solver->r_norm[i] = r_norm;
     if(i+1 < block_size) {
       check_multi[i] = fabs((eigenvalues[i]-eigenvalues[i+1])/eigenvalues[i]);

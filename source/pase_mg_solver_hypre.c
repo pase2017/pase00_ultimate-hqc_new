@@ -234,7 +234,7 @@ PASE_Mg_get_initial_vector_by_full_multigrid_hypre(void *mg_solver)
   solver->method_init = "full multigrid";
   HYPRE_Solver   lobpcg_solver = NULL; 
   HYPRE_Solver   precond       = NULL; 
-  PASE_INT       maxIterations = 50; 	        /* maximum number of iterations */
+  PASE_INT       maxIterations = 30; 	        /* maximum number of iterations */
   PASE_INT       pcgMode       = 1;    	        /* use rhs as initial guess for inner pcg iterations */
   PASE_INT       verbosity     = 0;    	        /* print iterations info */
   PASE_REAL      atol 	       = solver->atol;	/* absolute tolerance (all eigenvalues) */
@@ -353,7 +353,7 @@ PASE_Mg_get_initial_vector_by_full_multigrid_hypre(void *mg_solver)
     HYPRE_BoomerAMGSetNumSweeps(ksp_solver, 1); /* 2 sweeps of smoothing */
     HYPRE_BoomerAMGSetTol(ksp_solver, 0.0); /* conv. tolerance zero */
     HYPRE_BoomerAMGSetCoarsenType(ksp_solver, 6);
-    HYPRE_BoomerAMGSetMaxIter(ksp_solver, 1); /* do only one iteration! */
+    HYPRE_BoomerAMGSetMaxIter(ksp_solver, 2); /* do only one iteration! */
 #else
     HYPRE_ParCSRPCGCreate(MPI_COMM_WORLD, &ksp_solver);
     HYPRE_PCGSetMaxIter(ksp_solver, 2); /* max iterations */
@@ -549,8 +549,8 @@ PASE_Mg_smoothing_by_pcg_hypre(void *mg_solver, char *PreOrPost)
     PASE_Vector_scale(eigenvalues[i], rhs);
     hypre_PCGSolve(cg_solver, A, rhs, u[i]);
 
-    PASE_Vector_inner_product_general(rhs, u[i], A, &inner_A);
-    PASE_Vector_inner_product_general(rhs, u[i], B, &inner_B);
+    PASE_Vector_inner_product_general(u[i], u[i], A, &inner_A);
+    PASE_Vector_inner_product_general(u[i], u[i], B, &inner_B);
     eigenvalues[i] = inner_A / inner_B;
   }
 
@@ -602,8 +602,8 @@ PASE_Mg_smoothing_by_pcg_amg_hypre(void *mg_solver, char *PreOrPost)
     PASE_Vector_scale(eigenvalues[i], rhs);
     HYPRE_ParCSRPCGSolve(cg_solver, (HYPRE_ParCSRMatrix)(A->matrix_data), (HYPRE_ParVector)(rhs->vector_data), (HYPRE_ParVector)(u[i]->vector_data));
 
-    PASE_Vector_inner_product_general(rhs, u[i], A, &inner_A);
-    PASE_Vector_inner_product_general(rhs, u[i], B, &inner_B);
+    PASE_Vector_inner_product_general(u[i], u[i], A, &inner_A);
+    PASE_Vector_inner_product_general(u[i], u[i], B, &inner_B);
     eigenvalues[i] = inner_A / inner_B;
   }
 
@@ -662,9 +662,11 @@ PASE_Mg_smoothing_by_amg_hypre(void *mg_solver, char *PreOrPost)
     //HYPRE_BoomerAMGSolve(amg_solver, (HYPRE_ParCSRMatrix)(A->matrix_data), (HYPRE_ParVector)(rhs->vector_data), (HYPRE_ParVector)(u[i]->vector_data));
     HYPRE_BoomerAMGSolve((HYPRE_Solver)solver->multigrid->amg_data, (HYPRE_ParCSRMatrix)(A->matrix_data), (HYPRE_ParVector)(rhs->vector_data), (HYPRE_ParVector)(u[i]->vector_data));
 
-    PASE_Vector_inner_product_general(rhs, u[i], A, &inner_A);
-    PASE_Vector_inner_product_general(rhs, u[i], B, &inner_B);
-    eigenvalues[i] = inner_A / inner_B;
+    //PASE_Vector_inner_product_general(u[i], u[i], A, &inner_A);
+    //PASE_Vector_inner_product_general(u[i], u[i], B, &inner_B);
+    //PASE_Printf(MPI_COMM_WORLD, "inner_B = %f\n", 1.0/sqrt(inner_B));
+    //PASE_Vector_scale(1.0/sqrt(inner_B), solver->u[i]);
+    //eigenvalues[i] = inner_A / inner_B;
   }
 
   PASE_Vector_destroy(rhs);
