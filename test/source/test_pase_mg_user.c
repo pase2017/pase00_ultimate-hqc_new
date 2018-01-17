@@ -40,7 +40,7 @@ Author:       Li Yu (liyu@lsec.cc.ac.cn).
 
 static PASE_INT cmp( const void *a ,  const void *b );
 void GetEigenProblem(HYPRE_IJMatrix *A, HYPRE_IJMatrix *B, PASE_INT n);
-void GetCommandLineInfo(PASE_INT argc, char **argv, PASE_INT *n, PASE_INT *block_size, PASE_REAL *atol, PASE_INT *max_pre_iter, PASE_INT *max_post_iter, PASE_INT *max_level);
+void GetCommandLineInfo(PASE_INT argc, char **argv, PASE_INT *n, PASE_INT *block_size, PASE_REAL *atol, PASE_INT *max_pre_iter, PASE_INT *max_post_iter, PASE_INT *max_direct_iter, PASE_INT *max_level);
 void GetExactEigenvalues(PASE_REAL **exact_eigenvalues, PASE_INT n, PASE_INT block_size);
 
 PASE_INT main(PASE_INT argc, char *argv[])
@@ -60,7 +60,7 @@ PASE_INT main(PASE_INT argc, char *argv[])
   PASE_REAL rtol          = 1e-6;
   PASE_INT  print_level   = 1;
   PASE_INT  max_level     = 20;
-  GetCommandLineInfo(argc, argv, &n, &block_size, &atol, &max_pre_iter, &max_post_iter, &max_level);
+  GetCommandLineInfo(argc, argv, &n, &block_size, &atol, &max_pre_iter, &max_post_iter, &max_direct_iter, &max_level);
   //PASE_INT  min_coarse_size = block_size * 30;
   PASE_INT  min_coarse_size = 4000;
   PASE_INT  max_block_size= ((2*block_size)<(block_size+5))?(2*block_size):(block_size+5);
@@ -258,7 +258,7 @@ void GetEigenProblem(HYPRE_IJMatrix *A, HYPRE_IJMatrix *B, PASE_INT n)
   HYPRE_IJMatrixAssemble(*B);
 }
 
-void GetCommandLineInfo(PASE_INT argc, char **argv, PASE_INT *n, PASE_INT *block_size, PASE_REAL *atol, PASE_INT *max_pre_iter, PASE_INT *max_post_iter, PASE_INT *max_level)
+void GetCommandLineInfo(PASE_INT argc, char **argv, PASE_INT *n, PASE_INT *block_size, PASE_REAL *atol, PASE_INT *max_pre_iter, PASE_INT *max_post_iter, PASE_INT *max_direct_iter, PASE_INT *max_level)
 {
   PASE_INT arg_index = 0;
   PASE_INT print_usage = 0;
@@ -281,6 +281,9 @@ void GetCommandLineInfo(PASE_INT argc, char **argv, PASE_INT *n, PASE_INT *block
     } else if(strcmp(argv[arg_index], "-max_post_iter") == 0) {
       arg_index++;
       *max_post_iter = atoi(argv[arg_index++]);
+    } else if(strcmp(argv[arg_index], "-max_direct_iter") == 0) {
+      arg_index++;
+      *max_direct_iter = atoi(argv[arg_index++]);
     } else if(strcmp(argv[arg_index], "-max_levels") == 0) {
       arg_index++;
       *max_level = atoi(argv[arg_index++]);

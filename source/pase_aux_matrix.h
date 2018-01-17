@@ -20,6 +20,14 @@ typedef struct PASE_AUX_MATRIX_PRIVATE_ {
   PASE_SCALAR **block;
   PASE_INT      block_size;   //辅助空间的维数
   PASE_INT      is_mat_owner; //是否为 mat 属主
+
+#if 1
+  PASE_REAL Tmatvec;
+  PASE_REAL Tvecvec;
+  PASE_REAL Tveccom;
+  PASE_REAL Tblockb; 
+  PASE_REAL Ttotal;
+#endif
 } PASE_AUX_MATRIX_PRIVATE;
 typedef PASE_AUX_MATRIX_PRIVATE * PASE_AUX_MATRIX;
 

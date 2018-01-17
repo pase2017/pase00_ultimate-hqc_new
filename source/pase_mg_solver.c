@@ -386,6 +386,14 @@ PASE_Mg_pase_aux_matrix_create(PASE_MG_SOLVER solver, PASE_INT i)
     aux_A[i]->is_mat_owner = PASE_NO;
     aux_A[i]->block_size   = block_size;
 
+#if 1
+    aux_A[i]->Tmatvec      = 0.0;
+    aux_A[i]->Tvecvec      = 0.0;
+    aux_A[i]->Tveccom      = 0.0;
+    aux_A[i]->Tblockb      = 0.0;
+    aux_A[i]->Ttotal       = 0.0;
+#endif
+
     aux_A[i]->vec = (PASE_VECTOR*)PASE_Malloc(block_size*sizeof(PASE_VECTOR));
     aux_A[i]->block = (PASE_SCALAR**)PASE_Malloc(block_size*sizeof(PASE_SCALAR*));
     for(idx_block = 0; idx_block < block_size; idx_block++) {
@@ -399,6 +407,12 @@ PASE_Mg_pase_aux_matrix_create(PASE_MG_SOLVER solver, PASE_INT i)
     aux_B[i]->is_mat_owner = PASE_NO;
     aux_B[i]->block_size   = block_size;
 
+#if 1
+    aux_B[i]->Tmatvec      = 0.0;
+    aux_B[i]->Tvecvec      = 0.0;
+    aux_B[i]->Tveccom      = 0.0;
+    aux_B[i]->Ttotal       = 0.0;
+#endif
     aux_B[i]->vec = (PASE_VECTOR*)PASE_Malloc(block_size*sizeof(PASE_VECTOR));
     aux_B[i]->block = (PASE_SCALAR**)PASE_Malloc(block_size*sizeof(PASE_SCALAR*));
     for(idx_block = 0; idx_block < block_size; idx_block++) {
@@ -1297,6 +1311,13 @@ PASE_Mg_print(PASE_MG_SOLVER solver)
     PASE_Printf(MPI_COMM_WORLD, "direct solve time = %f seconds\n", solver->direct_solve_time);
     PASE_Printf(MPI_COMM_WORLD, "total solve time  = %f seconds\n", solver->total_solve_time);
     PASE_Printf(MPI_COMM_WORLD, "total time        = %f seconds\n", solver->total_time);
+    PASE_Printf(MPI_COMM_WORLD, "=============================================================\n");
+    PASE_Printf(MPI_COMM_WORLD, "Direct solve time statistics\n");
+    PASE_Printf(MPI_COMM_WORLD, "Tmatvec = %f seconds\n", solver->multigrid->aux_A[solver->idx_cycle_level[solver->max_cycle_level]]->Tmatvec+solver->multigrid->aux_B[solver->idx_cycle_level[solver->max_cycle_level]]->Tmatvec);
+    PASE_Printf(MPI_COMM_WORLD, "Tveccom = %f seconds\n", solver->multigrid->aux_A[solver->idx_cycle_level[solver->max_cycle_level]]->Tveccom+solver->multigrid->aux_B[solver->idx_cycle_level[solver->max_cycle_level]]->Tveccom);
+    PASE_Printf(MPI_COMM_WORLD, "Tvecvec = %f seconds\n", solver->multigrid->aux_A[solver->idx_cycle_level[solver->max_cycle_level]]->Tvecvec+solver->multigrid->aux_B[solver->idx_cycle_level[solver->max_cycle_level]]->Tvecvec);
+    PASE_Printf(MPI_COMM_WORLD, "Tblockb = %f seconds\n", solver->multigrid->aux_A[solver->idx_cycle_level[solver->max_cycle_level]]->Tblockb+solver->multigrid->aux_B[solver->idx_cycle_level[solver->max_cycle_level]]->Tblockb);
+    PASE_Printf(MPI_COMM_WORLD, "Ttotal  = %f seconds\n", solver->multigrid->aux_A[solver->idx_cycle_level[solver->max_cycle_level]]->Ttotal+solver->multigrid->aux_B[solver->idx_cycle_level[solver->max_cycle_level]]->Ttotal);
     PASE_Printf(MPI_COMM_WORLD, "=============================================================\n");
     if(NULL != solver->method_init) {
       PASE_Printf(MPI_COMM_WORLD, "Get initial vector:         %s\n", solver->method_init);
