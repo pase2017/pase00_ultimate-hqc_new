@@ -8,6 +8,7 @@
 #include "pase_gcg.h"
 
 #define CLK_TCK 1000000
+#define DIAG_GCG 0
 
 PASE_MG_SOLVER
 PASE_Mg_solver_create(PASE_MATRIX A, PASE_MATRIX B, PASE_PARAMETER param)
@@ -61,6 +62,10 @@ PASE_Mg_solver_create(PASE_MATRIX A, PASE_MATRIX B, PASE_PARAMETER param)
   solver->direct_solve_time         = 0.0;
   solver->total_solve_time          = 0.0;
   solver->total_time                = 0.0;
+
+  solver->time_inner                = 0.0;
+  solver->time_lapack               = 0.0;
+  solver->time_other                = 0.0;
 
   solver->exact_eigenvalues         = NULL;
   solver->eigenvalues               = NULL;
@@ -337,7 +342,7 @@ PASE_Mg_set_pase_aux_matrix_by_pase_matrix(PASE_MG_SOLVER solver, PASE_INT i, PA
   PASE_Aux_matrix_set_block_some(aux_A, nlock, block_size-1, A[j], u_j);
   PASE_Aux_matrix_set_block_some(aux_B, nlock, block_size-1, B[j], u_j);
   PASE_VECTOR Au = PASE_Vector_create_by_vector(u_j[0]);
-  for(idx_block = 0; idx_block < block_size; idx_block++) {
+  for(idx_block = nlock; idx_block < block_size; idx_block++) {
     PASE_Matrix_multiply_vector(A[j], u_j[idx_block], Au);
     PASE_Mg_restrict(solver, j, Au, i, aux_A->vec[idx_block]);
     PASE_Matrix_multiply_vector(B[j], u_j[idx_block], Au);
@@ -386,12 +391,14 @@ PASE_Mg_pase_aux_matrix_create(PASE_MG_SOLVER solver, PASE_INT i)
     aux_A[i]->is_mat_owner = PASE_NO;
     aux_A[i]->block_size   = block_size;
 
+    aux_A[i]->is_diag      = PASE_NO;
 #if 1
     aux_A[i]->Tmatvec      = 0.0;
     aux_A[i]->Tvecvec      = 0.0;
     aux_A[i]->Tveccom      = 0.0;
     aux_A[i]->Tblockb      = 0.0;
     aux_A[i]->Ttotal       = 0.0;
+    aux_A[i]->Tinnergeneral= 0.0;
 #endif
 
     aux_A[i]->vec = (PASE_VECTOR*)PASE_Malloc(block_size*sizeof(PASE_VECTOR));
@@ -407,11 +414,14 @@ PASE_Mg_pase_aux_matrix_create(PASE_MG_SOLVER solver, PASE_INT i)
     aux_B[i]->is_mat_owner = PASE_NO;
     aux_B[i]->block_size   = block_size;
 
+    aux_B[i]->is_diag      = PASE_NO;
 #if 1
     aux_B[i]->Tmatvec      = 0.0;
     aux_B[i]->Tvecvec      = 0.0;
     aux_B[i]->Tveccom      = 0.0;
+    aux_B[i]->Tblockb      = 0.0;
     aux_B[i]->Ttotal       = 0.0;
+    aux_B[i]->Tinnergeneral= 0.0;
 #endif
     aux_B[i]->vec = (PASE_VECTOR*)PASE_Malloc(block_size*sizeof(PASE_VECTOR));
     aux_B[i]->block = (PASE_SCALAR**)PASE_Malloc(block_size*sizeof(PASE_SCALAR*));
@@ -437,7 +447,7 @@ PASE_Mg_set_pase_aux_vector(PASE_MG_SOLVER solver, PASE_INT cycle_level)
   }
 
   /*多次迭代需要多次初始化初值，但空间不需要重新申请*/
-  for(idx_eigen = 0; idx_eigen < block_size; idx_eigen++) {
+  for(idx_eigen = solver->nlock; idx_eigen < block_size; idx_eigen++) {
     PASE_Vector_set_constant_value(solver->aux_u[cycle_level][idx_eigen]->vec, 0.0);
     memset(solver->aux_u[cycle_level][idx_eigen]->block, 0, block_size*sizeof(PASE_SCALAR));
     solver->aux_u[cycle_level][idx_eigen]->block[idx_eigen] = 1.0;
@@ -1126,7 +1136,7 @@ PASE_Linear_solve_by_cg(PASE_MATRIX A, PASE_VECTOR b, PASE_VECTOR x, PASE_REAL t
   }
   //end = clock();
   //PASE_Printf(MPI_COMM_WORLD, "the %dth eigenvalue, cg time = %.4e, iter = %d\n", idx_eigen, ((double)(end-start))/CLK_TCK, iter);
-  //PASE_Printf(MPI_COMM_WORLD, "iter = %d\n", iter);
+  //PASE_Printf(MPI_COMM_WORLD, "iter = %d, rnorm/bnorm = %e\n", iter, rnorm/bnorm);
   PASE_Vector_destroy(r);
   PASE_Vector_destroy(p);
   PASE_Vector_destroy(q);
@@ -1240,7 +1250,6 @@ PASE_INT
 PASE_Mg_direct_solve_by_gcg(void *mg_solver)
 {
   PASE_MG_SOLVER   solver      = (PASE_MG_SOLVER)mg_solver;
-  solver->method_dire = "gcg";
   PASE_INT         cur_level   = solver->idx_cycle_level[solver->max_cycle_level];
   PASE_INT         block_size  = solver->block_size;
 
@@ -1251,6 +1260,13 @@ PASE_Mg_direct_solve_by_gcg(void *mg_solver)
 
   PASE_INT         max_iter    = solver->max_direct_iter;
   PASE_REAL        tol         = solver->atol;
+
+#if DIAG_GCG
+  PASE_Mg_precondition_for_gcg(mg_solver);
+  solver->method_dire = "gcg with diag scheme";
+#else
+  solver->method_dire = "gcg";
+#endif
 
 #if 0
   PASE_INT        i      = 0;
@@ -1266,10 +1282,7 @@ PASE_Mg_direct_solve_by_gcg(void *mg_solver)
   PASE_Printf(MPI_COMM_WORLD, "\n");
 #endif
 
-#if 1
-#endif
-
-  GCG_Eigen(aux_A, aux_B, eigenvalues, aux_u, block_size, tol*1e-2, tol, max_iter, 10, solver->nconv);
+  GCG_Eigen(aux_A, aux_B, eigenvalues, aux_u, block_size, tol*1e-2, tol, max_iter, 10, solver->nconv, &(solver->time_inner), &(solver->time_lapack), &(solver->time_other));
 
 #if 0
   for(i = 0; i < block_size; i++) {
@@ -1282,6 +1295,108 @@ PASE_Mg_direct_solve_by_gcg(void *mg_solver)
   PASE_Printf(MPI_COMM_WORLD, "\n");
   PASE_Aux_vector_destroy(tmp);
 #endif
+
+#if DIAG_GCG
+  PASE_INT i = 0;
+  PASE_INT j = 0;
+  for(i = solver->nlock; i < block_size; i++) {
+    for(j = 0; j < block_size; j++) {
+      PASE_Vector_axpy(-aux_u[i]->block[j], aux_A->vec[j], aux_u[i]->vec);
+    }
+  }
+#endif
+
+  return 0;
+}
+
+PASE_INT
+PASE_Mg_precondition_for_gcg(void *mg_solver)
+{
+  PASE_MG_SOLVER   solver      = (PASE_MG_SOLVER)mg_solver;
+  PASE_INT         cur_level   = solver->idx_cycle_level[solver->max_cycle_level];
+  PASE_INT         block_size  = solver->block_size;
+  PASE_INT         nlock       = solver->nlock;
+
+  PASE_AUX_MATRIX  aux_A       = solver->multigrid->aux_A[cur_level];            
+  PASE_AUX_MATRIX  aux_B       = solver->multigrid->aux_B[cur_level];            
+  PASE_AUX_VECTOR *aux_u       = solver->aux_u[cur_level];
+
+  PASE_INT  i        = 0;
+  PASE_INT  j        = 0;
+  PASE_INT  max_iter = 1000;
+  PASE_REAL tol      = 1e-15;
+  PASE_INT  size_tmp = (block_size-nlock) * block_size;
+  PASE_SCALAR *tmp1_block = (PASE_SCALAR*)PASE_Malloc(size_tmp*sizeof(PASE_SCALAR));
+  PASE_SCALAR *tmp2_block = (PASE_SCALAR*)PASE_Malloc(size_tmp*sizeof(PASE_SCALAR));
+  MPI_Status status;
+  MPI_Request *requests1 = (MPI_Request*)PASE_Malloc((block_size-nlock)*sizeof(MPI_Request));
+  MPI_Request *requests2 = (MPI_Request*)PASE_Malloc((block_size-nlock)*sizeof(MPI_Request));
+  //y = A^{-1} * b, tmp1_block = yT * b
+  for(i = nlock; i < block_size; i++) {
+    for(j = 0; j < nlock; j++) {
+      tmp1_block[(i-nlock)*block_size + j] = hypre_SeqVectorInnerProd(hypre_ParVectorLocalVector((HYPRE_ParVector)(aux_A->vec[i]->vector_data)),  hypre_ParVectorLocalVector((HYPRE_ParVector)(aux_A->vec[j]->vector_data)));
+    }
+    PASE_Linear_solve_by_cg(aux_A->mat, aux_A->vec[i], aux_u[i]->vec, tol, max_iter);
+    for(j = nlock; j <= i; j++) {
+      tmp1_block[(i-nlock)*block_size + j] = hypre_SeqVectorInnerProd(hypre_ParVectorLocalVector((HYPRE_ParVector)(aux_u[i]->vec->vector_data)),  hypre_ParVectorLocalVector((HYPRE_ParVector)(aux_A->vec[j]->vector_data)));
+    }
+    MPI_Iallreduce(MPI_IN_PLACE, &(tmp1_block[(i-nlock)*block_size]), i+1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD, &(requests1[i-nlock]));
+  }
+
+  //x = a - B * y, tmp2_block = yT * x + aT * y
+  for(i = nlock; i < block_size; i++) {
+    for(j = 0; j < nlock; j++) {
+      tmp2_block[(i-nlock)*block_size + j] = hypre_SeqVectorInnerProd(hypre_ParVectorLocalVector((HYPRE_ParVector)(aux_u[i]->vec->vector_data)),  hypre_ParVectorLocalVector((HYPRE_ParVector)(aux_B->vec[j]->vector_data)));
+      tmp2_block[(i-nlock)*block_size + j] += hypre_SeqVectorInnerProd(hypre_ParVectorLocalVector((HYPRE_ParVector)(aux_B->vec[i]->vector_data)),  hypre_ParVectorLocalVector((HYPRE_ParVector)(aux_A->vec[j]->vector_data)));
+    }
+    PASE_Matrix_multiply_vector_general(-1.0, aux_B->mat, aux_u[i]->vec, 0.0, aux_A->vec[i]);
+    PASE_Vector_axpy(1.0, aux_B->vec[i], aux_A->vec[i]);
+    for(j = nlock; j <= i; j++) {
+      tmp2_block[(i-nlock)*block_size + j] = hypre_SeqVectorInnerProd(hypre_ParVectorLocalVector((HYPRE_ParVector)(aux_A->vec[i]->vector_data)),  hypre_ParVectorLocalVector((HYPRE_ParVector)(aux_u[j]->vec->vector_data)));
+      tmp2_block[(i-nlock)*block_size + j] += hypre_SeqVectorInnerProd(hypre_ParVectorLocalVector((HYPRE_ParVector)(aux_B->vec[j]->vector_data)),  hypre_ParVectorLocalVector((HYPRE_ParVector)(aux_u[i]->vec->vector_data)));
+    }
+    MPI_Iallreduce(MPI_IN_PLACE, &(tmp2_block[(i-nlock)*block_size]), i+1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD, &(requests2[i-nlock]));
+  }
+  //a = x
+  PASE_VECTOR tmp = NULL;
+  for(i = 0; i < nlock; i++) {
+    PASE_Vector_copy(aux_A->vec[i], aux_u[i]->vec);
+  }
+  for(i = nlock; i < block_size; i++) {
+    tmp = aux_B->vec[i];
+    aux_B->vec[i] = aux_A->vec[i];
+    aux_A->vec[i] = tmp;
+    PASE_Vector_copy(aux_u[i]->vec, aux_A->vec[i]);
+  }
+
+  //beta = beta - tmp1_block, alpha = alpha - tmp2_block
+  for(i = nlock ; i < block_size; i++) {
+    MPI_Wait(&(requests1[i-nlock]), &status);
+    for(j = 0; j <= i; j++) {
+      aux_A->block[i][j] -= tmp1_block[(i-nlock)*block_size+j];
+      if(j < i) {
+        //aux_A->block[j][i] -= tmp1_block[(i-nlock)*block_size+j];
+        aux_A->block[j][i] = aux_A->block[i][j];
+      }
+    }
+  }
+  for(i = nlock; i < block_size; i++) {
+    MPI_Wait(&(requests2[i-nlock]), &status);
+    for(j = 0; j <= i; j++) {
+      aux_B->block[i][j] -= tmp2_block[(i-nlock)*block_size+j];
+      if(j < i) {
+        aux_B->block[j][i] = aux_B->block[i][j];
+        //aux_B->block[j][i] -= tmp2_block[(i-nlock)*block_size+j];
+      }
+    }
+  }
+  aux_A->is_diag = PASE_YES;
+
+  PASE_Free(tmp1_block);
+  PASE_Free(tmp2_block);
+  PASE_Free(requests1);
+  PASE_Free(requests2);
+
   return 0;
 }
 
@@ -1317,7 +1432,10 @@ PASE_Mg_print(PASE_MG_SOLVER solver)
     PASE_Printf(MPI_COMM_WORLD, "Tveccom = %f seconds\n", solver->multigrid->aux_A[solver->idx_cycle_level[solver->max_cycle_level]]->Tveccom+solver->multigrid->aux_B[solver->idx_cycle_level[solver->max_cycle_level]]->Tveccom);
     PASE_Printf(MPI_COMM_WORLD, "Tvecvec = %f seconds\n", solver->multigrid->aux_A[solver->idx_cycle_level[solver->max_cycle_level]]->Tvecvec+solver->multigrid->aux_B[solver->idx_cycle_level[solver->max_cycle_level]]->Tvecvec);
     PASE_Printf(MPI_COMM_WORLD, "Tblockb = %f seconds\n", solver->multigrid->aux_A[solver->idx_cycle_level[solver->max_cycle_level]]->Tblockb+solver->multigrid->aux_B[solver->idx_cycle_level[solver->max_cycle_level]]->Tblockb);
-    PASE_Printf(MPI_COMM_WORLD, "Ttotal  = %f seconds\n", solver->multigrid->aux_A[solver->idx_cycle_level[solver->max_cycle_level]]->Ttotal+solver->multigrid->aux_B[solver->idx_cycle_level[solver->max_cycle_level]]->Ttotal);
+    PASE_Printf(MPI_COMM_WORLD, "TMatVec = %f seconds\n", solver->multigrid->aux_A[solver->idx_cycle_level[solver->max_cycle_level]]->Ttotal+solver->multigrid->aux_B[solver->idx_cycle_level[solver->max_cycle_level]]->Ttotal);
+    PASE_Printf(MPI_COMM_WORLD, "TVecVec = %f seconds\n", solver->time_inner+solver->multigrid->aux_A[solver->idx_cycle_level[solver->max_cycle_level]]->Tinnergeneral+solver->multigrid->aux_B[solver->idx_cycle_level[solver->max_cycle_level]]->Tinnergeneral);
+    PASE_Printf(MPI_COMM_WORLD, "TLapack = %f seconds\n", solver->time_lapack);
+    PASE_Printf(MPI_COMM_WORLD, "Tother  = %f seconds\n", solver->time_other);
     PASE_Printf(MPI_COMM_WORLD, "=============================================================\n");
     if(NULL != solver->method_init) {
       PASE_Printf(MPI_COMM_WORLD, "Get initial vector:         %s\n", solver->method_init);

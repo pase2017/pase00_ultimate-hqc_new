@@ -530,28 +530,38 @@ PASE_Aux_matrix_multiply_aux_vector(PASE_AUX_MATRIX aux_A, PASE_AUX_VECTOR aux_x
   clock_t start, end, start_total, end_total;
   MPI_Request request;
   MPI_Status  status;
-  start = clock();
   start_total = clock();
-  for(i = 0; i < aux_A->block_size; i++) {
-    aux_y->block[i] = hypre_SeqVectorInnerProd(hypre_ParVectorLocalVector((HYPRE_ParVector)(aux_A->vec[i]->vector_data)), hypre_ParVectorLocalVector((HYPRE_ParVector)(aux_x->vec->vector_data)));
+  if(PASE_NO == aux_A->is_diag) {
+    start = clock();
+    for(i = 0; i < aux_y->block_size; i++) {
+      aux_y->block[i] = hypre_SeqVectorInnerProd(hypre_ParVectorLocalVector((HYPRE_ParVector)(aux_A->vec[i]->vector_data)), hypre_ParVectorLocalVector((HYPRE_ParVector)(aux_x->vec->vector_data)));
+    }
+    MPI_Iallreduce(MPI_IN_PLACE, aux_y->block, aux_A->block_size, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD, &request);
+    end = clock();
+    aux_A->Tvecvec += ((double)(end-start))/1000000;
+  } else {
+    memset(aux_y->block, 0, aux_y->block_size*sizeof(PASE_SCALAR));
   }
-  MPI_Iallreduce(MPI_IN_PLACE, aux_y->block, aux_A->block_size, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD, &request);
-  end = clock();
-  aux_A->Tvecvec += ((double)(end-start))/1000000;
+
   start = clock();
   PASE_Matrix_multiply_vector(aux_A->mat, aux_x->vec, aux_y->vec);
   end = clock();
   aux_A->Tmatvec += ((double)(end-start))/1000000;
-  start = clock();
-  for(i = 0; i < aux_A->block_size; i++) {
-    PASE_Vector_axpy(aux_x->block[i], aux_A->vec[i], aux_y->vec);
+
+  if(PASE_NO == aux_A->is_diag) {
+    start = clock();
+    for(i = 0; i < aux_A->block_size; i++) {
+      PASE_Vector_axpy(aux_x->block[i], aux_A->vec[i], aux_y->vec);
+    }
+    end = clock();
+    aux_A->Tveccom += ((double)(end-start))/1000000;
+
+    start = clock();
+    MPI_Wait(&request, &status);
+    end = clock();
+    aux_A->Tvecvec += ((double)(end-start))/1000000;
   }
-  end = clock();
-  aux_A->Tveccom += ((double)(end-start))/1000000;
-  start = clock();
-  MPI_Wait(&request, &status);
-  end = clock();
-  aux_A->Tvecvec += ((double)(end-start))/1000000;
+
   start = clock();
   for(i = 0; i < aux_A->block_size; i++) {
     for(j = 0; j<aux_A->block_size; j++) {
@@ -659,7 +669,11 @@ PASE_Aux_vector_inner_product_general(PASE_AUX_VECTOR aux_x, PASE_AUX_VECTOR aux
 {
   PASE_AUX_VECTOR aux_workspace = PASE_Aux_vector_create_by_aux_vector(aux_x);
   PASE_Aux_matrix_multiply_aux_vector(aux_A, aux_y, aux_workspace);
+  clock_t start_t, end_t;
+  start_t = clock();
   PASE_Aux_vector_inner_product(aux_x, aux_workspace, prod);
+  end_t   = clock();
+  aux_A->Tinnergeneral += ((double)(end_t-start_t))/1000000;
   PASE_Aux_vector_destroy(aux_workspace);
 }
 

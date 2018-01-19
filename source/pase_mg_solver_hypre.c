@@ -420,8 +420,8 @@ PASE_Mg_get_initial_vector_by_full_multigrid_hypre(void *mg_solver)
   end = clock();
   smooth_time += ((double)(end-start))/CLK_TCK;
   PASE_Printf(MPI_COMM_WORLD, "\n");
-  PASE_Printf(MPI_COMM_WORLD, "max iter of direct solve = %.6f\n", maxIterations);
-  PASE_Printf(MPI_COMM_WORLD, "max iter of smooth       = %.6f\n", max_iter_smooth);
+  PASE_Printf(MPI_COMM_WORLD, "max iter of direct solve = %d\n", maxIterations);
+  PASE_Printf(MPI_COMM_WORLD, "max iter of smooth       = %d\n", max_iter_smooth);
   PASE_Printf(MPI_COMM_WORLD, "direct solve time        = %.6f\n", direct_time);
   PASE_Printf(MPI_COMM_WORLD, "aux direct solve time    = %.6f\n", aux_direct_time);
   PASE_Printf(MPI_COMM_WORLD, "smooth time              = %.6f\n", smooth_time);

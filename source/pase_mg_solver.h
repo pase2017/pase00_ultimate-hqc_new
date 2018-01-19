@@ -49,6 +49,10 @@ typedef struct PASE_MG_SOLVER_PRIVATE_ {
   PASE_REAL    total_solve_time;
   PASE_REAL    total_time;
 
+  PASE_REAL    time_inner;
+  PASE_REAL    time_lapack;
+  PASE_REAL    time_other;
+
   PASE_SCALAR *eigenvalues;
   PASE_SCALAR *exact_eigenvalues;
   PASE_VECTOR *u;
@@ -121,6 +125,7 @@ PASE_INT PASE_Mg_postsmoothing_by_cg_aux(void *mg_solver);
 PASE_INT PASE_Linear_solve_by_cg(PASE_MATRIX A, PASE_VECTOR b, PASE_VECTOR x, PASE_REAL tol, PASE_INT max_iter);
 PASE_INT PASE_Linear_solve_by_cg_aux(PASE_AUX_MATRIX aux_A, PASE_AUX_VECTOR aux_b, PASE_AUX_VECTOR aux_x, PASE_REAL tol, PASE_INT max_iter);
 PASE_INT PASE_Mg_direct_solve_by_gcg(void *mg_solver);
+PASE_INT PASE_Mg_precondition_for_gcg(void *mg_solver);
 
 /**
  * @brief 

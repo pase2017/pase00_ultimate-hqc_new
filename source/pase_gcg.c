@@ -4,12 +4,13 @@
 #include "stdio.h"
 #include "stdlib.h"
 #include "string.h"
+#include "time.h"
 
 #define EPS 2.220446e-16
 #define REORTH_TOL 0.75 
 
 void 
-GCG_Eigen(PASE_AUX_MATRIX A, PASE_AUX_MATRIX B, PASE_REAL *eval, PASE_AUX_VECTOR *evec, PASE_INT nev, PASE_REAL abs_tol, PASE_REAL cg_tol, PASE_INT max_iter, PASE_INT nsmooth, PASE_INT start)
+GCG_Eigen(PASE_AUX_MATRIX A, PASE_AUX_MATRIX B, PASE_REAL *eval, PASE_AUX_VECTOR *evec, PASE_INT nev, PASE_REAL abs_tol, PASE_REAL cg_tol, PASE_INT max_iter, PASE_INT nsmooth, PASE_INT start, PASE_REAL *time_inner, PASE_REAL *time_lapack, PASE_REAL *time_other)
 {
   //--------------------定义变量--------------------------------------------
   PASE_INT        i, max_dim_x = nev*5/4;//最大是1.25×nev
@@ -20,6 +21,7 @@ GCG_Eigen(PASE_AUX_MATRIX A, PASE_AUX_MATRIX B, PASE_REAL *eval, PASE_AUX_VECTOR
   //AA_sub用来存储小规模矩阵AA中与[X,P]对应的对角部分
   PASE_REAL       *AA, *approx_eval, *AA_copy, *AA_sub, *small_tmp, *RRes;
   PASE_AUX_VECTOR *V, *V_tmp, *X_tmp, *Orth_tmp;
+  clock_t start_t, end_t;
 
   //--------------------分配空间--------------------------------------------
   //给V，Vtmp,x2分配空间,V用于存储[X,d,W],Vtmp是临时存储空间,x2用于存储近似Ritz向量
@@ -47,40 +49,51 @@ GCG_Eigen(PASE_AUX_MATRIX A, PASE_AUX_MATRIX B, PASE_REAL *eval, PASE_AUX_VECTOR
   //计算初始近似特征向量并正交化
   //GetRitzVectors(AA, V, X_tmp, dim_x, dim_x);
   //ChangeVecPointer(V, X_tmp, Orth_tmp, dim_x);
-  GCG_Orthogonal(V, B, 0, &dim_x, V_tmp, Orth_tmp, Ind);
-  CheckConvergence(A, B, unlock, &nunlock, start, nev, V, approx_eval, abs_tol, V_tmp, -2, RRes);
+  GCG_Orthogonal(V, B, 0, &dim_x, V_tmp, Orth_tmp, Ind, time_inner);
+  CheckConvergence(A, B, unlock, &nunlock, start, nev, V, approx_eval, abs_tol, V_tmp, -2, RRes, time_inner);
   //用CG迭代获取W向量
   GetWinV(dim_x, nunlock, unlock, V, approx_eval, A, B, cg_tol, nsmooth, V_tmp[0]);
   //对V进行正交化,并计算evec=V^T*A*V,B1=V^T*B*V
   dim_xpw = 2*dim_x;
-  GCG_Orthogonal(V, B, dim_x, &dim_xpw, V_tmp, Orth_tmp, Ind);
-  RayleighRitz(A, V, AA, approx_eval, NULL, AA_copy, 0, 0, dim_xpw, V_tmp[0], NULL);
+  GCG_Orthogonal(V, B, dim_x, &dim_xpw, V_tmp, Orth_tmp, Ind, time_inner);
+  RayleighRitz(A, V, AA, approx_eval, NULL, AA_copy, 0, 0, dim_xpw, V_tmp[0], NULL, time_inner, time_lapack, time_other);
   //计算Ritz向量,由于得到的特征向量是关于B正交的，不需要对x2进行正交化
+
+  start_t = clock();
   GetRitzVectors(AA, V, X_tmp, dim_xpw, dim_x);
-  CheckConvergence(A, B, unlock, &nunlock, start, nev, X_tmp, approx_eval, abs_tol, V_tmp, -1, RRes);
+  end_t   = clock();
+  *time_other += ((double)(end_t-start_t))/1000000;
+  CheckConvergence(A, B, unlock, &nunlock, start, nev, X_tmp, approx_eval, abs_tol, V_tmp, -1, RRes, time_inner);
 
   //--------------------开始循环--------------------------------------------
   while((nunlock > 0)&&(iter < max_iter)) {
     //更新dim_xp,dim_xp表示[x2,d]的向量个数
     dim_xp = dim_x+nunlock;
     //计算P
+    start_t = clock();
     GetPinV(AA, V, dim_x, &dim_xp, dim_xpw, nunlock, unlock, V_tmp, Orth_tmp, Ind);
     GetXinV(V, X_tmp, Orth_tmp, dim_x);
+    end_t   = clock();
+    *time_other += ((double)(end_t-start_t))/1000000;
     //更新dim_xpw为V=[x2,d,w]的向量个数
     last_dim_xpw = dim_xpw;
     dim_xpw = dim_xp+nunlock;
     //对unlock的x2进行CG迭代得到w,V的前nev列为x2,dim_xp列之后是w
     GetWinV(dim_xp, nunlock, unlock, V, approx_eval, A, B, cg_tol, nsmooth, V_tmp[0]);
     //对W与前dim_xp个向量进行正交化,Ind记录W中的非零向量的列号
-    GCG_Orthogonal(V, B, dim_xp, &dim_xpw, V_tmp, Orth_tmp, Ind);
+    GCG_Orthogonal(V, B, dim_xp, &dim_xpw, V_tmp, Orth_tmp, Ind, time_inner);
     //PrintVec(V+dim_xp, dim_xpw-dim_xp);
     //计算小规模矩阵特征值
-    RayleighRitz(A, V, AA, approx_eval, AA_sub, AA_copy, dim_xp, last_dim_xpw, dim_xpw, V_tmp[0], small_tmp);
+    RayleighRitz(A, V, AA, approx_eval, AA_sub, AA_copy, dim_xp, last_dim_xpw, dim_xpw, V_tmp[0], small_tmp, time_inner, time_lapack, time_other);
     //检查特征值重数
+    start_t = clock();
     Updatedim_x(nev, max_dim_x, &dim_x, approx_eval);
     //计算Ritz向量
     GetRitzVectors(AA, V, X_tmp, dim_xpw, dim_x);
-    CheckConvergence(A, B, unlock, &nunlock, start, nev, X_tmp, approx_eval, abs_tol, V_tmp, iter, RRes);
+    end_t = clock();
+    *time_other += ((double)(end_t-start_t))/1000000;
+
+    CheckConvergence(A, B, unlock, &nunlock, start, nev, X_tmp, approx_eval, abs_tol, V_tmp, iter, RRes, time_inner);
 
     iter += 1;
   }
@@ -88,7 +101,7 @@ GCG_Eigen(PASE_AUX_MATRIX A, PASE_AUX_MATRIX B, PASE_REAL *eval, PASE_AUX_VECTOR
   //PrintSmallEigen(iter, nev, approx_eval, NULL, 0, RRes);
   //eval,evec是大规模矩阵的近似特征对
   memcpy(eval, approx_eval, nev*sizeof(PASE_REAL));
-  for(i = 0; i < nev; i++)
+  for(i = start; i < nev; i++)
     PASE_Aux_vector_copy(X_tmp[i], evec[i]);
   //------------GCG迭代结束------------------------------------
 
@@ -157,10 +170,12 @@ PrintSmallEigen(PASE_INT iter, PASE_INT nev, PASE_REAL *approx_eval, PASE_REAL *
 
 //计算lapack计算特征值时的小规模矩阵AA,start表示需要计算的起始列号,dim表示小规模矩阵的维数
 void 
-GetLAPACKMatrix(PASE_AUX_MATRIX A, PASE_AUX_VECTOR *V, PASE_REAL *AA, PASE_REAL *AA_sub, PASE_INT start, PASE_INT last_dim, PASE_INT dim, PASE_REAL *AA_copy, PASE_AUX_VECTOR tmp, PASE_REAL *small_tmp)
+GetLAPACKMatrix(PASE_AUX_MATRIX A, PASE_AUX_VECTOR *V, PASE_REAL *AA, PASE_REAL *AA_sub, PASE_INT start, PASE_INT last_dim, PASE_INT dim, PASE_REAL *AA_copy, PASE_AUX_VECTOR tmp, PASE_REAL *small_tmp, PASE_REAL *time_inner, PASE_REAL *time_other)
 {
+  clock_t start_t, end_t;
   PASE_INT       i;
   //计算AA_sub
+  start_t = clock();
   if(start != 0) {
     DenseVecsMatrixVecs(NULL, AA_copy, AA, AA_sub, 0, start, last_dim, small_tmp);
   }
@@ -168,8 +183,13 @@ GetLAPACKMatrix(PASE_AUX_MATRIX A, PASE_AUX_VECTOR *V, PASE_REAL *AA, PASE_REAL 
   for(i = 0; i<start; i++) {
     memcpy(AA+i*dim, AA_sub+i*start, start*sizeof(PASE_REAL));
   }
-  VecsMatrixVecsForRayleighRitz(A, V, AA, start, dim, tmp);
+  end_t = clock();
+  *time_other += ((double)(end_t-start_t))/1000000;
+  VecsMatrixVecsForRayleighRitz(A, V, AA, start, dim, tmp, time_inner);
+  start_t = clock();
   memcpy(AA_copy, AA, dim*dim*sizeof(PASE_REAL));
+  end_t = clock();
+  *time_other += ((double)(end_t-start_t))/1000000;
 }
 
 //用CG迭代得到向量W
@@ -192,16 +212,20 @@ GetWinV(PASE_INT start, PASE_INT nunlock, PASE_INT *unlock, PASE_AUX_VECTOR *V, 
 
 //计算残差，并获取未收敛的特征对编号及个数
 void 
-CheckConvergence(PASE_AUX_MATRIX A, PASE_AUX_MATRIX B, PASE_INT *unlock, PASE_INT *nunlock, PASE_INT start, PASE_INT nev, PASE_AUX_VECTOR *X_tmp, PASE_REAL *approx_eval, PASE_REAL abs_tol, PASE_AUX_VECTOR *V_tmp, PASE_INT iter, PASE_REAL *RRes)
+CheckConvergence(PASE_AUX_MATRIX A, PASE_AUX_MATRIX B, PASE_INT *unlock, PASE_INT *nunlock, PASE_INT start, PASE_INT nev, PASE_AUX_VECTOR *X_tmp, PASE_REAL *approx_eval, PASE_REAL abs_tol, PASE_AUX_VECTOR *V_tmp, PASE_INT iter, PASE_REAL *RRes, PASE_REAL *time_inner)
 {
   PASE_INT       i, nunlocktmp = 0;
   PASE_REAL      res_norm, evec_norm, res, max_res = 0.0, min_res = 0.0;
+  clock_t start_t, end_t;
   for(i = start; i < nev; i++) {
     PASE_Aux_matrix_multiply_aux_vector(A, X_tmp[i], V_tmp[0]); 
     PASE_Aux_matrix_multiply_aux_vector(B, X_tmp[i], V_tmp[1]); 
     PASE_Aux_vector_axpy(-approx_eval[i], V_tmp[1], V_tmp[0]); 
+    start_t = clock();
     PASE_Aux_vector_norm(V_tmp[0], &res_norm); 
     PASE_Aux_vector_norm(X_tmp[i], &evec_norm); 
+    end_t   = clock();
+    *time_inner += ((double)(end_t-start_t))/1000000;
     res  = res_norm/evec_norm;
     RRes[i] = res;
     if(i == start) {
@@ -231,7 +255,7 @@ GetPinV(PASE_REAL *AA, PASE_AUX_VECTOR *V, PASE_INT dim_x, PASE_INT *dim_xp, PAS
   PASE_INT i = 0;
   //小规模正交化，构造d,构造AA_sub用于下次计算
   for(i = 0; i < nunlock; i++) {
-    memset(AA+(dim_x+i)*dim_xpw, 0.0, dim_xpw*sizeof(PASE_REAL));
+    memset(AA+(dim_x+i)*dim_xpw, 0, dim_xpw*sizeof(PASE_REAL));
     memcpy(AA+(dim_x+i)*dim_xpw+dim_x, AA+unlock[i]*dim_xpw+dim_x, (dim_xpw-dim_x)*sizeof(PASE_REAL));
   }
   //小规模evec中，X部分是已经正交的（BB正交），所以对P部分正交化
@@ -269,10 +293,14 @@ DenseVecsMatrixVecs(PASE_REAL *LVecs, PASE_REAL *DenseMat, PASE_REAL *RVecs, PAS
 }
 
 void 
-RayleighRitz(PASE_AUX_MATRIX A, PASE_AUX_VECTOR *V, PASE_REAL *AA, PASE_REAL *approx_eval, PASE_REAL *AA_sub, PASE_REAL *AA_copy, PASE_INT start, PASE_INT last_dim, PASE_INT dim, PASE_AUX_VECTOR tmp, PASE_REAL *small_tmp)
+RayleighRitz(PASE_AUX_MATRIX A, PASE_AUX_VECTOR *V, PASE_REAL *AA, PASE_REAL *approx_eval, PASE_REAL *AA_sub, PASE_REAL *AA_copy, PASE_INT start, PASE_INT last_dim, PASE_INT dim, PASE_AUX_VECTOR tmp, PASE_REAL *small_tmp, PASE_REAL *time_inner, PASE_REAL *time_lapack, PASE_REAL *time_other)
 {
-  GetLAPACKMatrix(A, V, AA, AA_sub, start, last_dim, dim, AA_copy, tmp, small_tmp);
+  clock_t start_t, end_t;
+  GetLAPACKMatrix(A, V, AA, AA_sub, start, last_dim, dim, AA_copy, tmp, small_tmp, time_inner, time_other);
+  start_t = clock();
   LAPACKE_dsyev( 102, 'V', 'U', dim, AA, dim, approx_eval );
+  end_t   = clock();
+  *time_lapack += ((double)(end_t-start_t))/1000000;
 }
 
 
@@ -294,14 +322,18 @@ Updatedim_x(PASE_INT start, PASE_INT end, PASE_INT *dim_x, PASE_REAL *approx_eva
 }
 
 void 
-VecsMatrixVecsForRayleighRitz(PASE_AUX_MATRIX A, PASE_AUX_VECTOR *V, PASE_REAL *AA, PASE_INT start, PASE_INT dim, PASE_AUX_VECTOR tmp)
+VecsMatrixVecsForRayleighRitz(PASE_AUX_MATRIX A, PASE_AUX_VECTOR *V, PASE_REAL *AA, PASE_INT start, PASE_INT dim, PASE_AUX_VECTOR tmp, PASE_REAL *time_inner)
 {
+  clock_t start_t, end_t;
   PASE_INT i = 0;
   PASE_INT j = 0;
   for(i=start; i<dim; i++) {
     PASE_Aux_matrix_multiply_aux_vector(A, V[i], tmp); 
     for(j = 0; j < i+1; j++) {
+      start_t = clock();
       PASE_Aux_vector_inner_product(V[j], tmp, AA+i*dim+j); 
+      end_t = clock();
+      *time_inner += ((double)(end_t-start_t))/1000000;
       AA[j*dim+i] = AA[i*dim+j];
     }
   }
@@ -340,35 +372,51 @@ ChangeVecPointer(PASE_AUX_VECTOR *V_1, PASE_AUX_VECTOR *V_2, PASE_AUX_VECTOR *tm
 //V1:是一个临时的存储空间，是表示零向量的列的指针
 //全部正交化，则start=0
 void 
-GCG_Orthogonal(PASE_AUX_VECTOR *V, PASE_AUX_MATRIX B, PASE_INT start, PASE_INT *end, PASE_AUX_VECTOR *V_tmp, PASE_AUX_VECTOR *Nonzero_Vec, PASE_INT *Ind)
+GCG_Orthogonal(PASE_AUX_VECTOR *V, PASE_AUX_MATRIX B, PASE_INT start, PASE_INT *end, PASE_AUX_VECTOR *V_tmp, PASE_AUX_VECTOR *Nonzero_Vec, PASE_INT *Ind, PASE_REAL *time_inner)
 {
   PASE_INT       i, j, n_nonzero = 0, n_zero = 0;
   PASE_REAL      vin, vout, tmp, dd;
+  clock_t start_t, end_t;
   //地址是int型，所以这里只要分配int空间就可以，不需要PASE_REAL**
   if(B == NULL) {
     for(i = start; i < (*end); i++) {
       if(i == 0) {
+	start_t = clock();
         PASE_Aux_vector_norm(V[0], &dd); 
+        end_t   = clock();
+        *time_inner += ((double)(end_t-start_t))/1000000;
 	if(dd > 10*EPS) {
 	  PASE_Aux_vector_scale(1.0/dd, V[0]); 
 	  Ind[0] = 0;
 	  n_nonzero = 1;
 	}
       } else {
+	start_t = clock();
         PASE_Aux_vector_norm(V[i], &vout); 
+        end_t   = clock();
+        *time_inner += ((double)(end_t-start_t))/1000000;
 	do {
 	  vin = vout;
 	  for(j = 0; j < start; j++) {
 	    //计算 V[i]= V[i]-(V[i]^T*V[j])*V[j]
+	    start_t = clock();
 	    PASE_Aux_vector_inner_product(V[i], V[j], &tmp); 
+	    end_t = clock();
+	    *time_inner += ((double)(end_t-start_t))/1000000;
 	    PASE_Aux_vector_axpy(-tmp, V[j], V[i]); 
 	  }
 	  for(j = 0; j < n_nonzero; j++) {
 	    //计算 V[i]= V[i]-(V[i]^T*V[Ind[j]])*V[Ind[j]]
+	    start_t = clock();
 	    PASE_Aux_vector_inner_product(V[i], V[Ind[j]], &tmp); 
+	    end_t = clock();
+	    *time_inner += ((double)(end_t-start_t))/1000000;
 	    PASE_Aux_vector_axpy(-tmp, V[Ind[j]], V[i]); 
 	  }
+	  start_t = clock();
           PASE_Aux_vector_norm(V[i], &vout); 
+          end_t   = clock();
+          *time_inner += ((double)(end_t-start_t))/1000000;
 	} while(vout/vin < REORTH_TOL);
 	if(vout > 10*EPS) {
 	  PASE_Aux_vector_scale(1.0/vout, V[i]); 
@@ -400,12 +448,18 @@ GCG_Orthogonal(PASE_AUX_VECTOR *V, PASE_AUX_MATRIX B, PASE_INT start, PASE_INT *
 	  vin = vout;
 	  for(j = 0; j < start; j++) {
 	    //计算 V[i]= V[i]-(V[i]^T*V[j])_B*V[j]
+	    start_t = clock();
 	    PASE_Aux_vector_inner_product(V[i], V_tmp[j], &tmp); 
+	    end_t = clock();
+	    *time_inner += ((double)(end_t-start_t))/1000000;
 	    PASE_Aux_vector_axpy(-tmp, V[j], V[i]); 
 	  }
 	  for(j = 0; j < n_nonzero; j++) {
 	    //计算 V[i]= V[i]-(V[i]^T*V[Ind[j]])_B*V[Ind[j]]
+	    start_t = clock();
 	    PASE_Aux_vector_inner_product(V[i], V_tmp[start+j], &tmp); 
+	    end_t = clock();
+	    *time_inner += ((double)(end_t-start_t))/1000000;
 	    PASE_Aux_vector_axpy(-tmp, V[Ind[j]], V[i]); 
 	  }
 	  PASE_Aux_vector_inner_product_general(V[i], V[i], B, &vout);
