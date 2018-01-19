@@ -68,6 +68,8 @@ typedef struct PASE_MG_SOLVER_PRIVATE_ {
   char *method_pre_aux;
   char *method_post_aux;
   char *method_dire;
+
+  void *amg_data_coarsest;
 } PASE_MG_SOLVER_PRIVATE; 
 typedef PASE_MG_SOLVER_PRIVATE * PASE_MG_SOLVER;
 

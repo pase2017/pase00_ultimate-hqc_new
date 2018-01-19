@@ -24,6 +24,7 @@ PASE_INT PASE_Mg_postsmoothing_by_amg_hypre(void *mg_solver);
 PASE_INT PASE_Mg_presmoothing_by_pcg_aux_hypre(void *mg_solver);
 PASE_INT PASE_Mg_postsmoothing_by_pcg_aux_hypre(void *mg_solver);
 
+PASE_INT PASE_Linear_solve_by_amg_hypre(PASE_MATRIX A, PASE_VECTOR *b, PASE_VECTOR *x, PASE_INT n, PASE_REAL tol, PASE_INT max_iter, void *amg_data);
 #endif
 
 #endif

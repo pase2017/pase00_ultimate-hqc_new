@@ -342,7 +342,8 @@ PASE_Mg_get_initial_vector_by_full_multigrid_hypre(void *mg_solver)
   HYPRE_Solver ksp_solver = NULL;
   PASE_VECTOR  rhs = NULL;
   PASE_INT idx_level = 0;
-  PASE_INT max_iter_smooth = 2;
+  PASE_INT max_iter_smooth = solver->max_pre_iter+solver->max_post_iter;
+  //PASE_INT max_iter_smooth = 1;
 #if 1
     HYPRE_BoomerAMGCreate(&ksp_solver);
     HYPRE_BoomerAMGSetPrintLevel(ksp_solver, 0); /* print amg solution info */
@@ -782,6 +783,35 @@ PASE_INT
 PASE_Mg_postsmoothing_by_pcg_aux_hypre(void *mg_solver)
 {
   PASE_Mg_smoothing_by_pcg_aux_hypre(mg_solver, "post");
+  return 0;
+}
+
+PASE_INT
+PASE_Linear_solve_by_amg_hypre(PASE_MATRIX A, PASE_VECTOR *b, PASE_VECTOR *x, PASE_INT n, PASE_REAL tol, PASE_INT max_iter, void *amg_data)
+{
+  PASE_INT     i          = 0;
+  HYPRE_Solver amg_solver = (HYPRE_Solver) amg_data;
+  if(NULL == amg_data) {
+    HYPRE_BoomerAMGCreate(&amg_solver);
+    HYPRE_BoomerAMGSetPrintLevel(amg_solver, 0); /* print amg solution info */
+    HYPRE_BoomerAMGSetOldDefault(amg_solver);    /* Falgout coarsening with modified classical interpolaiton */
+    HYPRE_BoomerAMGSetRelaxType(amg_solver, 3);  /* G-S/Jacobi hybrid relaxation */
+    HYPRE_BoomerAMGSetRelaxOrder(amg_solver, 1); /* uses C/F relaxation */
+    HYPRE_BoomerAMGSetNumSweeps(amg_solver, 1);  /* 2 sweeps of smoothing */
+    HYPRE_BoomerAMGSetCoarsenType(amg_solver, 6);
+    HYPRE_BoomerAMGSetup(amg_solver, (HYPRE_ParCSRMatrix)A->matrix_data, (HYPRE_ParVector)b[0]->vector_data, (HYPRE_ParVector)x[0]->vector_data);
+  }
+
+  HYPRE_BoomerAMGSetTol(amg_solver, tol); 
+  HYPRE_BoomerAMGSetMaxIter(amg_solver, max_iter); 
+  for(i = 0; i < n; i++) {
+    HYPRE_BoomerAMGSolve(amg_solver, (HYPRE_ParCSRMatrix)(A->matrix_data), (HYPRE_ParVector)(b[i]->vector_data), (HYPRE_ParVector)(x[i]->vector_data));
+  }
+
+  if(NULL == amg_data) {
+    HYPRE_BoomerAMGDestroy(amg_solver);
+  }
+
   return 0;
 }
 #endif

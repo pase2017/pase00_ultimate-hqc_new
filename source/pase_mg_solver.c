@@ -79,6 +79,8 @@ PASE_Mg_solver_create(PASE_MATRIX A, PASE_MATRIX B, PASE_PARAMETER param)
   solver->method_pre_aux            = NULL;
   solver->method_post_aux           = NULL;
   solver->method_dire               = NULL;
+  
+  solver->amg_data_coarsest         = NULL;
   return solver;
 }
 
@@ -162,6 +164,9 @@ PASE_Mg_solver_destroy(PASE_MG_SOLVER solver)
     }
     if(NULL != solver->multigrid) {
       PASE_Multigrid_destroy(solver->multigrid);
+    }
+    if(NULL != solver->amg_data_coarsest) {
+      HYPRE_BoomerAMGDestroy((HYPRE_Solver)solver->amg_data_coarsest);
     }
     PASE_Free(solver);
   }
@@ -1323,7 +1328,7 @@ PASE_Mg_precondition_for_gcg(void *mg_solver)
 
   PASE_INT  i        = 0;
   PASE_INT  j        = 0;
-  PASE_INT  max_iter = 1000;
+  PASE_INT  max_iter = 10;
   PASE_REAL tol      = 1e-15;
   PASE_INT  size_tmp = (block_size-nlock) * block_size;
   PASE_SCALAR *tmp1_block = (PASE_SCALAR*)PASE_Malloc(size_tmp*sizeof(PASE_SCALAR));
@@ -1331,12 +1336,25 @@ PASE_Mg_precondition_for_gcg(void *mg_solver)
   MPI_Status status;
   MPI_Request *requests1 = (MPI_Request*)PASE_Malloc((block_size-nlock)*sizeof(MPI_Request));
   MPI_Request *requests2 = (MPI_Request*)PASE_Malloc((block_size-nlock)*sizeof(MPI_Request));
+  if(NULL == solver->amg_data_coarsest) {
+    HYPRE_Solver amg_solver = NULL;
+    HYPRE_BoomerAMGCreate(&amg_solver);
+    HYPRE_BoomerAMGSetPrintLevel(amg_solver, 0); /* print amg solution info */
+    HYPRE_BoomerAMGSetOldDefault(amg_solver);    /* Falgout coarsening with modified classical interpolaiton */
+    HYPRE_BoomerAMGSetRelaxType(amg_solver, 3);  /* G-S/Jacobi hybrid relaxation */
+    HYPRE_BoomerAMGSetRelaxOrder(amg_solver, 1); /* uses C/F relaxation */
+    HYPRE_BoomerAMGSetNumSweeps(amg_solver, 1);  /* 2 sweeps of smoothing */
+    HYPRE_BoomerAMGSetCoarsenType(amg_solver, 6);
+    HYPRE_BoomerAMGSetup(amg_solver, (HYPRE_ParCSRMatrix)aux_A->mat->matrix_data, (HYPRE_ParVector)aux_A->vec[0]->vector_data, (HYPRE_ParVector)aux_u[0]->vec->vector_data);
+    solver->amg_data_coarsest = (void*) amg_solver;
+  }
   //y = A^{-1} * b, tmp1_block = yT * b
   for(i = nlock; i < block_size; i++) {
     for(j = 0; j < nlock; j++) {
       tmp1_block[(i-nlock)*block_size + j] = hypre_SeqVectorInnerProd(hypre_ParVectorLocalVector((HYPRE_ParVector)(aux_A->vec[i]->vector_data)),  hypre_ParVectorLocalVector((HYPRE_ParVector)(aux_A->vec[j]->vector_data)));
     }
-    PASE_Linear_solve_by_cg(aux_A->mat, aux_A->vec[i], aux_u[i]->vec, tol, max_iter);
+    //PASE_Linear_solve_by_cg(aux_A->mat, aux_A->vec[i], aux_u[i]->vec, tol, max_iter);
+    PASE_Linear_solve_by_amg_hypre(aux_A->mat, &(aux_A->vec[i]), &(aux_u[i]->vec), 1, tol, max_iter, solver->amg_data_coarsest);
     for(j = nlock; j <= i; j++) {
       tmp1_block[(i-nlock)*block_size + j] = hypre_SeqVectorInnerProd(hypre_ParVectorLocalVector((HYPRE_ParVector)(aux_u[i]->vec->vector_data)),  hypre_ParVectorLocalVector((HYPRE_ParVector)(aux_A->vec[j]->vector_data)));
     }
