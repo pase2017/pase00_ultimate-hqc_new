@@ -667,7 +667,7 @@ PASE_Aux_vector_create_by_aux_matrix(PASE_AUX_MATRIX aux_A)
 void
 PASE_Aux_vector_inner_product_general(PASE_AUX_VECTOR aux_x, PASE_AUX_VECTOR aux_y, PASE_AUX_MATRIX aux_A, PASE_REAL *prod)
 {
-#if 1
+#if 0
   PASE_AUX_VECTOR aux_workspace = PASE_Aux_vector_create_by_aux_vector(aux_x);
   PASE_Aux_matrix_multiply_aux_vector(aux_A, aux_y, aux_workspace);
   clock_t start_t, end_t;

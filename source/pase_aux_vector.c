@@ -245,7 +245,7 @@ PASE_Aux_vector_inner_product(PASE_AUX_VECTOR aux_x, PASE_AUX_VECTOR aux_y, PASE
   }
 #endif
 
-#if 1
+#if 0
   PASE_Vector_inner_product(aux_x->vec, aux_y->vec, prod);
 
   PASE_INT i = 0;
