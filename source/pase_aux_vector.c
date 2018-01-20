@@ -7,6 +7,10 @@
 #include "pase_aux_vector.h"
 #include "pase_aux_matrix.h"
 
+#if PASE_USE_HYPRE
+#include "_hypre_parcsr_mv.h"
+#endif
+
 #define DEBUG_PASE_AUX_VECTOR 1
 
 #undef  __FUNCT__
@@ -241,12 +245,27 @@ PASE_Aux_vector_inner_product(PASE_AUX_VECTOR aux_x, PASE_AUX_VECTOR aux_y, PASE
   }
 #endif
 
+#if 1
   PASE_Vector_inner_product(aux_x->vec, aux_y->vec, prod);
 
   PASE_INT i = 0;
   for(i = 0; i < aux_x->block_size; i++) {
     *prod += aux_x->block[i] * aux_y->block[i]; 
   }
+#else
+  MPI_Status  status;
+  MPI_Request request;
+  *prod = hypre_SeqVectorInnerProd(hypre_ParVectorLocalVector((HYPRE_ParVector)(aux_x->vec->vector_data)), hypre_ParVectorLocalVector((HYPRE_ParVector)(aux_y->vec->vector_data)));
+  MPI_Iallreduce(MPI_IN_PLACE, prod, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD, &request);
+
+  PASE_INT  i   = 0;
+  PASE_REAL tmp = 0.0;
+  for(i = 0; i < aux_x->block_size; i++) {
+    tmp += aux_x->block[i] * aux_y->block[i]; 
+  }
+  MPI_Wait(&request, &status);
+  *prod += tmp;
+#endif
 }
 
 #undef  __FUNCT__
