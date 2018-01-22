@@ -9,14 +9,15 @@
 #define EPS 2.220446e-16
 #define REORTH_TOL 0.75 
 
+//Product_type=1表示A内积，其它表示B内积
 void 
-GCG_Eigen(PASE_AUX_MATRIX A, PASE_AUX_MATRIX B, PASE_REAL *eval, PASE_AUX_VECTOR *evec, PASE_INT nev, PASE_REAL abs_tol, PASE_REAL cg_tol, PASE_INT max_iter, PASE_INT nsmooth, PASE_INT start, PASE_REAL *time_inner, PASE_REAL *time_lapack, PASE_REAL *time_other)
+GCG_Eigen(PASE_AUX_MATRIX A, PASE_AUX_MATRIX B, PASE_INT Product_type, PASE_REAL *eval, PASE_AUX_VECTOR *evec, PASE_INT nev, PASE_REAL abs_tol, PASE_REAL cg_tol, PASE_INT max_iter, PASE_INT nsmooth, PASE_INT start, PASE_REAL *time_inner, PASE_REAL *time_lapack, PASE_REAL *time_other)
 {
   //--------------------定义变量--------------------------------------------
   PASE_INT        i, max_dim_x = nev*5/4;//最大是1.25×nev
   //unlock用来记录没有收敛的特征值和特征向量在V中的编号,nunlock为未收敛的特征对个数
   //dim_xpw表示V的长度,dim_xp表示[X,P]的向量个数,dim_x表示X中的向量个数
-  PASE_INT        *unlock, nunlock, dim_xpw, last_dim_xpw, dim_xp, dim_x = nev, iter = 0, *Ind;
+  PASE_INT        *unlock, nunlock, dim_xpw, last_dim_xpw, dim_xp, dim_x = nev, last_dim_x = nev, iter = 0, *Ind;
   //AA_copy用来存储矩阵AA的备份，为了下次计算做准备
   //AA_sub用来存储小规模矩阵AA中与[X,P]对应的对角部分
   PASE_REAL       *AA, *approx_eval, *AA_copy, *AA_sub, *small_tmp, *RRes;
@@ -49,14 +50,14 @@ GCG_Eigen(PASE_AUX_MATRIX A, PASE_AUX_MATRIX B, PASE_REAL *eval, PASE_AUX_VECTOR
   //计算初始近似特征向量并正交化
   //GetRitzVectors(AA, V, X_tmp, dim_x, dim_x);
   //ChangeVecPointer(V, X_tmp, Orth_tmp, dim_x);
-  GCG_Orthogonal(V, B, 0, &dim_x, V_tmp, Orth_tmp, Ind, time_inner);
+  GCG_Orthogonal(V, A, B, Product_type, 0, &dim_x, V_tmp, Orth_tmp, Ind, time_inner);
   CheckConvergence(A, B, unlock, &nunlock, start, nev, V, approx_eval, abs_tol, V_tmp, -2, RRes, time_inner);
   //用CG迭代获取W向量
   GetWinV(dim_x, nunlock, unlock, V, approx_eval, A, B, cg_tol, nsmooth, V_tmp[0]);
   //对V进行正交化,并计算evec=V^T*A*V,B1=V^T*B*V
   dim_xpw = 2*dim_x;
-  GCG_Orthogonal(V, B, dim_x, &dim_xpw, V_tmp, Orth_tmp, Ind, time_inner);
-  RayleighRitz(A, V, AA, approx_eval, NULL, AA_copy, 0, 0, dim_xpw, V_tmp[0], NULL, time_inner, time_lapack, time_other);
+  GCG_Orthogonal(V, A, B, Product_type, dim_x, &dim_xpw, V_tmp, Orth_tmp, Ind, time_inner);
+  RayleighRitz(A, B, Product_type, V, AA, approx_eval, NULL, AA_copy, 0, 0, dim_xpw, V_tmp[0], NULL, time_inner, time_lapack, time_other);
   //计算Ritz向量,由于得到的特征向量是关于B正交的，不需要对x2进行正交化
 
   start_t = clock();
@@ -71,7 +72,7 @@ GCG_Eigen(PASE_AUX_MATRIX A, PASE_AUX_MATRIX B, PASE_REAL *eval, PASE_AUX_VECTOR
     dim_xp = dim_x+nunlock;
     //计算P
     start_t = clock();
-    GetPinV(AA, V, dim_x, &dim_xp, dim_xpw, nunlock, unlock, V_tmp, Orth_tmp, Ind);
+    GetPinV(AA, V, dim_x, last_dim_x, &dim_xp, dim_xpw, nunlock, unlock, V_tmp, Orth_tmp, Ind);
     GetXinV(V, X_tmp, Orth_tmp, dim_x);
     end_t   = clock();
     *time_other += ((double)(end_t-start_t))/1000000;
@@ -81,12 +82,13 @@ GCG_Eigen(PASE_AUX_MATRIX A, PASE_AUX_MATRIX B, PASE_REAL *eval, PASE_AUX_VECTOR
     //对unlock的x2进行CG迭代得到w,V的前nev列为x2,dim_xp列之后是w
     GetWinV(dim_xp, nunlock, unlock, V, approx_eval, A, B, cg_tol, nsmooth, V_tmp[0]);
     //对W与前dim_xp个向量进行正交化,Ind记录W中的非零向量的列号
-    GCG_Orthogonal(V, B, dim_xp, &dim_xpw, V_tmp, Orth_tmp, Ind, time_inner);
+    GCG_Orthogonal(V, A, B, Product_type, dim_xp, &dim_xpw, V_tmp, Orth_tmp, Ind, time_inner);
     //PrintVec(V+dim_xp, dim_xpw-dim_xp);
     //计算小规模矩阵特征值
-    RayleighRitz(A, V, AA, approx_eval, AA_sub, AA_copy, dim_xp, last_dim_xpw, dim_xpw, V_tmp[0], small_tmp, time_inner, time_lapack, time_other);
+    RayleighRitz(A, B, Product_type, V, AA, approx_eval, AA_sub, AA_copy, dim_xp, last_dim_xpw, dim_xpw, V_tmp[0], small_tmp, time_inner, time_lapack, time_other);
     //检查特征值重数
     start_t = clock();
+    last_dim_x = dim_x;
     Updatedim_x(nev, max_dim_x, &dim_x, approx_eval);
     //计算Ritz向量
     GetRitzVectors(AA, V, X_tmp, dim_xpw, dim_x);
@@ -250,13 +252,13 @@ CheckConvergence(PASE_AUX_MATRIX A, PASE_AUX_MATRIX B, PASE_INT *unlock, PASE_IN
 
 //获取d
 void 
-GetPinV(PASE_REAL *AA, PASE_AUX_VECTOR *V, PASE_INT dim_x, PASE_INT *dim_xp, PASE_INT dim_xpw, PASE_INT nunlock, PASE_INT *unlock, PASE_AUX_VECTOR *V_tmp, PASE_AUX_VECTOR *Orth_tmp, PASE_INT *Ind)
+GetPinV(PASE_REAL *AA, PASE_AUX_VECTOR *V, PASE_INT dim_x, PASE_INT last_dim_x, PASE_INT *dim_xp, PASE_INT dim_xpw, PASE_INT nunlock, PASE_INT *unlock, PASE_AUX_VECTOR *V_tmp, PASE_AUX_VECTOR *Orth_tmp, PASE_INT *Ind)
 {
   PASE_INT i = 0;
   //小规模正交化，构造d,构造AA_sub用于下次计算
   for(i = 0; i < nunlock; i++) {
     memset(AA+(dim_x+i)*dim_xpw, 0, dim_xpw*sizeof(PASE_REAL));
-    memcpy(AA+(dim_x+i)*dim_xpw+dim_x, AA+unlock[i]*dim_xpw+dim_x, (dim_xpw-dim_x)*sizeof(PASE_REAL));
+    memcpy(AA+(dim_x+i)*dim_xpw+last_dim_x, AA+unlock[i]*dim_xpw+last_dim_x, (dim_xpw-last_dim_x)*sizeof(PASE_REAL));
   }
   //小规模evec中，X部分是已经正交的（BB正交），所以对P部分正交化
   OrthogonalSmall(AA, NULL, dim_xpw, dim_x, dim_xp, Ind);
@@ -293,16 +295,48 @@ DenseVecsMatrixVecs(PASE_REAL *LVecs, PASE_REAL *DenseMat, PASE_REAL *RVecs, PAS
 }
 
 void 
-RayleighRitz(PASE_AUX_MATRIX A, PASE_AUX_VECTOR *V, PASE_REAL *AA, PASE_REAL *approx_eval, PASE_REAL *AA_sub, PASE_REAL *AA_copy, PASE_INT start, PASE_INT last_dim, PASE_INT dim, PASE_AUX_VECTOR tmp, PASE_REAL *small_tmp, PASE_REAL *time_inner, PASE_REAL *time_lapack, PASE_REAL *time_other)
+RayleighRitz(PASE_AUX_MATRIX A, PASE_AUX_MATRIX B, PASE_INT Product_type, PASE_AUX_VECTOR *V, PASE_REAL *AA, PASE_REAL *approx_eval, PASE_REAL *AA_sub, PASE_REAL *AA_copy, PASE_INT start, PASE_INT last_dim, PASE_INT dim, PASE_AUX_VECTOR tmp, PASE_REAL *small_tmp, PASE_REAL *time_inner, PASE_REAL *time_lapack, PASE_REAL *time_other)
 {
   clock_t start_t, end_t;
-  GetLAPACKMatrix(A, V, AA, AA_sub, start, last_dim, dim, AA_copy, tmp, small_tmp, time_inner, time_other);
+  PASE_AUX_MATRIX RitzMat = A;
+  if(Product_type == 1){
+    RitzMat = B;
+  }
+  GetLAPACKMatrix(RitzMat, V, AA, AA_sub, start, last_dim, dim, AA_copy, tmp, small_tmp, time_inner, time_other);
   start_t = clock();
   LAPACKE_dsyev( 102, 'V', 'U', dim, AA, dim, approx_eval );
+  if(Product_type == 1)
+  {
+    SortEigen(AA, approx_eval, dim, dim);
+  }	
   end_t   = clock();
   *time_lapack += ((double)(end_t-start_t))/1000000;
 }
 
+void 
+SortEigen(PASE_REAL *evec, PASE_REAL *eval, PASE_INT dim, PASE_INT dim_x)
+{
+    PASE_INT head = 0, tail = dim-1;
+    PASE_REAL *work = (PASE_REAL*)calloc(dim, sizeof(PASE_REAL));
+	for( head=0; head<dim_x; head++ )
+	{
+	    tail = dim-1-head;
+	    if(head < tail)
+	    {
+			memcpy(work, evec+head*dim, dim*sizeof(PASE_REAL));
+			memcpy(evec+head*dim, evec+tail*dim, dim*sizeof(PASE_REAL));
+			memcpy(evec+tail*dim, work, dim*sizeof(PASE_REAL));
+			work[0] = eval[head];
+			eval[head] = 1.0/eval[tail];
+			eval[tail] = 1.0/work[0];
+	    }
+	    else
+	    {
+		    break;
+	    }
+	}
+    free(work); work = NULL;
+}
 
 void 
 Updatedim_x(PASE_INT start, PASE_INT end, PASE_INT *dim_x, PASE_REAL *approx_eval)
@@ -372,10 +406,14 @@ ChangeVecPointer(PASE_AUX_VECTOR *V_1, PASE_AUX_VECTOR *V_2, PASE_AUX_VECTOR *tm
 //V1:是一个临时的存储空间，是表示零向量的列的指针
 //全部正交化，则start=0
 void 
-GCG_Orthogonal(PASE_AUX_VECTOR *V, PASE_AUX_MATRIX B, PASE_INT start, PASE_INT *end, PASE_AUX_VECTOR *V_tmp, PASE_AUX_VECTOR *Nonzero_Vec, PASE_INT *Ind, PASE_REAL *time_inner)
+GCG_Orthogonal(PASE_AUX_VECTOR *V, PASE_AUX_MATRIX A, PASE_AUX_MATRIX M, PASE_INT Product_type, PASE_INT start, PASE_INT *end, PASE_AUX_VECTOR *V_tmp, PASE_AUX_VECTOR *Nonzero_Vec, PASE_INT *Ind, PASE_REAL *time_inner)
 {
   PASE_INT       i, j, n_nonzero = 0, n_zero = 0;
   PASE_REAL      vin, vout, tmp, dd;
+  PASE_AUX_MATRIX B = M;
+  if(Product_type == 1){
+    B = A; 
+  }
   clock_t start_t, end_t;
   //地址是int型，所以这里只要分配int空间就可以，不需要PASE_REAL**
   if(B == NULL) {

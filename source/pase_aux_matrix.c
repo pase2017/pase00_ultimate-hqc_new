@@ -679,39 +679,49 @@ PASE_Aux_vector_inner_product_general(PASE_AUX_VECTOR aux_x, PASE_AUX_VECTOR aux
 #else
   PASE_INT i = 0;
   PASE_INT j = 0;
-  MPI_Status status;
-  MPI_Request request;
-  PASE_VECTOR workspace = PASE_Vector_create_by_vector(aux_x->vec);
-  PASE_Vector_set_constant_value(workspace, 0.0);
   clock_t start_t, end_t;
-  PASE_SCALAR tmp = 0; 
   start_t = clock();
 
-  for(i = 0; i < aux_A->block_size; i++) {
-    PASE_Vector_axpy(aux_x->block[i], aux_A->vec[i], workspace);   
-  }
-  tmp += hypre_SeqVectorInnerProd(hypre_ParVectorLocalVector((HYPRE_ParVector)(workspace->vector_data)), hypre_ParVectorLocalVector((HYPRE_ParVector)(aux_y->vec->vector_data)));
-  PASE_Matrix_multiply_vector(aux_A->mat, aux_y->vec, workspace);
-  for(i = 0; i < aux_A->block_size; i++) {
-    PASE_Vector_axpy(aux_y->block[i], aux_A->vec[i], workspace);   
-  }
-  tmp += hypre_SeqVectorInnerProd(hypre_ParVectorLocalVector((HYPRE_ParVector)(workspace->vector_data)), hypre_ParVectorLocalVector((HYPRE_ParVector)(aux_x->vec->vector_data)));
-  MPI_Iallreduce(MPI_IN_PLACE, &tmp, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD, &request);
+  if(PASE_NO == aux_A->is_diag) {
+    MPI_Status status;
+    MPI_Request request;
+    PASE_VECTOR workspace = PASE_Vector_create_by_vector(aux_x->vec);
+    PASE_Vector_set_constant_value(workspace, 0.0);
+    PASE_SCALAR tmp = 0; 
 
-  *prod = 0.0;
-  for(i = 0; i < aux_A->block_size; i++) {
-    for(j = 0; j < aux_A->block_size; j++) {
-      *prod += aux_x->block[i] * aux_A->block[i][j] * aux_y->block[j];
+    for(i = 0; i < aux_A->block_size; i++) {
+      PASE_Vector_axpy(aux_x->block[i], aux_A->vec[i], workspace);   
+    }
+    tmp += hypre_SeqVectorInnerProd(hypre_ParVectorLocalVector((HYPRE_ParVector)(workspace->vector_data)), hypre_ParVectorLocalVector((HYPRE_ParVector)(aux_y->vec->vector_data)));
+    PASE_Matrix_multiply_vector(aux_A->mat, aux_y->vec, workspace);
+    for(i = 0; i < aux_A->block_size; i++) {
+      PASE_Vector_axpy(aux_y->block[i], aux_A->vec[i], workspace);   
+    }
+    tmp += hypre_SeqVectorInnerProd(hypre_ParVectorLocalVector((HYPRE_ParVector)(workspace->vector_data)), hypre_ParVectorLocalVector((HYPRE_ParVector)(aux_x->vec->vector_data)));
+    MPI_Iallreduce(MPI_IN_PLACE, &tmp, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD, &request);
+
+    *prod = 0.0;
+    for(i = 0; i < aux_A->block_size; i++) {
+      for(j = 0; j < aux_A->block_size; j++) {
+        *prod += aux_x->block[i] * aux_A->block[i][j] * aux_y->block[j];
+      }
+    }
+    MPI_Wait(&request, &status);
+    *prod += tmp;
+    PASE_Vector_destroy(workspace);
+  } else {
+    PASE_Vector_inner_product_general(aux_x->vec, aux_y->vec, aux_A->mat, prod);
+    for(i = 0; i < aux_A->block_size; i++) {
+      for(j = 0; j < aux_A->block_size; j++) {
+        *prod += aux_x->block[i] * aux_A->block[i][j] * aux_y->block[j];
+      }
     }
   }
-  MPI_Wait(&request, &status);
-  *prod += tmp;
 
   end_t = clock();
   aux_A->Tinnergeneral += ((double)(end_t-start_t))/1000000;
-
-  PASE_Vector_destroy(workspace);
 #endif
+
 }
 
 #undef  __FUNCT__

@@ -1176,6 +1176,9 @@ PASE_Linear_solve_by_cg_aux(PASE_AUX_MATRIX aux_A, PASE_AUX_VECTOR aux_b, PASE_A
   PASE_Aux_vector_inner_product(aux_r, aux_r, &rho);
   rnorm = sqrt(rho);
   if(rnorm/bnorm < tol) {
+    PASE_Aux_vector_destroy(aux_r);
+    PASE_Aux_vector_destroy(aux_p);
+    PASE_Aux_vector_destroy(aux_q);
     return 0;
   }
   for(iter = 0; iter < max_iter; iter++) {
@@ -1287,7 +1290,7 @@ PASE_Mg_direct_solve_by_gcg(void *mg_solver)
   PASE_Printf(MPI_COMM_WORLD, "\n");
 #endif
 
-  GCG_Eigen(aux_A, aux_B, eigenvalues, aux_u, block_size, tol*1e-2, tol, max_iter, 10, solver->nconv, &(solver->time_inner), &(solver->time_lapack), &(solver->time_other));
+  GCG_Eigen(aux_A, aux_B, 1, eigenvalues, aux_u, block_size, tol*1e-2, tol, max_iter, 10, solver->nconv, &(solver->time_inner), &(solver->time_lapack), &(solver->time_other));
 
 #if 0
   for(i = 0; i < block_size; i++) {
