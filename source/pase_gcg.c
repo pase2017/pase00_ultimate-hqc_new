@@ -6,6 +6,11 @@
 #include "string.h"
 #include "time.h"
 
+#if PASE_USE_HYPRE
+#include "_hypre_parcsr_mv.h"
+#endif
+
+
 #define EPS 2.220446e-16
 #define REORTH_TOL 0.75 
 
@@ -466,6 +471,8 @@ GCG_Orthogonal(PASE_AUX_VECTOR *V, PASE_AUX_MATRIX A, PASE_AUX_MATRIX M, PASE_IN
       }
     }
   } else {
+
+#if 0
     for(i = 0; i < start; i++) {
       PASE_Aux_matrix_multiply_aux_vector(B, V[i], V_tmp[i]); 
     }
@@ -502,6 +509,7 @@ GCG_Orthogonal(PASE_AUX_VECTOR *V, PASE_AUX_MATRIX A, PASE_AUX_MATRIX M, PASE_IN
 	  }
 	  PASE_Aux_vector_inner_product_general(V[i], V[i], B, &vout);
 	  vout = sqrt(vout);
+	  //PASE_Printf(MPI_COMM_WORLD, "i = %d, vin = %e, vout = %e\n", i, vin, vout);
 	} while(vout/vin < REORTH_TOL);
 	if(vout > 10*EPS) {
 	  PASE_Aux_vector_scale(1.0/vout, V[i]); 
@@ -510,9 +518,125 @@ GCG_Orthogonal(PASE_AUX_VECTOR *V, PASE_AUX_MATRIX A, PASE_AUX_MATRIX M, PASE_IN
 	} else {
 	  //PASE_Printf(MPI_COMM_WORLD, "In GCG_Orthogonal, there is a zero vector! i = %d, start = %d, end: %d\n", i, start, *end);
 	  Nonzero_Vec[n_zero++] = V[i];
+	  //PASE_Printf(MPI_COMM_WORLD, "Here is a zero vector!!!!!!!!\n");
 	}
       }
     }
+#else
+    MPI_Status status;
+    MPI_Request *requests = (MPI_Request*)PASE_Malloc((*end-start)*sizeof(MPI_Request));
+    PASE_SCALAR *block_tmp1 = (PASE_SCALAR*)PASE_Malloc(V[0]->block_size*sizeof(PASE_SCALAR));
+    PASE_SCALAR *block_tmp2 = (PASE_SCALAR*)PASE_Malloc(V[0]->block_size*sizeof(PASE_SCALAR));
+    PASE_SCALAR *inner_product = (PASE_SCALAR*)calloc(*end, sizeof(PASE_SCALAR));
+    PASE_SCALAR *inner_product_tmp = (PASE_SCALAR*)calloc(*end, sizeof(PASE_SCALAR));
+    PASE_INT k = 0;
+    //PASE_SCALAR norm = 0.0;
+
+    for(i = start; i < (*end); i++) {
+      if(i == 0) {
+	//计算 V[0]^T*A*V[0]
+	PASE_Aux_vector_inner_product_general(V[0], V[0], B, &dd);
+	dd = sqrt(dd);
+	if(dd > 10*EPS) {
+	  PASE_Aux_vector_scale(1.0/dd, V[0]); 
+	  Ind[n_nonzero++] = 0;
+	}
+      } else {
+	do {
+	  PASE_Matrix_multiply_vector(B->mat, V[i]->vec, V_tmp[0]->vec);
+	  for(j = 0; j < V[i]->block_size; j++) {
+	    PASE_Vector_axpy(V[i]->block[j], B->vec[j], V_tmp[0]->vec);
+	    block_tmp1[j] = hypre_SeqVectorInnerProd(hypre_ParVectorLocalVector((HYPRE_ParVector)(B->vec[j]->vector_data)), hypre_ParVectorLocalVector((HYPRE_ParVector)(V[i]->vec->vector_data)));
+	    block_tmp2[j] = 0.0;
+	    for(k = 0; k < V[i]->block_size; k++) {
+	      block_tmp2[j] += B->block[j][k] * V[i]->block[k];
+	    }
+	  }
+	  for(j = 0; j < start; j++) {
+	    inner_product[j]  = hypre_SeqVectorInnerProd(hypre_ParVectorLocalVector((HYPRE_ParVector)(V[j]->vec->vector_data)), hypre_ParVectorLocalVector((HYPRE_ParVector)(V_tmp[0]->vec->vector_data)));
+	    for(k = 0; k < V[i]->block_size; k++) {
+	      inner_product[j] += V[j]->block[k] * block_tmp1[k];
+	    }
+	  }
+	  for(j = 0; j < n_nonzero; j++) {
+	    inner_product[Ind[j]]  = hypre_SeqVectorInnerProd(hypre_ParVectorLocalVector((HYPRE_ParVector)(V[Ind[j]]->vec->vector_data)), hypre_ParVectorLocalVector((HYPRE_ParVector)(V_tmp[0]->vec->vector_data)));
+	    for(k = 0; k < V[i]->block_size; k++) {
+	      inner_product[Ind[j]] += V[Ind[j]]->block[k] * block_tmp1[k];
+	    }
+	  }
+	  inner_product[i] = hypre_SeqVectorInnerProd(hypre_ParVectorLocalVector((HYPRE_ParVector)(V[i]->vec->vector_data)), hypre_ParVectorLocalVector((HYPRE_ParVector)(V_tmp[0]->vec->vector_data)));
+	  for(k = 0; k < V[i]->block_size; k++) {
+	    inner_product[i] += V[i]->block[k] * block_tmp1[k];
+	  }
+          MPI_Iallreduce(MPI_IN_PLACE, inner_product, i+1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD, &(requests[0]));
+
+	  for(j = 0; j < start; j++) {
+	    inner_product_tmp[j] = 0.0;
+	    for(k = 0; k < V[i]->block_size; k++) {
+	      inner_product_tmp[j] += V[j]->block[k] * block_tmp2[k];
+	    }
+	  }
+	  for(j = 0; j < n_nonzero; j++) {
+	    inner_product_tmp[Ind[j]] = 0.0;
+	    for(k = 0; k < V[i]->block_size; k++) {
+	      inner_product_tmp[Ind[j]] += V[Ind[j]]->block[k] * block_tmp2[k];
+	    }
+	  }
+	  inner_product_tmp[i] = 0.0;
+	  for(k = 0; k < V[i]->block_size; k++) {
+	    inner_product_tmp[i] += V[i]->block[k] * block_tmp2[k];
+	  }
+
+          MPI_Wait(&(requests[0]), &status);
+	  for(j = 0; j < start; j++) {
+	    inner_product[j] += inner_product_tmp[j];
+	  }
+	  for(j = 0; j < n_nonzero; j++) {
+	    inner_product[Ind[j]] += inner_product_tmp[Ind[j]];
+	  }
+	  inner_product[i] += inner_product_tmp[i];
+
+	  vout = inner_product[i];
+	  for(j = 0; j < start; j++) {
+	    vout -= inner_product[j]*inner_product[j];
+	  }
+	  for(j = 0; j < n_nonzero; j++) {
+            vout -= inner_product[Ind[j]]*inner_product[Ind[j]];
+	  }
+	  vout = sqrt(vout);
+	  vin = sqrt(inner_product[i]);
+	  //PASE_Printf(MPI_COMM_WORLD, "i = %d, vin = %e, vout = %e, inner_product[0] = %e\n", i, vin, vout, inner_product[0]);
+	  if(vout < 10*EPS) {
+	    Nonzero_Vec[n_zero++] = V[i];
+	    //PASE_Printf(MPI_COMM_WORLD, "Here is a zero vector!!!!!!!!\n");
+	    break;
+	  } else {
+	    for(j = 0; j < start; j++) {
+	      PASE_Aux_vector_axpy(-inner_product[j], V[j], V[i]);
+	    }
+	    for(j = 0; j < n_nonzero; j++) {
+	      PASE_Aux_vector_axpy(-inner_product[Ind[j]], V[Ind[j]], V[i]);
+	    }
+	    PASE_Aux_vector_scale(1.0/vout, V[i]); 
+	    //for(j = 0; j <= i; j++) {
+	    //  PASE_Aux_vector_inner_product_general(V[i], V[j], B, &norm);
+	    //  PASE_Printf(MPI_COMM_WORLD, "A[%d,%d]=%e, ", i, j, norm);
+	    //}
+	    //PASE_Printf(MPI_COMM_WORLD, "\n");
+	  }
+	} while(vout/vin < REORTH_TOL);
+	if(vout > 10*EPS) {
+	  Ind[n_nonzero++] = i;
+	  //PASE_Printf(MPI_COMM_WORLD, "Ind[%d] = %d\n", n_nonzero-1, Ind[n_nonzero-1]);
+	}
+      }
+    }
+    PASE_Free(requests);
+    PASE_Free(block_tmp1);
+    PASE_Free(block_tmp2);
+    PASE_Free(inner_product);
+    PASE_Free(inner_product_tmp);
+#endif
   }
   //接下来要把V的所有非零列向量存储在地址表格中靠前位置
   *end = start + n_nonzero;

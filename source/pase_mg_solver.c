@@ -8,7 +8,7 @@
 #include "pase_gcg.h"
 
 #define CLK_TCK 1000000
-#define DIAG_GCG 1
+#define DIAG_GCG 0
 
 PASE_MG_SOLVER
 PASE_Mg_solver_create(PASE_MATRIX A, PASE_MATRIX B, PASE_PARAMETER param)
