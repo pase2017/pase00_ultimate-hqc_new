@@ -524,7 +524,7 @@ GCG_Orthogonal(PASE_AUX_VECTOR *V, PASE_AUX_MATRIX A, PASE_AUX_MATRIX M, PASE_IN
     }
 #else
     MPI_Status status;
-    MPI_Request *requests = (MPI_Request*)PASE_Malloc((*end-start)*sizeof(MPI_Request));
+    MPI_Request *requests = (MPI_Request*)PASE_Malloc((*end)*sizeof(MPI_Request));
     PASE_SCALAR *block_tmp1 = (PASE_SCALAR*)PASE_Malloc(V[0]->block_size*sizeof(PASE_SCALAR));
     PASE_SCALAR *block_tmp2 = (PASE_SCALAR*)PASE_Malloc(V[0]->block_size*sizeof(PASE_SCALAR));
     PASE_SCALAR *inner_product = (PASE_SCALAR*)calloc(*end, sizeof(PASE_SCALAR));
@@ -547,29 +547,35 @@ GCG_Orthogonal(PASE_AUX_VECTOR *V, PASE_AUX_MATRIX A, PASE_AUX_MATRIX M, PASE_IN
 	  for(j = 0; j < V[i]->block_size; j++) {
 	    PASE_Vector_axpy(V[i]->block[j], B->vec[j], V_tmp[0]->vec);
 	    block_tmp1[j] = hypre_SeqVectorInnerProd(hypre_ParVectorLocalVector((HYPRE_ParVector)(B->vec[j]->vector_data)), hypre_ParVectorLocalVector((HYPRE_ParVector)(V[i]->vec->vector_data)));
-	    block_tmp2[j] = 0.0;
-	    for(k = 0; k < V[i]->block_size; k++) {
-	      block_tmp2[j] += B->block[j][k] * V[i]->block[k];
-	    }
 	  }
+
 	  for(j = 0; j < start; j++) {
 	    inner_product[j]  = hypre_SeqVectorInnerProd(hypre_ParVectorLocalVector((HYPRE_ParVector)(V[j]->vec->vector_data)), hypre_ParVectorLocalVector((HYPRE_ParVector)(V_tmp[0]->vec->vector_data)));
 	    for(k = 0; k < V[i]->block_size; k++) {
 	      inner_product[j] += V[j]->block[k] * block_tmp1[k];
 	    }
+            //MPI_Iallreduce(MPI_IN_PLACE, &(inner_product[j]), 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD, &(requests[j]));
 	  }
 	  for(j = 0; j < n_nonzero; j++) {
 	    inner_product[Ind[j]]  = hypre_SeqVectorInnerProd(hypre_ParVectorLocalVector((HYPRE_ParVector)(V[Ind[j]]->vec->vector_data)), hypre_ParVectorLocalVector((HYPRE_ParVector)(V_tmp[0]->vec->vector_data)));
 	    for(k = 0; k < V[i]->block_size; k++) {
 	      inner_product[Ind[j]] += V[Ind[j]]->block[k] * block_tmp1[k];
 	    }
+            //MPI_Iallreduce(MPI_IN_PLACE, &(inner_product[Ind[j]]), 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD, &(requests[Ind[j]]));
 	  }
 	  inner_product[i] = hypre_SeqVectorInnerProd(hypre_ParVectorLocalVector((HYPRE_ParVector)(V[i]->vec->vector_data)), hypre_ParVectorLocalVector((HYPRE_ParVector)(V_tmp[0]->vec->vector_data)));
 	  for(k = 0; k < V[i]->block_size; k++) {
 	    inner_product[i] += V[i]->block[k] * block_tmp1[k];
 	  }
+          //MPI_Iallreduce(MPI_IN_PLACE, &(inner_product[i]), 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD, &(requests[i]));
           MPI_Iallreduce(MPI_IN_PLACE, inner_product, i+1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD, &(requests[0]));
 
+	  for(j = 0; j < V[i]->block_size; j++) {
+	    block_tmp2[j] = 0.0;
+	    for(k = 0; k < V[i]->block_size; k++) {
+	      block_tmp2[j] += B->block[j][k] * V[i]->block[k];
+	    }
+	  }
 	  for(j = 0; j < start; j++) {
 	    inner_product_tmp[j] = 0.0;
 	    for(k = 0; k < V[i]->block_size; k++) {
@@ -589,11 +595,14 @@ GCG_Orthogonal(PASE_AUX_VECTOR *V, PASE_AUX_MATRIX A, PASE_AUX_MATRIX M, PASE_IN
 
           MPI_Wait(&(requests[0]), &status);
 	  for(j = 0; j < start; j++) {
+            //MPI_Wait(&(requests[j]), &status);
 	    inner_product[j] += inner_product_tmp[j];
 	  }
 	  for(j = 0; j < n_nonzero; j++) {
+            //MPI_Wait(&(requests[Ind[j]]), &status);
 	    inner_product[Ind[j]] += inner_product_tmp[Ind[j]];
 	  }
+          //MPI_Wait(&(requests[i]), &status);
 	  inner_product[i] += inner_product_tmp[i];
 
 	  vout = inner_product[i];
