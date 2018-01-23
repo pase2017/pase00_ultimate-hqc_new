@@ -5,7 +5,7 @@
 #include "lapacke_utils.h"
 #include "pase_mg_solver.h"
 
-void GCG_Eigen(PASE_AUX_MATRIX A, PASE_AUX_MATRIX B, PASE_INT Product_type, PASE_REAL *eval, PASE_AUX_VECTOR *evec, PASE_INT nev, PASE_REAL abs_tol, PASE_REAL cg_tol, PASE_INT max_iter, PASE_INT nsmooth, PASE_INT start, PASE_REAL *time_inner, PASE_REAL *time_lapack, PASE_REAL *time_other);
+void GCG_Eigen(PASE_AUX_MATRIX A, PASE_AUX_MATRIX B, PASE_INT Product_type, PASE_REAL *eval, PASE_AUX_VECTOR *evec, PASE_INT nev, PASE_REAL abs_tol, PASE_REAL cg_tol, PASE_INT max_iter, PASE_INT nsmooth, PASE_INT start, PASE_REAL *time_inner, PASE_REAL *time_lapack, PASE_REAL *time_other, PASE_REAL *time_orth);
 
 //用Petsc的矩阵和向量操作构造的函数
 void AllocateVecs(PASE_AUX_MATRIX A, PASE_AUX_VECTOR *evec, PASE_AUX_VECTOR **V_1, PASE_AUX_VECTOR **V_2, PASE_AUX_VECTOR **V_3, PASE_INT nev, PASE_INT a, PASE_INT b, PASE_INT c);

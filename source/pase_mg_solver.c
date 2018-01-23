@@ -68,6 +68,7 @@ PASE_Mg_solver_create(PASE_MATRIX A, PASE_MATRIX B, PASE_PARAMETER param)
   solver->time_other                = 0.0;
   solver->time_diag_pre             = 0.0;
   solver->time_linear_diag          = 0.0;
+  solver->time_orth_gcg             = 0.0;
 
   solver->exact_eigenvalues         = NULL;
   solver->eigenvalues               = NULL;
@@ -1292,7 +1293,7 @@ PASE_Mg_direct_solve_by_gcg(void *mg_solver)
   PASE_Printf(MPI_COMM_WORLD, "\n");
 #endif
 
-  GCG_Eigen(aux_A, aux_B, 1, eigenvalues, aux_u, block_size, tol*1e-2, tol, max_iter, 10, solver->nconv, &(solver->time_inner), &(solver->time_lapack), &(solver->time_other));
+  GCG_Eigen(aux_A, aux_B, 1, eigenvalues, aux_u, block_size, tol*1e-2, tol, max_iter, 10, solver->nconv, &(solver->time_inner), &(solver->time_lapack), &(solver->time_other), &(solver->time_orth_gcg));
 
 #if 0
   for(i = 0; i < block_size; i++) {
@@ -1471,6 +1472,7 @@ PASE_Mg_print(PASE_MG_SOLVER solver)
     PASE_Printf(MPI_COMM_WORLD, "TMatVec     = %f seconds\n", solver->multigrid->aux_A[solver->idx_cycle_level[solver->max_cycle_level]]->Ttotal+solver->multigrid->aux_B[solver->idx_cycle_level[solver->max_cycle_level]]->Ttotal);
     PASE_Printf(MPI_COMM_WORLD, "TVecVec     = %f seconds\n", solver->time_inner+solver->multigrid->aux_A[solver->idx_cycle_level[solver->max_cycle_level]]->Tinnergeneral+solver->multigrid->aux_B[solver->idx_cycle_level[solver->max_cycle_level]]->Tinnergeneral);
     PASE_Printf(MPI_COMM_WORLD, "TLapack     = %f seconds\n", solver->time_lapack);
+    PASE_Printf(MPI_COMM_WORLD, "Torth       = %f seconds\n", solver->time_orth_gcg);
     PASE_Printf(MPI_COMM_WORLD, "Tother      = %f seconds\n", solver->time_other);
     PASE_Printf(MPI_COMM_WORLD, "Tdiagpre    = %f seconds\n", solver->time_diag_pre);
     PASE_Printf(MPI_COMM_WORLD, "Tdiaglinear = %f seconds\n", solver->time_linear_diag);

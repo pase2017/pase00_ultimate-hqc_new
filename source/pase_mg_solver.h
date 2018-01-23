@@ -52,6 +52,7 @@ typedef struct PASE_MG_SOLVER_PRIVATE_ {
   PASE_REAL    time_inner;
   PASE_REAL    time_lapack;
   PASE_REAL    time_other;
+  PASE_REAL    time_orth_gcg;
   PASE_REAL    time_diag_pre;
   PASE_REAL    time_linear_diag;
 
