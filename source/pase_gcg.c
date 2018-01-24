@@ -504,13 +504,15 @@ GCG_Orthogonal(PASE_AUX_VECTOR *V, PASE_AUX_MATRIX A, PASE_AUX_MATRIX M, PASE_IN
     }
 #else
     MPI_Status status;
-    MPI_Request *requests = (MPI_Request*)PASE_Malloc((*end)*sizeof(MPI_Request));
+    MPI_Request request; 
+    //MPI_Request *requests = (MPI_Request*)PASE_Malloc((*end)*sizeof(MPI_Request));
     PASE_SCALAR *block_tmp1 = (PASE_SCALAR*)PASE_Malloc(V[0]->block_size*sizeof(PASE_SCALAR));
     PASE_SCALAR *block_tmp2 = (PASE_SCALAR*)PASE_Malloc(V[0]->block_size*sizeof(PASE_SCALAR));
     PASE_SCALAR *inner_product = (PASE_SCALAR*)calloc(*end, sizeof(PASE_SCALAR));
     PASE_SCALAR *inner_product_tmp = (PASE_SCALAR*)calloc(*end, sizeof(PASE_SCALAR));
     PASE_INT k = 0;
     //PASE_SCALAR norm = 0.0;
+    PASE_INT iter = 0;
 
     for(i = start; i < (*end); i++) {
       if(i == 0) {
@@ -522,7 +524,9 @@ GCG_Orthogonal(PASE_AUX_VECTOR *V, PASE_AUX_MATRIX A, PASE_AUX_MATRIX M, PASE_IN
 	  Ind[n_nonzero++] = 0;
 	}
       } else {
+	iter = 0;
 	do {
+	  iter ++;
 	  PASE_Matrix_multiply_vector(B->mat, V[i]->vec, V_tmp[0]->vec);
 	  for(j = 0; j < V[i]->block_size; j++) {
 	    PASE_Vector_axpy(V[i]->block[j], B->vec[j], V_tmp[0]->vec);
@@ -548,7 +552,7 @@ GCG_Orthogonal(PASE_AUX_VECTOR *V, PASE_AUX_MATRIX A, PASE_AUX_MATRIX M, PASE_IN
 	    inner_product[i] += V[i]->block[k] * block_tmp1[k];
 	  }
           //MPI_Iallreduce(MPI_IN_PLACE, &(inner_product[i]), 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD, &(requests[i]));
-          MPI_Iallreduce(MPI_IN_PLACE, inner_product, i+1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD, &(requests[0]));
+          MPI_Iallreduce(MPI_IN_PLACE, inner_product, i+1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD, &request);
 
 	  for(j = 0; j < V[i]->block_size; j++) {
 	    block_tmp2[j] = 0.0;
@@ -573,7 +577,7 @@ GCG_Orthogonal(PASE_AUX_VECTOR *V, PASE_AUX_MATRIX A, PASE_AUX_MATRIX M, PASE_IN
 	    inner_product_tmp[i] += V[i]->block[k] * block_tmp2[k];
 	  }
 
-          MPI_Wait(&(requests[0]), &status);
+          MPI_Wait(&request, &status);
 	  for(j = 0; j < start; j++) {
             //MPI_Wait(&(requests[j]), &status);
 	    inner_product[j] += inner_product_tmp[j];
@@ -588,16 +592,17 @@ GCG_Orthogonal(PASE_AUX_VECTOR *V, PASE_AUX_MATRIX A, PASE_AUX_MATRIX M, PASE_IN
 	  vout = inner_product[i];
 	  for(j = 0; j < start; j++) {
 	    vout -= inner_product[j]*inner_product[j];
+	    //PASE_Printf(MPI_COMM_WORLD, "inner_product[%d] = %e, ", j, inner_product[j]);
 	  }
 	  for(j = 0; j < n_nonzero; j++) {
             vout -= inner_product[Ind[j]]*inner_product[Ind[j]];
+	    //PASE_Printf(MPI_COMM_WORLD, "inner_product[%d] = %e, ", Ind[j], inner_product[Ind[j]]);
 	  }
-	  vout = sqrt(vout);
+	  //PASE_Printf(MPI_COMM_WORLD, "\n", Ind[j], inner_product[Ind[j]]);
 	  vin = sqrt(inner_product[i]);
-	  //PASE_Printf(MPI_COMM_WORLD, "i = %d, vin = %e, vout = %e, inner_product[0] = %e\n", i, vin, vout, inner_product[0]);
-	  if(vout < 10*EPS) {
+	  if(vout < 100*EPS*EPS) {
 	    Nonzero_Vec[n_zero++] = V[i];
-	    //PASE_Printf(MPI_COMM_WORLD, "Here is a zero vector!!!!!!!!\n");
+	    //PASE_Printf(MPI_COMM_WORLD, "Here is a zero vector!!!! vout = %e\n", vout);
 	    break;
 	  } else {
 	    for(j = 0; j < start; j++) {
@@ -606,21 +611,23 @@ GCG_Orthogonal(PASE_AUX_VECTOR *V, PASE_AUX_MATRIX A, PASE_AUX_MATRIX M, PASE_IN
 	    for(j = 0; j < n_nonzero; j++) {
 	      PASE_Aux_vector_axpy(-inner_product[Ind[j]], V[Ind[j]], V[i]);
 	    }
+	    vout = sqrt(vout);
 	    PASE_Aux_vector_scale(1.0/vout, V[i]); 
+	    //PASE_Printf(MPI_COMM_WORLD, "i = %d, vin = %e, vout = %e, inner_product[0] = %e\n", i, vin, vout, inner_product[0]);
 	    //for(j = 0; j <= i; j++) {
 	    //  PASE_Aux_vector_inner_product_general(V[i], V[j], B, &norm);
 	    //  PASE_Printf(MPI_COMM_WORLD, "A[%d,%d]=%e, ", i, j, norm);
 	    //}
 	    //PASE_Printf(MPI_COMM_WORLD, "\n");
 	  }
-	} while(vout/vin < REORTH_TOL);
+	} while(vout/vin < REORTH_TOL || iter < 1);
 	if(vout > 10*EPS) {
 	  Ind[n_nonzero++] = i;
 	  //PASE_Printf(MPI_COMM_WORLD, "Ind[%d] = %d\n", n_nonzero-1, Ind[n_nonzero-1]);
 	}
       }
     }
-    PASE_Free(requests);
+    //PASE_Free(requests);
     PASE_Free(block_tmp1);
     PASE_Free(block_tmp2);
     PASE_Free(inner_product);
