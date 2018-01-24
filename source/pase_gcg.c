@@ -363,6 +363,7 @@ Updatedim_x(PASE_INT start, PASE_INT end, PASE_INT *dim_x, PASE_REAL *approx_eva
 void 
 VecsMatrixVecsForRayleighRitz(PASE_AUX_MATRIX A, PASE_AUX_VECTOR *V, PASE_REAL *AA, PASE_INT start, PASE_INT dim, PASE_AUX_VECTOR tmp, PASE_REAL *time_inner)
 {
+#if 0
   clock_t start_t, end_t;
   PASE_INT i = 0;
   PASE_INT j = 0;
@@ -376,6 +377,65 @@ VecsMatrixVecsForRayleighRitz(PASE_AUX_MATRIX A, PASE_AUX_VECTOR *V, PASE_REAL *
       AA[j*dim+i] = AA[i*dim+j];
     }
   }
+#else
+  PASE_INT i = 0;
+  PASE_INT j = 0;
+  PASE_INT k = 0;
+  PASE_INT num_half_inner = ((start+dim+1) * (dim-start)) / 2;
+  PASE_INT start_inner = 0;
+  MPI_Status status;
+  MPI_Request request; 
+  //MPI_Request *requests = (MPI_Request*)PASE_Malloc((dim-start)*sizeof(MPI_Request)); 
+  PASE_SCALAR *block_tmp1 = (PASE_SCALAR*)PASE_Malloc(V[0]->block_size*sizeof(PASE_SCALAR));
+  PASE_SCALAR *block_tmp2 = (PASE_SCALAR*)PASE_Malloc(V[0]->block_size*sizeof(PASE_SCALAR));
+  PASE_SCALAR *inner_product_tmp = (PASE_SCALAR*)calloc(num_half_inner, sizeof(PASE_SCALAR));
+  for(i = start; i < dim; i++) {
+    start_inner = ((start+i+1) * (i-start)) / 2;
+    PASE_Matrix_multiply_vector(A->mat, V[i]->vec, tmp->vec);
+    for(j = 0; j < V[i]->block_size; j++) {
+      PASE_Vector_axpy(V[i]->block[j], A->vec[j], tmp->vec);
+      block_tmp1[j] = hypre_SeqVectorInnerProd(hypre_ParVectorLocalVector((HYPRE_ParVector)(A->vec[j]->vector_data)), hypre_ParVectorLocalVector((HYPRE_ParVector)(V[i]->vec->vector_data)));
+    }
+    for(j = 0; j <= i; j++) {
+      inner_product_tmp[start_inner+j]  = hypre_SeqVectorInnerProd(hypre_ParVectorLocalVector((HYPRE_ParVector)(V[j]->vec->vector_data)), hypre_ParVectorLocalVector((HYPRE_ParVector)(tmp->vec->vector_data)));
+      for(k = 0; k < V[i]->block_size; k++) {
+	inner_product_tmp[start_inner+j] += V[j]->block[k] * block_tmp1[k];
+      }
+    }
+    //MPI_Iallreduce(MPI_IN_PLACE, &(inner_product_tmp[(i-start)*dim]), i+1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD, &(requests[i-start]));
+  }
+  MPI_Iallreduce(MPI_IN_PLACE, inner_product_tmp, num_half_inner, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD, &request);
+
+  for(i = start; i < dim; i++) {
+    for(j = 0; j < V[i]->block_size; j++) {
+      block_tmp2[j] = 0.0;
+      for(k = 0; k < V[i]->block_size; k++) {
+	block_tmp2[j] += A->block[j][k] * V[i]->block[k];
+      }
+    }
+    for(j = 0; j <= i; j++) {
+      AA[i*dim+j] = 0.0;
+      for(k = 0; k < V[i]->block_size; k++) {
+	AA[i*dim+j] += V[j]->block[k] * block_tmp2[k];
+      }
+    }
+  }
+
+  MPI_Wait(&request, &status);
+  for(i = start; i < dim; i++) {
+    start_inner = (start+i+1) * (i-start) / 2;
+    //MPI_Wait(&(requests[i-start]), &status);
+    for(j = 0; j <= i; ++j) {
+      AA[i*dim+j] += inner_product_tmp[start_inner+j];
+      AA[j*dim+i] = AA[i*dim+j];
+    }
+  }
+  PASE_Free(block_tmp1);
+  PASE_Free(block_tmp2);
+  PASE_Free(inner_product_tmp);
+  //PASE_Free(requests);
+
+#endif
 }
 
 //U = V*x
