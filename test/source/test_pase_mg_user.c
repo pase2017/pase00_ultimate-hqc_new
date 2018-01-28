@@ -71,9 +71,10 @@ PASE_INT main(PASE_INT argc, char *argv[])
   HYPRE_IJMatrixGetObject(A, (void**) &parcsr_A);
   HYPRE_IJMatrixGetObject(B, (void**) &parcsr_B);
 
-  PASE_REAL *eigenvalues, *exact_eigenvalues;
+  PASE_REAL *eigenvalues;
   eigenvalues = PASE_Malloc(block_size*sizeof(PASE_REAL));
-  GetExactEigenvalues(&exact_eigenvalues, n, block_size);
+  //PASE_REAL *exact_eigenvalues;
+  //GetExactEigenvalues(&exact_eigenvalues, n, block_size);
 
   PASE_Printf(MPI_COMM_WORLD, "PASE (Parallel Auxiliary Space Eigen-solver), parallel version\n"); 
   PASE_Printf(MPI_COMM_WORLD, "Please contact liyu@lsec.cc.ac.cn, if there is any bugs.\n"); 
@@ -114,7 +115,7 @@ PASE_INT main(PASE_INT argc, char *argv[])
   PASE_Mg_set_atol(solver, atol);
   PASE_Mg_set_rtol(solver, rtol);
   PASE_Mg_set_print_level(solver, print_level);
-  PASE_Mg_set_exact_eigenvalues(solver, exact_eigenvalues);
+  //PASE_Mg_set_exact_eigenvalues(solver, exact_eigenvalues);
   PASE_Mg_set_up(solver, pase_A, pase_B, pase_x, param);
 
   //Solve
@@ -127,7 +128,7 @@ PASE_INT main(PASE_INT argc, char *argv[])
   PASE_Matrix_destroy(pase_B);
   PASE_Vector_destroy(pase_x);
   PASE_Free(eigenvalues);
-  PASE_Free(exact_eigenvalues);
+  //PASE_Free(exact_eigenvalues);
   HYPRE_IJMatrixDestroy(A);
   HYPRE_IJMatrixDestroy(B);
 

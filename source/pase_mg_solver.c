@@ -17,17 +17,19 @@ PASE_Mg_solver_create(PASE_MATRIX A, PASE_MATRIX B, PASE_PARAMETER param)
   PASE_MULTIGRID multigrid   = PASE_Multigrid_create(A, B, param, NULL);
 
   solver->multigrid          = multigrid;
-  solver->function           = PASE_Mg_function_create(//PASE_Mg_get_initial_vector_by_coarse_grid_hypre,
+  solver->function           = PASE_Mg_function_create(PASE_Mg_get_initial_vector_by_coarse_grid_hypre,
                                                        //PASE_Mg_get_initial_vector_by_coarse_grid_lobpcg_amg_hypre, 
-						       PASE_Mg_get_initial_vector_by_full_multigrid_hypre, 
-                                                       //PASE_Mg_direct_solve_by_lobpcg_aux_hypre,
-						       PASE_Mg_direct_solve_by_gcg, 
+						       //PASE_Mg_get_initial_vector_by_full_multigrid_hypre, 
+						       //PASE_Mg_get_initial_vector_by_full_multigrid_hypre_for_guangji, 
+                                                       PASE_Mg_direct_solve_by_lobpcg_aux_hypre,
+						       //PASE_Mg_direct_solve_by_gcg, 
                                                        //PASE_Mg_presmoothing_by_cg,
-                                                       //PASE_Mg_presmoothing_by_cg,
-						       //PASE_Mg_presmoothing_by_pcg_amg_hypre, 
+                                                       //PASE_Mg_postsmoothing_by_cg,
+						       PASE_Mg_presmoothing_by_pcg_amg_hypre, 
+						       PASE_Mg_smoothing_by_pcg_amg_hypre_for_guangji, 
 						       //PASE_Mg_postsmoothing_by_pcg_amg_hypre, 
-						       PASE_Mg_presmoothing_by_amg_hypre, 
-						       PASE_Mg_postsmoothing_by_amg_hypre, 
+						       //PASE_Mg_presmoothing_by_amg_hypre, 
+						       //PASE_Mg_postsmoothing_by_amg_hypre, 
                                                        PASE_Mg_presmoothing_by_cg_aux,
                                                        PASE_Mg_postsmoothing_by_cg_aux);
   solver->cycle_type                = 0;
@@ -84,6 +86,7 @@ PASE_Mg_solver_create(PASE_MATRIX A, PASE_MATRIX B, PASE_PARAMETER param)
   solver->method_dire               = NULL;
   
   solver->amg_data_coarsest         = NULL;
+  solver->multigrid_pre             = NULL;
   return solver;
 }
 
@@ -248,7 +251,7 @@ PASE_Mg_solve(PASE_MG_SOLVER solver)
   start = clock();
   PASE_Mg_get_initial_vector(solver);
   PASE_Mg_error_estimate(solver);
-  //PASE_Mg_print(solver);
+  PASE_Mg_print(solver);
   do {
     solver->ncycl++;
     PASE_Mg_cycle(solver);
@@ -658,7 +661,7 @@ PASE_Mg_error_estimate(PASE_MG_SOLVER solver)
     //PASE_REAL error = fabs(solver->eigenvalues[0] - solver->exact_eigenvalues[0]);	
     PASE_Printf(MPI_COMM_WORLD, "cycle = %d, nconv = %d, ", solver->ncycl, solver->nconv);
     if(solver->nconv < solver->block_size) {
-      PASE_Printf(MPI_COMM_WORLD, "residual of the first unconverged = %1.6e\n", solver->r_norm[solver->nconv]);
+      PASE_Printf(MPI_COMM_WORLD, "the first unconverged eigenvalues (residual) = %.8e (%1.6e)\n", solver->eigenvalues[solver->nconv], solver->r_norm[solver->nconv]);
     } else {
       PASE_Printf(MPI_COMM_WORLD, "all the wanted eigenpairs have converged.\n");
     }
@@ -1465,12 +1468,12 @@ PASE_Mg_print(PASE_MG_SOLVER solver)
     PASE_Printf(MPI_COMM_WORLD, "total time        = %f seconds\n", solver->total_time);
     PASE_Printf(MPI_COMM_WORLD, "=============================================================\n");
     PASE_Printf(MPI_COMM_WORLD, "Direct solve time statistics\n");
-    PASE_Printf(MPI_COMM_WORLD, "Tmatvec     = %f seconds\n", solver->multigrid->aux_A[solver->idx_cycle_level[solver->max_cycle_level]]->Tmatvec+solver->multigrid->aux_B[solver->idx_cycle_level[solver->max_cycle_level]]->Tmatvec);
-    PASE_Printf(MPI_COMM_WORLD, "Tveccom     = %f seconds\n", solver->multigrid->aux_A[solver->idx_cycle_level[solver->max_cycle_level]]->Tveccom+solver->multigrid->aux_B[solver->idx_cycle_level[solver->max_cycle_level]]->Tveccom);
-    PASE_Printf(MPI_COMM_WORLD, "Tvecvec     = %f seconds\n", solver->multigrid->aux_A[solver->idx_cycle_level[solver->max_cycle_level]]->Tvecvec+solver->multigrid->aux_B[solver->idx_cycle_level[solver->max_cycle_level]]->Tvecvec);
-    PASE_Printf(MPI_COMM_WORLD, "Tblockb     = %f seconds\n", solver->multigrid->aux_A[solver->idx_cycle_level[solver->max_cycle_level]]->Tblockb+solver->multigrid->aux_B[solver->idx_cycle_level[solver->max_cycle_level]]->Tblockb);
-    PASE_Printf(MPI_COMM_WORLD, "TMatVec     = %f seconds\n", solver->multigrid->aux_A[solver->idx_cycle_level[solver->max_cycle_level]]->Ttotal+solver->multigrid->aux_B[solver->idx_cycle_level[solver->max_cycle_level]]->Ttotal);
-    PASE_Printf(MPI_COMM_WORLD, "TVecVec     = %f seconds\n", solver->time_inner+solver->multigrid->aux_A[solver->idx_cycle_level[solver->max_cycle_level]]->Tinnergeneral+solver->multigrid->aux_B[solver->idx_cycle_level[solver->max_cycle_level]]->Tinnergeneral);
+    //PASE_Printf(MPI_COMM_WORLD, "Tmatvec     = %f seconds\n", solver->multigrid->aux_A[solver->idx_cycle_level[solver->max_cycle_level]]->Tmatvec+solver->multigrid->aux_B[solver->idx_cycle_level[solver->max_cycle_level]]->Tmatvec);
+    //PASE_Printf(MPI_COMM_WORLD, "Tveccom     = %f seconds\n", solver->multigrid->aux_A[solver->idx_cycle_level[solver->max_cycle_level]]->Tveccom+solver->multigrid->aux_B[solver->idx_cycle_level[solver->max_cycle_level]]->Tveccom);
+    //PASE_Printf(MPI_COMM_WORLD, "Tvecvec     = %f seconds\n", solver->multigrid->aux_A[solver->idx_cycle_level[solver->max_cycle_level]]->Tvecvec+solver->multigrid->aux_B[solver->idx_cycle_level[solver->max_cycle_level]]->Tvecvec);
+    //PASE_Printf(MPI_COMM_WORLD, "Tblockb     = %f seconds\n", solver->multigrid->aux_A[solver->idx_cycle_level[solver->max_cycle_level]]->Tblockb+solver->multigrid->aux_B[solver->idx_cycle_level[solver->max_cycle_level]]->Tblockb);
+    //PASE_Printf(MPI_COMM_WORLD, "TMatVec     = %f seconds\n", solver->multigrid->aux_A[solver->idx_cycle_level[solver->max_cycle_level]]->Ttotal+solver->multigrid->aux_B[solver->idx_cycle_level[solver->max_cycle_level]]->Ttotal);
+    //PASE_Printf(MPI_COMM_WORLD, "TVecVec     = %f seconds\n", solver->time_inner+solver->multigrid->aux_A[solver->idx_cycle_level[solver->max_cycle_level]]->Tinnergeneral+solver->multigrid->aux_B[solver->idx_cycle_level[solver->max_cycle_level]]->Tinnergeneral);
     PASE_Printf(MPI_COMM_WORLD, "TLapack     = %f seconds\n", solver->time_lapack);
     PASE_Printf(MPI_COMM_WORLD, "Torth       = %f seconds\n", solver->time_orth_gcg);
     PASE_Printf(MPI_COMM_WORLD, "Tother      = %f seconds\n", solver->time_other);
