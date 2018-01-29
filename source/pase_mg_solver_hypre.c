@@ -866,7 +866,7 @@ PASE_Mg_smoothing_by_pcg_amg_hypre_for_guangji(void *mg_solver)
   //HYPRE_BoomerAMGSetMaxIter(precond, 1); /* do only one iteration! */
 
   HYPRE_ParCSRPCGCreate(MPI_COMM_WORLD, &cg_solver);
-  HYPRE_PCGSetTol(cg_solver, 1.0e-15); 
+  HYPRE_PCGSetTol(cg_solver, 1.0e-10); 
   HYPRE_PCGSetMaxIter(cg_solver, max_iter); /* max iterations */
   HYPRE_PCGSetTwoNorm(cg_solver, 1); /* use the two norm as the st    opping criteria */
   HYPRE_PCGSetPrintLevel(cg_solver, 2); 

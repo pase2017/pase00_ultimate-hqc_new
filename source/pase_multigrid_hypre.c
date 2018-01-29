@@ -23,7 +23,7 @@ PASE_Multigrid_get_amg_array_hypre
   //HYPRE_BoomerAMGSetPMaxElmts(amg_solver, 0 );
   HYPRE_BoomerAMGSetOldDefault(amg_solver);
   //HYPRE_BoomerAMGSetCoarsenType(amg_solver, 6);
-  HYPRE_BoomerAMGSetMaxLevels(amg_solver, param->max_level+7);  /* maximum number of levels */
+  HYPRE_BoomerAMGSetMaxLevels(amg_solver, 14);  /* maximum number of levels */
   HYPRE_BoomerAMGSetRelaxType(amg_solver, 6);          /* G-S/Jacobi hybrid relaxation */
   //HYPRE_BoomerAMGSetRelaxOrder(amg_solver, 1);         /* uses C/F relaxation */
   HYPRE_BoomerAMGSetNumSweeps(amg_solver, 1);          /* Sweeeps on each level */
