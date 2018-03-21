@@ -42,7 +42,7 @@ GCG_Eigen(PASE_AUX_MATRIX A, PASE_AUX_MATRIX B, PASE_INT Product_type, PASE_REAL
   Ind         = calloc(3*max_dim_x, sizeof(PASE_INT));
   RRes        = (PASE_REAL*)calloc(nev, sizeof(PASE_REAL));
   Orth_tmp    = (PASE_AUX_VECTOR*)PASE_Malloc(max_dim_x*sizeof(PASE_AUX_VECTOR));
-  for(i = 0 ; i < nev; i++) {
+  for(i = 0 ; i < nev; ++i) {
     approx_eval[i] = eval[i];
   }
 
@@ -102,14 +102,17 @@ GCG_Eigen(PASE_AUX_MATRIX A, PASE_AUX_MATRIX B, PASE_INT Product_type, PASE_REAL
 
     CheckConvergence(A, B, unlock, &nunlock, start, nev, X_tmp, approx_eval, abs_tol, V_tmp, iter, RRes, time_inner);
 
+    //PrintSmallEigen(iter, nev, approx_eval, NULL, 0, RRes);
     iter += 1;
   }
   //PASE_Printf(MPI_COMM_WORLD, "iter = %d\n", iter);
-  //PrintSmallEigen(iter, nev, approx_eval, NULL, 0, RRes);
+  //PrintSmallEigen(iter, nev, approx_eval, AA, 0, RRes);
   //eval,evec是大规模矩阵的近似特征对
-  memcpy(eval, approx_eval, nev*sizeof(PASE_REAL));
-  for(i = start; i < nev; i++)
+  //memcpy(eval, approx_eval, nev*sizeof(PASE_REAL));
+  for(i = start; i < nev; ++i) {
     PASE_Aux_vector_copy(X_tmp[i], evec[i]);
+    eval[i] = approx_eval[i];
+  }
   //------------GCG迭代结束------------------------------------
 
   //释放空间
@@ -121,13 +124,13 @@ GCG_Eigen(PASE_AUX_MATRIX A, PASE_AUX_MATRIX B, PASE_INT Product_type, PASE_REAL
   free(small_tmp);    small_tmp   = NULL;
   free(RRes);         RRes        = NULL;
   free(Ind);          Ind         = NULL;
-  for(i = 0; i < 3*max_dim_x; i++) {
+  for(i = 0; i < 3*max_dim_x; ++i) {
     PASE_Aux_vector_destroy(V[i]);
     PASE_Aux_vector_destroy(V_tmp[i]);
   }
   PASE_Free(V);
   PASE_Free(V_tmp);
-  for(i = 0; i < max_dim_x; i++) {
+  for(i = 0; i < max_dim_x; ++i) {
     PASE_Aux_vector_destroy(X_tmp[i]);
   }
   PASE_Free(X_tmp);
@@ -143,16 +146,16 @@ AllocateVecs(PASE_AUX_MATRIX A, PASE_AUX_VECTOR *evec, PASE_AUX_VECTOR **V_1, PA
   (*V_3) = (PASE_AUX_VECTOR*)PASE_Malloc(c*sizeof(PASE_AUX_VECTOR));
   PASE_INT i = 0;
   (*V_1)[0] = PASE_Aux_vector_create_by_aux_matrix(A);
-  for(i = 1; i < a; i++) {
+  for(i = 1; i < a; ++i) {
     (*V_1)[i] = PASE_Aux_vector_create_by_aux_vector((*V_1)[0]);
   }
-  for(i = 0; i < b; i++) {
+  for(i = 0; i < b; ++i) {
     (*V_2)[i] = PASE_Aux_vector_create_by_aux_vector((*V_1)[0]);
   }
-  for(i = 0; i < c; i++) {
+  for(i = 0; i < c; ++i) {
     (*V_3)[i] = PASE_Aux_vector_create_by_aux_vector((*V_1)[0]);
   }
-  for(i = 0; i < nev; i++) {
+  for(i = 0; i < nev; ++i) {
     PASE_Aux_vector_copy(evec[i], (*V_1)[i]);
   }
 }
@@ -162,12 +165,12 @@ PrintSmallEigen(PASE_INT iter, PASE_INT nev, PASE_REAL *approx_eval, PASE_REAL *
 {
   PASE_INT i, j;
   PASE_Printf(MPI_COMM_WORLD, "'in while, the iter: %d LAPACKsyev:'\n", iter);
-  for(i = 0; i < nev; i++) {
+  for(i = 0; i < nev; ++i) {
     PASE_Printf(MPI_COMM_WORLD, "'approx_eval[%d] = %18.15lf, abosolute residual: %e'\n", i, approx_eval[i], RRes[i]);
   }
   if(AA != NULL) {
-    for(i = 0; i < nev; i++) {
-      for(j = 0; j < dim; j++) {
+    for(i = 0; i < nev; ++i) {
+      for(j = 0; j < dim; ++j) {
 	PASE_Printf(MPI_COMM_WORLD, "small evec[%d][%d] = %18.15lf\n", i, j, AA[i*dim+j]);
       }
     }
@@ -187,7 +190,7 @@ GetLAPACKMatrix(PASE_AUX_MATRIX A, PASE_AUX_VECTOR *V, PASE_REAL *AA, PASE_REAL 
     DenseVecsMatrixVecs(NULL, AA_copy, AA, AA_sub, 0, start, last_dim, small_tmp);
   }
   memset(AA, 0.0, dim*dim*sizeof(PASE_REAL));
-  for(i = 0; i<start; i++) {
+  for(i = 0; i<start; ++i) {
     memcpy(AA+i*dim, AA_sub+i*start, start*sizeof(PASE_REAL));
   }
   end_t = clock();
@@ -204,15 +207,16 @@ void
 GetWinV(PASE_INT start, PASE_INT nunlock, PASE_INT *unlock, PASE_AUX_VECTOR *V, PASE_REAL *approx_eval, PASE_AUX_MATRIX A, PASE_AUX_MATRIX B, PASE_REAL cg_tol, PASE_INT nsmooth, PASE_AUX_VECTOR rhs)
 {
   PASE_INT       i, j;
-  for(i = 0; i < nunlock; i++) {
+  for(i = 0; i < nunlock; ++i) {
     j = unlock[i];
     //初值V[start+i]=V[i]/approx_eval[i]
     //Vtmp[0]=B*V[i]作为右端项
     //计算V[start+i]=A^(-1)BV[i]
     //调用CG迭代来计算线性方程组
+    PASE_Aux_matrix_multiply_aux_vector(B, V[j], rhs); 
+    //PASE_Aux_vector_copy(rhs, V[start+i]);
     PASE_Aux_vector_copy(V[j], V[start+i]); 
     PASE_Aux_vector_scale(1.0/approx_eval[j], V[start+i]); 
-    PASE_Aux_matrix_multiply_aux_vector(B, V[j], rhs); 
     PASE_Linear_solve_by_cg_aux(A, rhs, V[start+i], cg_tol, nsmooth);
   }
 }
@@ -224,7 +228,7 @@ CheckConvergence(PASE_AUX_MATRIX A, PASE_AUX_MATRIX B, PASE_INT *unlock, PASE_IN
   PASE_INT       i, nunlocktmp = 0;
   PASE_REAL      res_norm, evec_norm, res, max_res = 0.0, min_res = 0.0;
   clock_t start_t, end_t;
-  for(i = start; i < nev; i++) {
+  for(i = start; i < nev; ++i) {
     PASE_Aux_matrix_multiply_aux_vector(A, X_tmp[i], V_tmp[0]); 
     PASE_Aux_matrix_multiply_aux_vector(B, X_tmp[i], V_tmp[1]); 
     PASE_Aux_vector_axpy(-approx_eval[i], V_tmp[1], V_tmp[0]); 
@@ -261,7 +265,7 @@ GetPinV(PASE_REAL *AA, PASE_AUX_VECTOR *V, PASE_INT dim_x, PASE_INT last_dim_x, 
 {
   PASE_INT i = 0;
   //小规模正交化，构造d,构造AA_sub用于下次计算
-  for(i = 0; i < nunlock; i++) {
+  for(i = 0; i < nunlock; ++i) {
     memset(AA+(dim_x+i)*dim_xpw, 0, dim_xpw*sizeof(PASE_REAL));
     memcpy(AA+(dim_x+i)*dim_xpw+last_dim_x, AA+unlock[i]*dim_xpw+last_dim_x, (dim_xpw-last_dim_x)*sizeof(PASE_REAL));
   }
@@ -283,16 +287,16 @@ void
 DenseVecsMatrixVecs(PASE_REAL *LVecs, PASE_REAL *DenseMat, PASE_REAL *RVecs, PASE_REAL *ProductMat, PASE_INT nl, PASE_INT nr, PASE_INT dim, PASE_REAL *tmp)
 {
   PASE_INT  i, j;
-  for(i = 0; i < nr; i++) {
+  for(i = 0; i < nr; ++i) {
     //t=A*u[i]
     DenseMatVec(DenseMat, RVecs+i*dim, tmp, dim);
     if(nl == 0) {
-      for(j = 0; j < i+1; j++) {
+      for(j = 0; j < i+1; ++j) {
 	ProductMat[i*nr+j] = VecDotVecSmall(RVecs+j*dim, tmp, dim);
 	ProductMat[j*nr+i] = ProductMat[i*nr+j];
       }
     } else {
-      for(j = 0; j < nl; j++) {
+      for(j = 0; j < nl; ++j) {
 	ProductMat[i*nl+j] = VecDotVecSmall(LVecs+j*dim, tmp, dim);
       }
     }
@@ -350,7 +354,7 @@ Updatedim_x(PASE_INT start, PASE_INT end, PASE_INT *dim_x, PASE_REAL *approx_eva
   tmp = start;
   //dsygv求出的特征值已经排序是ascending,从小到大
   //检查特征值的数值确定下次要进行计算的特征值个数
-  for(i=start; i<end; i++) {
+  for(i=start; i<end; ++i) {
     if((fabs(fabs(approx_eval[tmp]/approx_eval[tmp-1])-1))<0.2) {
       tmp += 1;
     } else {
@@ -367,9 +371,9 @@ VecsMatrixVecsForRayleighRitz(PASE_AUX_MATRIX A, PASE_AUX_VECTOR *V, PASE_REAL *
   clock_t start_t, end_t;
   PASE_INT i = 0;
   PASE_INT j = 0;
-  for(i=start; i<dim; i++) {
+  for(i=start; i<dim; ++i) {
     PASE_Aux_matrix_multiply_aux_vector(A, V[i], tmp); 
-    for(j = 0; j < i+1; j++) {
+    for(j = 0; j < i+1; ++j) {
       start_t = clock();
       PASE_Aux_vector_inner_product(V[j], tmp, AA+i*dim+j); 
       end_t = clock();
@@ -389,16 +393,16 @@ VecsMatrixVecsForRayleighRitz(PASE_AUX_MATRIX A, PASE_AUX_VECTOR *V, PASE_REAL *
   PASE_SCALAR *block_tmp1 = (PASE_SCALAR*)PASE_Malloc(V[0]->block_size*sizeof(PASE_SCALAR));
   PASE_SCALAR *block_tmp2 = (PASE_SCALAR*)PASE_Malloc(V[0]->block_size*sizeof(PASE_SCALAR));
   PASE_SCALAR *inner_product_tmp = (PASE_SCALAR*)calloc(num_half_inner, sizeof(PASE_SCALAR));
-  for(i = start; i < dim; i++) {
+  for(i = start; i < dim; ++i) {
     start_inner = ((start+i+1) * (i-start)) / 2;
     PASE_Matrix_multiply_vector(A->mat, V[i]->vec, tmp->vec);
-    for(j = 0; j < V[i]->block_size; j++) {
+    for(j = 0; j < V[i]->block_size; ++j) {
       PASE_Vector_axpy(V[i]->block[j], A->vec[j], tmp->vec);
       block_tmp1[j] = hypre_SeqVectorInnerProd(hypre_ParVectorLocalVector((HYPRE_ParVector)(A->vec[j]->vector_data)), hypre_ParVectorLocalVector((HYPRE_ParVector)(V[i]->vec->vector_data)));
     }
-    for(j = 0; j <= i; j++) {
+    for(j = 0; j <= i; ++j) {
       inner_product_tmp[start_inner+j]  = hypre_SeqVectorInnerProd(hypre_ParVectorLocalVector((HYPRE_ParVector)(V[j]->vec->vector_data)), hypre_ParVectorLocalVector((HYPRE_ParVector)(tmp->vec->vector_data)));
-      for(k = 0; k < V[i]->block_size; k++) {
+      for(k = 0; k < V[i]->block_size; ++k) {
 	inner_product_tmp[start_inner+j] += V[j]->block[k] * block_tmp1[k];
       }
     }
@@ -406,23 +410,23 @@ VecsMatrixVecsForRayleighRitz(PASE_AUX_MATRIX A, PASE_AUX_VECTOR *V, PASE_REAL *
   }
   MPI_Iallreduce(MPI_IN_PLACE, inner_product_tmp, num_half_inner, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD, &request);
 
-  for(i = start; i < dim; i++) {
-    for(j = 0; j < V[i]->block_size; j++) {
+  for(i = start; i < dim; ++i) {
+    for(j = 0; j < V[i]->block_size; ++j) {
       block_tmp2[j] = 0.0;
-      for(k = 0; k < V[i]->block_size; k++) {
+      for(k = 0; k < V[i]->block_size; ++k) {
 	block_tmp2[j] += A->block[j][k] * V[i]->block[k];
       }
     }
-    for(j = 0; j <= i; j++) {
+    for(j = 0; j <= i; ++j) {
       AA[i*dim+j] = 0.0;
-      for(k = 0; k < V[i]->block_size; k++) {
+      for(k = 0; k < V[i]->block_size; ++k) {
 	AA[i*dim+j] += V[j]->block[k] * block_tmp2[k];
       }
     }
   }
 
   MPI_Wait(&request, &status);
-  for(i = start; i < dim; i++) {
+  for(i = start; i < dim; ++i) {
     start_inner = (start+i+1) * (i-start) / 2;
     //MPI_Wait(&(requests[i-start]), &status);
     for(j = 0; j <= i; ++j) {
@@ -444,7 +448,7 @@ SumSeveralVecs(PASE_AUX_VECTOR *V, PASE_REAL *x, PASE_AUX_VECTOR U, PASE_INT n_v
 {
   PASE_INT i = 0;
   PASE_Aux_vector_set_constant_value(U, 0.0);
-  for(i = 0; i < n_vec; i++) {
+  for(i = 0; i < n_vec; ++i) {
     PASE_Aux_vector_axpy(x[i], V[i], U);
   }
 }
@@ -454,7 +458,7 @@ void
 GetRitzVectors(PASE_REAL *SmallEvec, PASE_AUX_VECTOR *V, PASE_AUX_VECTOR *RitzVec, PASE_INT dim, PASE_INT n_vec) 
 {
   PASE_INT i = 0;
-  for(i = 0; i < n_vec; i++) {
+  for(i = 0; i < n_vec; ++i) {
     SumSeveralVecs(V, SmallEvec+i*dim, RitzVec[i], dim);
   }
 }
@@ -483,7 +487,7 @@ GCG_Orthogonal(PASE_AUX_VECTOR *V, PASE_AUX_MATRIX A, PASE_AUX_MATRIX M, PASE_IN
   start_t = clock(); 
   //地址是int型，所以这里只要分配int空间就可以，不需要PASE_REAL**
   if(B == NULL) {
-    for(i = start; i < (*end); i++) {
+    for(i = start; i < (*end); ++i) {
       if(i == 0) {
         PASE_Aux_vector_norm(V[0], &dd); 
 	if(dd > 10*EPS) {
@@ -495,12 +499,12 @@ GCG_Orthogonal(PASE_AUX_VECTOR *V, PASE_AUX_MATRIX A, PASE_AUX_MATRIX M, PASE_IN
         PASE_Aux_vector_norm(V[i], &vout); 
 	do {
 	  vin = vout;
-	  for(j = 0; j < start; j++) {
+	  for(j = 0; j < start; ++j) {
 	    //计算 V[i]= V[i]-(V[i]^T*V[j])*V[j]
 	    PASE_Aux_vector_inner_product(V[i], V[j], &tmp); 
 	    PASE_Aux_vector_axpy(-tmp, V[j], V[i]); 
 	  }
-	  for(j = 0; j < n_nonzero; j++) {
+	  for(j = 0; j < n_nonzero; ++j) {
 	    //计算 V[i]= V[i]-(V[i]^T*V[Ind[j]])*V[Ind[j]]
 	    PASE_Aux_vector_inner_product(V[i], V[Ind[j]], &tmp); 
 	    PASE_Aux_vector_axpy(-tmp, V[Ind[j]], V[i]); 
@@ -519,10 +523,10 @@ GCG_Orthogonal(PASE_AUX_VECTOR *V, PASE_AUX_MATRIX A, PASE_AUX_MATRIX M, PASE_IN
   } else {
 
 #if 0
-    for(i = 0; i < start; i++) {
+    for(i = 0; i < start; ++i) {
       PASE_Aux_matrix_multiply_aux_vector(B, V[i], V_tmp[i]); 
     }
-    for(i = start; i < (*end); i++) {
+    for(i = start; i < (*end); ++i) {
       if(i == 0) {
 	//计算 V[0]^T*A*V[0]
 	PASE_Aux_vector_inner_product_general(V[0], V[0], B, &dd);
@@ -537,12 +541,12 @@ GCG_Orthogonal(PASE_AUX_VECTOR *V, PASE_AUX_MATRIX A, PASE_AUX_MATRIX M, PASE_IN
 	vout = sqrt(vout);
 	do {
 	  vin = vout;
-	  for(j = 0; j < start; j++) {
+	  for(j = 0; j < start; ++j) {
 	    //计算 V[i]= V[i]-(V[i]^T*V[j])_B*V[j]
 	    PASE_Aux_vector_inner_product(V[i], V_tmp[j], &tmp); 
 	    PASE_Aux_vector_axpy(-tmp, V[j], V[i]); 
 	  }
-	  for(j = 0; j < n_nonzero; j++) {
+	  for(j = 0; j < n_nonzero; ++j) {
 	    //计算 V[i]= V[i]-(V[i]^T*V[Ind[j]])_B*V[Ind[j]]
 	    PASE_Aux_vector_inner_product(V[i], V_tmp[start+j], &tmp); 
 	    PASE_Aux_vector_axpy(-tmp, V[Ind[j]], V[i]); 
@@ -556,9 +560,8 @@ GCG_Orthogonal(PASE_AUX_VECTOR *V, PASE_AUX_MATRIX A, PASE_AUX_MATRIX M, PASE_IN
 	  PASE_Aux_matrix_multiply_aux_vector(B, V[i], V_tmp[start+n_nonzero]); 
 	  Ind[n_nonzero++] = i;
 	} else {
-	  //PASE_Printf(MPI_COMM_WORLD, "In GCG_Orthogonal, there is a zero vector! i = %d, start = %d, end: %d\n", i, start, *end);
+	  PASE_Printf(MPI_COMM_WORLD, "In GCG_Orthogonal, there is a zero vector! i = %d, start = %d, end: %d\n", i, start, *end);
 	  Nonzero_Vec[n_zero++] = V[i];
-	  //PASE_Printf(MPI_COMM_WORLD, "Here is a zero vector!!!!!!!!\n");
 	}
       }
     }
@@ -574,7 +577,7 @@ GCG_Orthogonal(PASE_AUX_VECTOR *V, PASE_AUX_MATRIX A, PASE_AUX_MATRIX M, PASE_IN
     //PASE_SCALAR norm = 0.0;
     PASE_INT iter = 0;
 
-    for(i = start; i < (*end); i++) {
+    for(i = start; i < (*end); ++i) {
       if(i == 0) {
 	//计算 V[0]^T*A*V[0]
 	PASE_Aux_vector_inner_product_general(V[0], V[0], B, &dd);
@@ -588,61 +591,61 @@ GCG_Orthogonal(PASE_AUX_VECTOR *V, PASE_AUX_MATRIX A, PASE_AUX_MATRIX M, PASE_IN
 	do {
 	  iter ++;
 	  PASE_Matrix_multiply_vector(B->mat, V[i]->vec, V_tmp[0]->vec);
-	  for(j = 0; j < V[i]->block_size; j++) {
+	  for(j = 0; j < V[i]->block_size; ++j) {
 	    PASE_Vector_axpy(V[i]->block[j], B->vec[j], V_tmp[0]->vec);
 	    block_tmp1[j] = hypre_SeqVectorInnerProd(hypre_ParVectorLocalVector((HYPRE_ParVector)(B->vec[j]->vector_data)), hypre_ParVectorLocalVector((HYPRE_ParVector)(V[i]->vec->vector_data)));
 	  }
 
-	  for(j = 0; j < start; j++) {
+	  for(j = 0; j < start; ++j) {
 	    inner_product[j]  = hypre_SeqVectorInnerProd(hypre_ParVectorLocalVector((HYPRE_ParVector)(V[j]->vec->vector_data)), hypre_ParVectorLocalVector((HYPRE_ParVector)(V_tmp[0]->vec->vector_data)));
-	    for(k = 0; k < V[i]->block_size; k++) {
+	    for(k = 0; k < V[i]->block_size; ++k) {
 	      inner_product[j] += V[j]->block[k] * block_tmp1[k];
 	    }
             //MPI_Iallreduce(MPI_IN_PLACE, &(inner_product[j]), 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD, &(requests[j]));
 	  }
-	  for(j = 0; j < n_nonzero; j++) {
+	  for(j = 0; j < n_nonzero; ++j) {
 	    inner_product[Ind[j]]  = hypre_SeqVectorInnerProd(hypre_ParVectorLocalVector((HYPRE_ParVector)(V[Ind[j]]->vec->vector_data)), hypre_ParVectorLocalVector((HYPRE_ParVector)(V_tmp[0]->vec->vector_data)));
-	    for(k = 0; k < V[i]->block_size; k++) {
+	    for(k = 0; k < V[i]->block_size; ++k) {
 	      inner_product[Ind[j]] += V[Ind[j]]->block[k] * block_tmp1[k];
 	    }
             //MPI_Iallreduce(MPI_IN_PLACE, &(inner_product[Ind[j]]), 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD, &(requests[Ind[j]]));
 	  }
 	  inner_product[i] = hypre_SeqVectorInnerProd(hypre_ParVectorLocalVector((HYPRE_ParVector)(V[i]->vec->vector_data)), hypre_ParVectorLocalVector((HYPRE_ParVector)(V_tmp[0]->vec->vector_data)));
-	  for(k = 0; k < V[i]->block_size; k++) {
+	  for(k = 0; k < V[i]->block_size; ++k) {
 	    inner_product[i] += V[i]->block[k] * block_tmp1[k];
 	  }
           //MPI_Iallreduce(MPI_IN_PLACE, &(inner_product[i]), 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD, &(requests[i]));
           MPI_Iallreduce(MPI_IN_PLACE, inner_product, i+1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD, &request);
 
-	  for(j = 0; j < V[i]->block_size; j++) {
+	  for(j = 0; j < V[i]->block_size; ++j) {
 	    block_tmp2[j] = 0.0;
-	    for(k = 0; k < V[i]->block_size; k++) {
+	    for(k = 0; k < V[i]->block_size; ++k) {
 	      block_tmp2[j] += B->block[j][k] * V[i]->block[k];
 	    }
 	  }
-	  for(j = 0; j < start; j++) {
+	  for(j = 0; j < start; ++j) {
 	    inner_product_tmp[j] = 0.0;
-	    for(k = 0; k < V[i]->block_size; k++) {
+	    for(k = 0; k < V[i]->block_size; ++k) {
 	      inner_product_tmp[j] += V[j]->block[k] * block_tmp2[k];
 	    }
 	  }
-	  for(j = 0; j < n_nonzero; j++) {
+	  for(j = 0; j < n_nonzero; ++j) {
 	    inner_product_tmp[Ind[j]] = 0.0;
-	    for(k = 0; k < V[i]->block_size; k++) {
+	    for(k = 0; k < V[i]->block_size; ++k) {
 	      inner_product_tmp[Ind[j]] += V[Ind[j]]->block[k] * block_tmp2[k];
 	    }
 	  }
 	  inner_product_tmp[i] = 0.0;
-	  for(k = 0; k < V[i]->block_size; k++) {
+	  for(k = 0; k < V[i]->block_size; ++k) {
 	    inner_product_tmp[i] += V[i]->block[k] * block_tmp2[k];
 	  }
 
           MPI_Wait(&request, &status);
-	  for(j = 0; j < start; j++) {
+	  for(j = 0; j < start; ++j) {
             //MPI_Wait(&(requests[j]), &status);
 	    inner_product[j] += inner_product_tmp[j];
 	  }
-	  for(j = 0; j < n_nonzero; j++) {
+	  for(j = 0; j < n_nonzero; ++j) {
             //MPI_Wait(&(requests[Ind[j]]), &status);
 	    inner_product[Ind[j]] += inner_product_tmp[Ind[j]];
 	  }
@@ -650,40 +653,46 @@ GCG_Orthogonal(PASE_AUX_VECTOR *V, PASE_AUX_MATRIX A, PASE_AUX_MATRIX M, PASE_IN
 	  inner_product[i] += inner_product_tmp[i];
 
 	  vout = inner_product[i];
-	  for(j = 0; j < start; j++) {
+	  for(j = 0; j < start; ++j) {
 	    vout -= inner_product[j]*inner_product[j];
 	    //PASE_Printf(MPI_COMM_WORLD, "inner_product[%d] = %e, ", j, inner_product[j]);
 	  }
-	  for(j = 0; j < n_nonzero; j++) {
+	  for(j = 0; j < n_nonzero; ++j) {
             vout -= inner_product[Ind[j]]*inner_product[Ind[j]];
 	    //PASE_Printf(MPI_COMM_WORLD, "inner_product[%d] = %e, ", Ind[j], inner_product[Ind[j]]);
 	  }
 	  //PASE_Printf(MPI_COMM_WORLD, "\n", Ind[j], inner_product[Ind[j]]);
 	  vin = sqrt(inner_product[i]);
-	  if(vout < 100*EPS*EPS) {
+	  if(vout < EPS*EPS) {
 	    Nonzero_Vec[n_zero++] = V[i];
-	    //PASE_Printf(MPI_COMM_WORLD, "Here is a zero vector!!!! vout = %e\n", vout);
+	    //PASE_Printf(MPI_COMM_WORLD, "Here is a zero vector!!!! i = %d, vin = %e, vout = %e\n", i, vin, vout);
 	    break;
 	  } else {
-	    for(j = 0; j < start; j++) {
+	    for(j = 0; j < start; ++j) {
 	      PASE_Aux_vector_axpy(-inner_product[j], V[j], V[i]);
 	    }
-	    for(j = 0; j < n_nonzero; j++) {
+	    for(j = 0; j < n_nonzero; ++j) {
 	      PASE_Aux_vector_axpy(-inner_product[Ind[j]], V[Ind[j]], V[i]);
 	    }
 	    vout = sqrt(vout);
 	    PASE_Aux_vector_scale(1.0/vout, V[i]); 
 	    //PASE_Printf(MPI_COMM_WORLD, "i = %d, vin = %e, vout = %e, inner_product[0] = %e\n", i, vin, vout, inner_product[0]);
-	    //for(j = 0; j <= i; j++) {
+	    //for(j = 0; j <= i; ++j) {
 	    //  PASE_Aux_vector_inner_product_general(V[i], V[j], B, &norm);
 	    //  PASE_Printf(MPI_COMM_WORLD, "A[%d,%d]=%e, ", i, j, norm);
 	    //}
 	    //PASE_Printf(MPI_COMM_WORLD, "\n");
 	  }
-	} while(vout/vin < REORTH_TOL || iter < 1);
-	if(vout > 10*EPS) {
-	  Ind[n_nonzero++] = i;
-	  //PASE_Printf(MPI_COMM_WORLD, "Ind[%d] = %d\n", n_nonzero-1, Ind[n_nonzero-1]);
+	} while(vout/vin < REORTH_TOL && iter < 50);
+
+	if(vout > EPS*EPS) { //说明并非因为 vout < EPS*EPS 跳出
+	  if(vout/vin < REORTH_TOL) { //vout/vin < REORTH_TOL 说明达到最大迭代步数仍旧未满足要求, 为程序稳定性, 将其判定了零向量去除
+	    Nonzero_Vec[n_zero++] = V[i];
+	    PASE_Printf(MPI_COMM_WORLD, "Here is a zero vector!!!! i = %d, vin = %e, vout = %e\n", i, vin, vout);
+	  } else { //当前向量不是零向量, 正交化成功
+	    Ind[n_nonzero++] = i;
+	    //PASE_Printf(MPI_COMM_WORLD, "Ind[%d] = %d\n", n_nonzero-1, Ind[n_nonzero-1]);
+	  }
 	}
       }
     }
@@ -697,7 +706,7 @@ GCG_Orthogonal(PASE_AUX_VECTOR *V, PASE_AUX_MATRIX A, PASE_AUX_MATRIX M, PASE_IN
   //接下来要把V的所有非零列向量存储在地址表格中靠前位置
   *end = start + n_nonzero;
   if(n_zero > 0) {
-    for(i = 0; i < n_nonzero; i++) {
+    for(i = 0; i < n_nonzero; ++i) {
       V[start+i] = V[Ind[i]];
     }
     memcpy(V+(*end), Nonzero_Vec, n_zero*sizeof(PASE_AUX_VECTOR));
@@ -719,15 +728,15 @@ OrthogonalSmall(PASE_REAL *V, PASE_REAL **B, PASE_INT dim_xpw, PASE_INT dim_x, P
   PASE_REAL vin, vout, tmp;
 
   if(B == NULL) {
-    for(i = dim_x; i < (*dim_xp); i++) {
+    for(i = dim_x; i < (*dim_xp); ++i) {
       vout = NormVecSmall(V+i*dim_xpw, dim_xpw);
       do {
 	vin = vout;
-	for(j = 0; j < dim_x; j++) {
+	for(j = 0; j < dim_x; ++j) {
 	  tmp = VecDotVecSmall(V+j*dim_xpw, V+i*dim_xpw, dim_xpw);
 	  SmallAXPBY(-tmp, V+j*dim_xpw, 1.0, V+i*dim_xpw, dim_xpw);
 	}
-	for(j = 0; j < n_nonzero; j++) {
+	for(j = 0; j < n_nonzero; ++j) {
 	  tmp = VecDotVecSmall(V+Ind[j]*dim_xpw, V+i*dim_xpw, dim_xpw);
 	  SmallAXPBY(-tmp, V+Ind[j]*dim_xpw, 1.0, V+i*dim_xpw, dim_xpw);
 	}
@@ -745,7 +754,7 @@ OrthogonalSmall(PASE_REAL *V, PASE_REAL **B, PASE_INT dim_xpw, PASE_INT dim_x, P
 
   if(n_nonzero < (*dim_xp-dim_x)) {
     *dim_xp = dim_x + n_nonzero;
-    for(i = 0; i < n_nonzero; i++) {
+    for(i = 0; i < n_nonzero; ++i) {
       memcpy(V+(dim_x+i)*dim_xpw, V+Ind[i]*dim_xpw, dim_xpw*sizeof(PASE_REAL));
     }
   }
@@ -757,7 +766,7 @@ DenseMatVec(PASE_REAL *DenseMat, PASE_REAL *x, PASE_REAL *b, PASE_INT dim)
 {
   PASE_INT i = 0;
   memset(b, 0.0, dim*sizeof(PASE_REAL));
-  for(i = 0; i < dim; i++) {
+  for(i = 0; i < dim; ++i) {
     SmallAXPBY(x[i], DenseMat+i*dim, 1.0, b, dim);
   }
 }
@@ -767,7 +776,7 @@ void
 ScalVecSmall(PASE_REAL alpha, PASE_REAL *a, PASE_INT n)
 {
   PASE_INT i = 0;
-  for(i = 0; i < n; i++) {
+  for(i = 0; i < n; ++i) {
     a[i] *= alpha;
   }
 }
@@ -778,7 +787,7 @@ NormVecSmall(PASE_REAL *a, PASE_INT n)
 {
   PASE_INT  i     = 0;
   PASE_REAL value = 0.0;
-  for(i = 0; i < n; i++) {
+  for(i = 0; i < n; ++i) {
     value += a[i] * a[i];
   }
   return sqrt(value);
@@ -790,7 +799,7 @@ VecDotVecSmall(PASE_REAL *a, PASE_REAL *b, PASE_INT n)
 {
   PASE_INT  i     = 0;
   PASE_REAL value = 0.0;
-  for(i = 0; i < n; i++) {
+  for(i = 0; i < n; ++i) {
     value += a[i] * b[i];
   }
   return value;
@@ -801,7 +810,7 @@ void
 SmallAXPBY(PASE_REAL alpha, PASE_REAL *a, PASE_REAL beta, PASE_REAL *b, PASE_INT n)
 {
   PASE_INT i = 0;
-  for(i = 0; i < n; i++) {
+  for(i = 0; i < n; ++i) {
     b[i] = alpha*a[i] + beta*b[i];
   }
 }

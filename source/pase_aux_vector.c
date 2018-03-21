@@ -197,7 +197,7 @@ PASE_Aux_vector_set_block_constant(PASE_AUX_VECTOR aux_x, PASE_SCALAR val)
 #endif
 
   PASE_INT i = 0;
-  for(i = 0; i < aux_x->block_size; i++) {
+  for(i = 0; i < aux_x->block_size; ++i) {
     aux_x->block[i] = val;
   }
 } 
@@ -222,7 +222,7 @@ PASE_Aux_vector_set_block_random(PASE_AUX_VECTOR aux_x, PASE_INT seed)
 
   PASE_INT i = 0;
   srand(seed);
-  for(i=0; i<aux_x->block_size; i++) {
+  for(i=0; i<aux_x->block_size; ++i) {
     aux_x->block[i] = ((double)rand())/2147483647;
   }
 } 
@@ -249,7 +249,7 @@ PASE_Aux_vector_inner_product(PASE_AUX_VECTOR aux_x, PASE_AUX_VECTOR aux_y, PASE
   PASE_Vector_inner_product(aux_x->vec, aux_y->vec, prod);
 
   PASE_INT i = 0;
-  for(i = 0; i < aux_x->block_size; i++) {
+  for(i = 0; i < aux_x->block_size; ++i) {
     *prod += aux_x->block[i] * aux_y->block[i]; 
   }
 #else
@@ -260,7 +260,7 @@ PASE_Aux_vector_inner_product(PASE_AUX_VECTOR aux_x, PASE_AUX_VECTOR aux_y, PASE
 
   PASE_INT  i   = 0;
   PASE_REAL tmp = 0.0;
-  for(i = 0; i < aux_x->block_size; i++) {
+  for(i = 0; i < aux_x->block_size; ++i) {
     tmp += aux_x->block[i] * aux_y->block[i]; 
   }
   MPI_Wait(&request, &status);
@@ -341,7 +341,7 @@ PASE_Aux_vector_axpy(PASE_SCALAR a, PASE_AUX_VECTOR aux_x, PASE_AUX_VECTOR aux_y
   PASE_Vector_axpy(a, aux_x->vec, aux_y->vec);
 
   PASE_INT i = 0;
-  for(i = 0; i < aux_x->block_size; i++) {
+  for(i = 0; i < aux_x->block_size; ++i) {
     aux_y->block[i] += a * aux_x->block[i];
   }
 }
@@ -366,7 +366,7 @@ PASE_Aux_vector_scale(PASE_SCALAR a, PASE_AUX_VECTOR aux_x)
   PASE_Vector_scale(a, aux_x->vec);
 
   PASE_INT i = 0;
-  for(i = 0; i < aux_x->block_size; i++) {
+  for(i = 0; i < aux_x->block_size; ++i) {
     aux_x->block[i] *= a;
   }
 }
@@ -454,7 +454,7 @@ PASE_Multi_aux_vector_combination(PASE_AUX_VECTOR *aux_x, PASE_INT num_vec, PASE
 
   PASE_INT j = 0;
   PASE_Aux_vector_set_constant_value(aux_y, 0.0);
-  for(j = 0; j < num_vec; j++) {
+  for(j = 0; j < num_vec; ++j) {
     PASE_Aux_vector_axpy(coef[j], aux_x[j], aux_y);
   }
 }
@@ -486,7 +486,7 @@ PASE_Multi_aux_vector_by_matrix(PASE_AUX_VECTOR *aux_x, PASE_INT num_vec, PASE_S
 #endif
 
   PASE_INT i = 0;
-  for(i = 0; i < num_mat; i++) {
+  for(i = 0; i < num_mat; ++i) {
     PASE_Multi_aux_vector_combination(aux_x, num_vec, mat[i], aux_y[i]);
   }
 }

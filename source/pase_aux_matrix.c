@@ -117,13 +117,13 @@ PASE_Aux_matrix_set_vec_some(PASE_AUX_MATRIX aux_A, PASE_INT i, PASE_INT j, PASE
   PASE_INT k;
   if(NULL == aux_A->vec) {
     aux_A->vec = (PASE_VECTOR*)PASE_Malloc(aux_A->block_size*sizeof(PASE_VECTOR));
-    for(k = 0; k < aux_A->block_size; k++) {
+    for(k = 0; k < aux_A->block_size; ++k) {
       aux_A->vec[k] = PASE_Vector_create_by_matrix_and_vector_data_operator(aux_A->mat, u_h[0]->ops);
     }
   }
 
   PASE_VECTOR workspace_h = PASE_Vector_create_by_vector(u_h[0]);
-  for(k = i; k <= j; k++) {
+  for(k = i; k <= j; ++k) {
     PASE_Matrix_multiply_vector(A_h, u_h[k], workspace_h);
     PASE_Matrix_multiply_vector(R_hH, workspace_h, aux_A->vec[k]);
   }
@@ -145,31 +145,20 @@ PASE_Aux_matrix_set_block_some(PASE_AUX_MATRIX aux_A, PASE_INT i, PASE_INT j, PA
   PASE_INT block_size = aux_A->block_size;
   if(NULL == aux_A->block) {
     aux_A->block = (PASE_SCALAR**)PASE_Malloc(block_size*sizeof(PASE_SCALAR*));
-    for(k = 0; k < block_size; k++) {
+    for(k = 0; k < block_size; ++k) {
       aux_A->block[k] = (PASE_SCALAR*)PASE_Malloc(block_size*sizeof(PASE_SCALAR));
     }
   }
   PASE_VECTOR workspace_h = PASE_Vector_create_by_vector(u_h[0]);
-#if 0
-  for(k = i; k <= j; k++) {
-    PASE_Matrix_multiply_vector(A_h, u_h[k], workspace_h);
-    for(l = 0; l < aux_A->block_size; l++) {
-      if(l >= i && l <= j) {
-        PASE_Vector_inner_product(workspace_h, u_h[l], &(aux_A->block[k][l]));
-      } else {
-        PASE_Vector_inner_product(workspace_h, u_h[l], &(aux_A->block[k][l]));
-	aux_A->block[l][k] = aux_A->block[k][l];
-      }
-    }
-  }
-#else
+
+#if PASE_USE_HYPRE
   MPI_Status status;
   MPI_Request *requests = (MPI_Request*)PASE_Malloc((j-i+1)*sizeof(MPI_Request));
   //MPI_Request requests;
   PASE_SCALAR *data = (PASE_SCALAR*)PASE_Malloc(block_size*(j-i+1)*sizeof(PASE_SCALAR));
-  for(k = i; k <= j; k++) {
+  for(k = i; k <= j; ++k) {
     PASE_Matrix_multiply_vector(A_h, u_h[k], workspace_h);
-    for(l = 0; l < block_size; l++) {
+    for(l = 0; l < block_size; ++l) {
       if(l < i) {
         data[(k-i)*block_size+l] = hypre_SeqVectorInnerProd(hypre_ParVectorLocalVector((HYPRE_ParVector)(workspace_h->vector_data)), hypre_ParVectorLocalVector((HYPRE_ParVector)(u_h[l]->vector_data)));
       } else if(l >= k) {
@@ -178,9 +167,9 @@ PASE_Aux_matrix_set_block_some(PASE_AUX_MATRIX aux_A, PASE_INT i, PASE_INT j, PA
     }
     MPI_Iallreduce(MPI_IN_PLACE, &(data[(k-i)*block_size]), block_size-k+i, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD, &(requests[k-i]));
   }
-  for(k = i; k <= j; k++) {
+  for(k = i; k <= j; ++k) {
     MPI_Wait(&(requests[k-i]), &status);
-    for(l = 0; l < block_size; l++) {
+    for(l = 0; l < block_size; ++l) {
       if(l < i) {
         aux_A->block[k][l] = data[(k-i)*block_size+l];
         aux_A->block[l][k] = data[(k-i)*block_size+l];
@@ -197,6 +186,18 @@ PASE_Aux_matrix_set_block_some(PASE_AUX_MATRIX aux_A, PASE_INT i, PASE_INT j, PA
   }
   PASE_Free(requests);
   PASE_Free(data);
+#else
+  for(k = i; k <= j; ++k) {
+    PASE_Matrix_multiply_vector(A_h, u_h[k], workspace_h);
+    for(l = 0; l < aux_A->block_size; ++l) {
+      if(l >= i && l <= j) {
+        PASE_Vector_inner_product(workspace_h, u_h[l], &(aux_A->block[k][l]));
+      } else {
+        PASE_Vector_inner_product(workspace_h, u_h[l], &(aux_A->block[k][l]));
+	aux_A->block[l][k] = aux_A->block[k][l];
+      }
+    }
+  }
 #endif
   PASE_Vector_destroy(workspace_h);
   return 0;
@@ -345,12 +346,12 @@ PASE_Aux_matrix_set_aux_space_some_by_aux_matrix(PASE_AUX_MATRIX aux_A, PASE_INT
   PASE_INT k;
   if(NULL == aux_A->vec) {
     aux_A->vec = (PASE_VECTOR*)PASE_Malloc(aux_A->block_size*sizeof(PASE_VECTOR));
-    for(k = 0; k < aux_A->block_size; k++) {
+    for(k = 0; k < aux_A->block_size; ++k) {
       aux_A->vec[k] = PASE_Vector_create_by_matrix_and_vector_data_operator(aux_A->mat, aux_A_h->vec[0]->ops);
     }
   }
   PASE_AUX_VECTOR aux_workspace_h = PASE_Aux_vector_create_by_aux_vector(aux_u_h[0]);
-  for(k = i; k <= j; k++) {
+  for(k = i; k <= j; ++k) {
     PASE_Aux_matrix_multiply_aux_vector(aux_A_h, aux_u_h[k], aux_workspace_h);
     PASE_Matrix_multiply_vector(R_hH, aux_workspace_h->vec, aux_A->vec[k]);
   }
@@ -404,14 +405,14 @@ PASE_Aux_matrix_set_block_some_by_aux_matrix(PASE_AUX_MATRIX aux_A, PASE_INT i, 
   PASE_INT l = 0;
   if(NULL == aux_A->block) {
     aux_A->block = (PASE_SCALAR**)PASE_Malloc(aux_A->block_size*sizeof(PASE_SCALAR*));
-    for(k = 0; k < aux_A->block_size; k++) {
+    for(k = 0; k < aux_A->block_size; ++k) {
       aux_A->block[k] = (PASE_SCALAR*)PASE_Malloc(aux_A->block_size*sizeof(PASE_SCALAR));
     }
   }
   PASE_AUX_VECTOR aux_workspace_h = PASE_Aux_vector_create_by_aux_vector(aux_u_h[0]);
-  for(k = i; k <= j; k++) {
+  for(k = i; k <= j; ++k) {
     PASE_Aux_matrix_multiply_aux_vector(aux_A_h, aux_u_h[k], aux_workspace_h);
-    for(l = 0; l < aux_A->block_size; l++) {
+    for(l = 0; l < aux_A->block_size; ++l) {
       if(l >= i && l <= j) {
         PASE_Aux_vector_inner_product(aux_workspace_h, aux_u_h[l], &(aux_A->block[k][l]));
       } else {
@@ -445,13 +446,13 @@ PASE_Aux_matrix_destroy(PASE_AUX_MATRIX aux_A)
     PASE_Matrix_destroy(aux_A->mat);
   }
   if(NULL != aux_A->vec) {
-    for(i = 0; i < aux_A->block_size; i++) {
+    for(i = 0; i < aux_A->block_size; ++i) {
       PASE_Vector_destroy(aux_A->vec[i]);
     }
     PASE_Free(aux_A->vec);
   }
   if(NULL != aux_A->block) {
-    for(i = 0; i < aux_A->block_size; i++) {
+    for(i = 0; i < aux_A->block_size; ++i) {
       PASE_Free(aux_A->block[i]);
     }
     PASE_Free(aux_A->block);
@@ -517,23 +518,15 @@ PASE_Aux_matrix_multiply_aux_vector(PASE_AUX_MATRIX aux_A, PASE_AUX_VECTOR aux_x
 #endif
 
   PASE_INT i, j;
-#if 0
-  PASE_Matrix_multiply_vector(aux_A->mat, aux_x->vec, aux_y->vec);
-  for(i = 0; i < aux_A->block_size; i++) {
-    PASE_Vector_axpy(aux_x->block[i], aux_A->vec[i], aux_y->vec);
-    PASE_Vector_inner_product(aux_A->vec[i], aux_x->vec, &(aux_y->block[i]));
-    for(j = 0; j<aux_A->block_size; j++) {
-      aux_y->block[i] += aux_A->block[i][j] * aux_x->block[j];
-    }
-  }
-#else
+
+#if PASE_USE_HYPRE 
   clock_t start, end, start_total, end_total;
   MPI_Request request;
   MPI_Status  status;
   start_total = clock();
   if(PASE_NO == aux_A->is_diag) {
     start = clock();
-    for(i = 0; i < aux_y->block_size; i++) {
+    for(i = 0; i < aux_y->block_size; ++i) {
       aux_y->block[i] = hypre_SeqVectorInnerProd(hypre_ParVectorLocalVector((HYPRE_ParVector)(aux_A->vec[i]->vector_data)), hypre_ParVectorLocalVector((HYPRE_ParVector)(aux_x->vec->vector_data)));
     }
     MPI_Iallreduce(MPI_IN_PLACE, aux_y->block, aux_A->block_size, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD, &request);
@@ -550,7 +543,7 @@ PASE_Aux_matrix_multiply_aux_vector(PASE_AUX_MATRIX aux_A, PASE_AUX_VECTOR aux_x
 
   if(PASE_NO == aux_A->is_diag) {
     start = clock();
-    for(i = 0; i < aux_A->block_size; i++) {
+    for(i = 0; i < aux_A->block_size; ++i) {
       PASE_Vector_axpy(aux_x->block[i], aux_A->vec[i], aux_y->vec);
     }
     end = clock();
@@ -563,8 +556,8 @@ PASE_Aux_matrix_multiply_aux_vector(PASE_AUX_MATRIX aux_A, PASE_AUX_VECTOR aux_x
   }
 
   start = clock();
-  for(i = 0; i < aux_A->block_size; i++) {
-    for(j = 0; j<aux_A->block_size; j++) {
+  for(i = 0; i < aux_A->block_size; ++i) {
+    for(j = 0; j<aux_A->block_size; ++j) {
       aux_y->block[i] += aux_A->block[i][j] * aux_x->block[j];
     }
   }
@@ -572,6 +565,16 @@ PASE_Aux_matrix_multiply_aux_vector(PASE_AUX_MATRIX aux_A, PASE_AUX_VECTOR aux_x
   end_total = clock();
   aux_A->Tblockb += ((double)(end-start))/1000000;
   aux_A->Ttotal += ((double)(end_total-start_total))/1000000;
+
+#else
+  PASE_Matrix_multiply_vector(aux_A->mat, aux_x->vec, aux_y->vec);
+  for(i = 0; i < aux_A->block_size; ++i) {
+    PASE_Vector_axpy(aux_x->block[i], aux_A->vec[i], aux_y->vec);
+    PASE_Vector_inner_product(aux_A->vec[i], aux_x->vec, &(aux_y->block[i]));
+    for(j = 0; j<aux_A->block_size; ++j) {
+      aux_y->block[i] += aux_A->block[i][j] * aux_x->block[j];
+    }
+  }
 #endif
 }
 
@@ -667,16 +670,7 @@ PASE_Aux_vector_create_by_aux_matrix(PASE_AUX_MATRIX aux_A)
 void
 PASE_Aux_vector_inner_product_general(PASE_AUX_VECTOR aux_x, PASE_AUX_VECTOR aux_y, PASE_AUX_MATRIX aux_A, PASE_REAL *prod)
 {
-#if 0
-  PASE_AUX_VECTOR aux_workspace = PASE_Aux_vector_create_by_aux_vector(aux_x);
-  PASE_Aux_matrix_multiply_aux_vector(aux_A, aux_y, aux_workspace);
-  clock_t start_t, end_t;
-  start_t = clock();
-  PASE_Aux_vector_inner_product(aux_x, aux_workspace, prod);
-  end_t   = clock();
-  aux_A->Tinnergeneral += ((double)(end_t-start_t))/1000000;
-  PASE_Aux_vector_destroy(aux_workspace);
-#else
+#if PASE_USE_HYPRE 
   PASE_INT i = 0;
   PASE_INT j = 0;
   clock_t start_t, end_t;
@@ -689,20 +683,20 @@ PASE_Aux_vector_inner_product_general(PASE_AUX_VECTOR aux_x, PASE_AUX_VECTOR aux
     PASE_Vector_set_constant_value(workspace, 0.0);
     PASE_SCALAR tmp = 0; 
 
-    for(i = 0; i < aux_A->block_size; i++) {
+    for(i = 0; i < aux_A->block_size; ++i) {
       PASE_Vector_axpy(aux_x->block[i], aux_A->vec[i], workspace);   
     }
     tmp += hypre_SeqVectorInnerProd(hypre_ParVectorLocalVector((HYPRE_ParVector)(workspace->vector_data)), hypre_ParVectorLocalVector((HYPRE_ParVector)(aux_y->vec->vector_data)));
     PASE_Matrix_multiply_vector(aux_A->mat, aux_y->vec, workspace);
-    for(i = 0; i < aux_A->block_size; i++) {
+    for(i = 0; i < aux_A->block_size; ++i) {
       PASE_Vector_axpy(aux_y->block[i], aux_A->vec[i], workspace);   
     }
     tmp += hypre_SeqVectorInnerProd(hypre_ParVectorLocalVector((HYPRE_ParVector)(workspace->vector_data)), hypre_ParVectorLocalVector((HYPRE_ParVector)(aux_x->vec->vector_data)));
     MPI_Iallreduce(MPI_IN_PLACE, &tmp, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD, &request);
 
     *prod = 0.0;
-    for(i = 0; i < aux_A->block_size; i++) {
-      for(j = 0; j < aux_A->block_size; j++) {
+    for(i = 0; i < aux_A->block_size; ++i) {
+      for(j = 0; j < aux_A->block_size; ++j) {
         *prod += aux_x->block[i] * aux_A->block[i][j] * aux_y->block[j];
       }
     }
@@ -711,8 +705,8 @@ PASE_Aux_vector_inner_product_general(PASE_AUX_VECTOR aux_x, PASE_AUX_VECTOR aux
     PASE_Vector_destroy(workspace);
   } else {
     PASE_Vector_inner_product_general(aux_x->vec, aux_y->vec, aux_A->mat, prod);
-    for(i = 0; i < aux_A->block_size; i++) {
-      for(j = 0; j < aux_A->block_size; j++) {
+    for(i = 0; i < aux_A->block_size; ++i) {
+      for(j = 0; j < aux_A->block_size; ++j) {
         *prod += aux_x->block[i] * aux_A->block[i][j] * aux_y->block[j];
       }
     }
@@ -720,6 +714,15 @@ PASE_Aux_vector_inner_product_general(PASE_AUX_VECTOR aux_x, PASE_AUX_VECTOR aux
 
   end_t = clock();
   aux_A->Tinnergeneral += ((double)(end_t-start_t))/1000000;
+#else
+  PASE_AUX_VECTOR aux_workspace = PASE_Aux_vector_create_by_aux_vector(aux_x);
+  PASE_Aux_matrix_multiply_aux_vector(aux_A, aux_y, aux_workspace);
+  clock_t start_t, end_t;
+  start_t = clock();
+  PASE_Aux_vector_inner_product(aux_x, aux_workspace, prod);
+  end_t   = clock();
+  aux_A->Tinnergeneral += ((double)(end_t-start_t))/1000000;
+  PASE_Aux_vector_destroy(aux_workspace);
 #endif
 
 }

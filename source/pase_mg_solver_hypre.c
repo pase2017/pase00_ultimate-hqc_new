@@ -15,7 +15,7 @@ PASE_INT
 PASE_Mg_get_initial_vector_by_coarse_grid_hypre(void *mg_solver)
 {
   PASE_MG_SOLVER solver        = (PASE_MG_SOLVER)mg_solver;
-  solver->method_init = "solve eigenvalue problem by lobpcg without preconditioner on coarsest grid";
+  solver->method_init          = "solve eigenvalue problem by lobpcg without preconditioner on coarsest grid";
   HYPRE_Solver   lobpcg_solver = NULL; 
   PASE_INT       maxIterations = 1000; 	        /* maximum number of iterations */
   PASE_INT       pcgMode       = 1;    	        /* use rhs as initial guess for inner pcg iterations */
@@ -99,8 +99,8 @@ PASE_Mg_get_initial_vector_by_coarse_grid_hypre(void *mg_solver)
     PASE_Vector_destroy(solver->u[i]);
     PASE_Vector_destroy(u_H[i]);
   }
-  PASE_Mg_smoothing_by_pcg_amg_hypre_for_guangji(mg_solver);
-  //PASE_Mg_smoothing_by_pcg_amg_hypre(mg_solver, "NeitherPreNorPost");
+  //PASE_Mg_smoothing_by_pcg_amg_hypre_for_guangji(mg_solver);
+  PASE_Mg_smoothing_by_pcg_amg_hypre(mg_solver, "NeitherPreNorPost");
 
   free((mv_TempMultiVector*)mv_MultiVectorGetData(eigenvectors_Hh));
   PASE_Free(eigenvectors_Hh);
@@ -118,7 +118,7 @@ PASE_INT
 PASE_Mg_get_initial_vector_by_coarse_grid_lobpcg_amg_hypre(void *mg_solver)
 {
   PASE_MG_SOLVER solver        = (PASE_MG_SOLVER)mg_solver;
-  solver->method_init = "solve eigenvalue problem by lobpcg with amg preconditioner on coarsest grid";
+  solver->method_init          = "solve eigenvalue problem by lobpcg with amg preconditioner on coarsest grid";
   HYPRE_Solver   lobpcg_solver = NULL; 
   HYPRE_Solver   precond       = NULL; 
   PASE_INT       maxIterations = 50; 	        /* maximum number of iterations */
@@ -233,7 +233,7 @@ PASE_INT
 PASE_Mg_get_initial_vector_by_full_multigrid_hypre(void *mg_solver)
 {
   PASE_MG_SOLVER solver        = (PASE_MG_SOLVER)mg_solver;
-  solver->method_init = "full multigrid";
+  solver->method_init          = "full multigrid";
   HYPRE_Solver   lobpcg_solver = NULL; 
   HYPRE_Solver   precond       = NULL; 
   PASE_INT       maxIterations = 30; 	        /* maximum number of iterations */
@@ -453,12 +453,12 @@ PASE_Mg_get_initial_vector_by_full_multigrid_hypre_for_guangji(void *mg_solver)
 {
 
   PASE_MG_SOLVER solver        = (PASE_MG_SOLVER)mg_solver;
-  solver->method_init = "full multigrid for guangji";
+  solver->method_init          = "full multigrid for guangji";
   HYPRE_Solver   lobpcg_solver = NULL; 
   HYPRE_Solver   precond       = NULL; 
   PASE_INT       maxIterations = 500; 	        /* maximum number of iterations */
   PASE_INT       pcgMode       = 1;    	        /* use rhs as initial guess for inner pcg iterations */
-  PASE_INT       verbosity     = 0;    	        /* print iterations info */
+  PASE_INT       verbosity     = 1;    	        /* print iterations info */
   PASE_REAL      atol 	       = solver->atol;	/* absolute tolerance (all eigenvalues) */
   PASE_REAL      rtol          = 1e-50;
   PASE_INT       lobpcgSeed    = 77;
@@ -584,7 +584,7 @@ PASE_Mg_get_initial_vector_by_full_multigrid_hypre_for_guangji(void *mg_solver)
     HYPRE_PCGSetMaxIter(ksp_solver, max_iter_smooth); /* max iterations */
     HYPRE_PCGSetTol(ksp_solver, 1.0e-50); 
     HYPRE_PCGSetTwoNorm(ksp_solver, 1);                    /* use the two norm as the stopping criteria */
-    HYPRE_PCGSetPrintLevel(ksp_solver, 0); 
+    HYPRE_PCGSetPrintLevel(ksp_solver, 2); 
     HYPRE_PCGSetLogging(ksp_solver, 1);                    /* needed to get run info later */
     HYPRE_PCGSetPrecond(ksp_solver, (HYPRE_PtrToSolverFcn) HYPRE_BoomerAMGSolve, (HYPRE_PtrToSolverFcn) HYPRE_BoomerAMGSetup, precond);
 
@@ -613,7 +613,8 @@ PASE_Mg_get_initial_vector_by_full_multigrid_hypre_for_guangji(void *mg_solver)
     start = clock();
 
     //特征值问题
-    PASE_Mg_direct_solve_by_gcg(solver);
+    PASE_Mg_direct_solve_by_lobpcg_aux_hypre(solver);
+    //PASE_Mg_direct_solve_by_gcg(solver);
     end = clock();
     aux_direct_time += ((double)(end-start))/CLK_TCK;
     start = clock();
@@ -884,6 +885,7 @@ PASE_Mg_smoothing_by_pcg_amg_hypre_for_guangji(void *mg_solver)
     //PASE_Vector_inner_product_general(u[i], u[i], A, &inner_A);
     //PASE_Vector_inner_product_general(u[i], u[i], B, &inner_B);
     //eigenvalues[i] = inner_A / inner_B;
+    //PASE_Vector_scale(1.0/sqrt(inner_B), u[i]);
   }
 
   PASE_Vector_destroy(rhs);
