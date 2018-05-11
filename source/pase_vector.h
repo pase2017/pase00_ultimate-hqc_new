@@ -88,7 +88,7 @@ typedef struct PASE_VECTOR_PRIVATE_ {
     PASE_INT                   global_nrow; // 向量全局长度
     PASE_VECTOR_DATA_OPERATOR  ops;         // 向量运算集合
     PASE_INT                   is_vector_data_owner; // 是否为向量数据属主
-    PASE_INT                   data_form;   // 向量数据格式
+    DATA_FORM                  data_form;   // 向量数据格式
 } PASE_VECTOR_PRIVATE;
 
 typedef PASE_VECTOR_PRIVATE * PASE_VECTOR;

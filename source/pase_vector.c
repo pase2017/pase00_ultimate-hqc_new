@@ -53,7 +53,7 @@ PASE_Vector_data_operator_create(PASE_INT data_form)
 {
   PASE_VECTOR_DATA_OPERATOR ops = NULL;
 #if PASE_USE_HYPRE
-  if(PACKAGE_HYPRE == data_form) {
+  if(DATA_FORM_HYPRE == data_form) {
     ops = PASE_Vector_data_operator_assign(PASE_Vector_data_create_by_vector_hypre,
                                            PASE_Vector_data_create_by_matrix_hypre,
                                            PASE_Vector_data_copy_hypre,
@@ -68,7 +68,7 @@ PASE_Vector_data_operator_create(PASE_INT data_form)
 #endif
 
 #if PASE_USE_JXPAMG
-  if(PACKAGE_JXPAMG == data_form) {
+  if(DATA_FORM_JXPAMG == data_form) {
   }
 #endif
 
@@ -111,7 +111,7 @@ PASE_Vector_assign(void *vector_data, PASE_VECTOR_DATA_OPERATOR ops)
 
   x->vector_data          = vector_data;
   x->is_vector_data_owner = PASE_NO;
-  x->data_form            = PASE_USER;
+  x->data_form            = DATA_FORM_USER;
   *(x->ops)               = *ops;
   x->ops->get_global_nrow(x->vector_data, &x->global_nrow);
   return x;

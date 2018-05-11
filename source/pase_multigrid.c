@@ -183,7 +183,7 @@ PASE_MULTIGRID_OPERATOR
 PASE_Multigrid_operator_create(PASE_INT data_form)
 {         
   PASE_MULTIGRID_OPERATOR ops = NULL;
-  if(data_form == 1){
+  if(DATA_FORM_HYPRE == data_form){
     ops = PASE_Multigrid_operator_assign(PASE_Multigrid_get_amg_array_hypre,
 	PASE_Multigrid_destroy_amg_data_hypre);
   }        

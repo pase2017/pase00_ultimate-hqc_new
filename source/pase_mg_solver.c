@@ -22,8 +22,17 @@
 PASE_MG_SOLVER
 PASE_Mg_solver_create(PASE_MATRIX A, PASE_MATRIX B, PASE_PARAMETER param)
 {
+  PASE_MG_SOLVER solver    = NULL;  
+  PASE_MULTIGRID multigrid = PASE_Multigrid_create(A, B, param, NULL);
+  solver = PASE_Mg_solver_create_by_multigrid(multigrid, param);
+  return solver;
+}
+
+  
+PASE_MG_SOLVER
+PASE_Mg_solver_create_by_multigrid(PASE_MULTIGRID multigrid, PASE_PARAMETER param)
+{
   PASE_MG_SOLVER solver      = (PASE_MG_SOLVER)PASE_Malloc(sizeof(PASE_MG_SOLVER_PRIVATE));
-  PASE_MULTIGRID multigrid   = PASE_Multigrid_create(A, B, param, NULL);
 
   solver->multigrid          = multigrid;
   solver->function           = PASE_Mg_function_create(//PASE_Mg_get_initial_vector_by_coarse_grid_hypre,
@@ -34,11 +43,11 @@ PASE_Mg_solver_create(PASE_MATRIX A, PASE_MATRIX B, PASE_PARAMETER param)
 						       PASE_Mg_direct_solve_by_gcg, 
                                                        //PASE_Mg_presmoothing_by_cg,
                                                        //PASE_Mg_postsmoothing_by_cg,
-						       //PASE_Mg_presmoothing_by_pcg_amg_hypre, 
+						       PASE_Mg_presmoothing_by_pcg_amg_hypre, 
 						       //PASE_Mg_smoothing_by_pcg_amg_hypre_for_guangji, 
-						       //PASE_Mg_postsmoothing_by_pcg_amg_hypre, 
-						       PASE_Mg_presmoothing_by_amg_hypre, 
-						       PASE_Mg_postsmoothing_by_amg_hypre, 
+						       PASE_Mg_postsmoothing_by_pcg_amg_hypre, 
+						       //PASE_Mg_presmoothing_by_amg_hypre, 
+						       //PASE_Mg_postsmoothing_by_amg_hypre, 
                                                        PASE_Mg_presmoothing_by_cg_aux,
                                                        PASE_Mg_postsmoothing_by_cg_aux);
   solver->cycle_type                = 0;

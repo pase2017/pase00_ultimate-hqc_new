@@ -59,7 +59,7 @@ PASE_Matrix_data_operator_create(PASE_INT data_form)
 {
   PASE_MATRIX_DATA_OPERATOR ops = NULL;
 #if PASE_USE_HYPRE
-  if(PACKAGE_HYPRE == data_form) {
+  if(DATA_FORM_HYPRE == data_form) {
     ops = PASE_Matrix_data_operator_assign(PASE_Matrix_create_by_matrix_hypre,
                                            PASE_Matrix_destroy_hypre,
                                            PASE_Matrix_transpose_hypre,
@@ -77,7 +77,7 @@ PASE_Matrix_data_operator_create(PASE_INT data_form)
 #endif
 
 #if PASE_USE_JXPAMG
-  if(PACKAGE_JXPAMG == data_form) {
+  if(DATA_FORM_JXPAMG == data_form) {
   }
 #endif
 
@@ -126,7 +126,7 @@ PASE_Matrix_assign(void *matrix_data, PASE_MATRIX_DATA_OPERATOR ops)
   *(A->ops)               = *ops;
   A->matrix_data          = matrix_data;
   A->is_matrix_data_owner = PASE_NO;
-  A->data_form            = PASE_USER;
+  A->data_form            = DATA_FORM_USER;
   A->ops->get_global_nrow(A->matrix_data, &A->global_nrow);
   A->ops->get_global_ncol(A->matrix_data, &A->global_ncol);
   return A;

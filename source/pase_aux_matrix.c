@@ -151,7 +151,7 @@ PASE_Aux_matrix_set_block_some(PASE_AUX_MATRIX aux_A, PASE_INT i, PASE_INT j, PA
   }
   PASE_VECTOR workspace_h = PASE_Vector_create_by_vector(u_h[0]);
 
-#if PASE_USE_HYPRE
+#if PASE_USE_HYPRE && PASE_USE_MPI
   MPI_Status status;
   MPI_Request *requests = (MPI_Request*)PASE_Malloc((j-i+1)*sizeof(MPI_Request));
   //MPI_Request requests;
@@ -519,7 +519,7 @@ PASE_Aux_matrix_multiply_aux_vector(PASE_AUX_MATRIX aux_A, PASE_AUX_VECTOR aux_x
 
   PASE_INT i, j;
 
-#if PASE_USE_HYPRE 
+#if PASE_USE_HYPRE && PASE_USE_MPI 
   clock_t start, end, start_total, end_total;
   MPI_Request request;
   MPI_Status  status;
@@ -670,7 +670,7 @@ PASE_Aux_vector_create_by_aux_matrix(PASE_AUX_MATRIX aux_A)
 void
 PASE_Aux_vector_inner_product_general(PASE_AUX_VECTOR aux_x, PASE_AUX_VECTOR aux_y, PASE_AUX_MATRIX aux_A, PASE_REAL *prod)
 {
-#if PASE_USE_HYPRE 
+#if PASE_USE_HYPRE && PASE_USE_MPI
   PASE_INT i = 0;
   PASE_INT j = 0;
   clock_t start_t, end_t;

@@ -99,8 +99,8 @@ PASE_Mg_get_initial_vector_by_coarse_grid_hypre(void *mg_solver)
     PASE_Vector_destroy(solver->u[i]);
     PASE_Vector_destroy(u_H[i]);
   }
-  //PASE_Mg_smoothing_by_pcg_amg_hypre_for_guangji(mg_solver);
-  PASE_Mg_smoothing_by_pcg_amg_hypre(mg_solver, "NeitherPreNorPost");
+  PASE_Mg_smoothing_by_pcg_amg_hypre_for_guangji(mg_solver);
+  //PASE_Mg_smoothing_by_pcg_amg_hypre(mg_solver, "NeitherPreNorPost");
 
   free((mv_TempMultiVector*)mv_MultiVectorGetData(eigenvectors_Hh));
   PASE_Free(eigenvectors_Hh);

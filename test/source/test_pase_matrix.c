@@ -1,25 +1,3 @@
-/*
-   mv
-
-   Compile with: make mv
-
-   Sample run:   ./mv -n 10 
-
-   Description:  This example solves the 2-D Laplacian eigenvalue
-                 problem with zero boundary conditions on an nxn grid.
-                 The number of unknowns is N=n^2. The standard 5-point
-                 stencil is used, and we solve for the interior nodes
-                 only.
-
-                 We use the same matrix as in Examples 3 and 5.
-                 The eigensolver is PASE (Parallels Auxiliary Space Eigen-solver)
-                 with LOBPCG and AMG preconditioner.
-   
-   Created:      2017.08.26
-
-   Author:       Li Yu (liyu@lsec.cc.ac.cn).
-*/
-
 #include "pase_matrix.h"
 #include "pase_vector.h"
 #include <unistd.h>
@@ -71,10 +49,10 @@ main (PASE_INT argc, char *argv[])
   //PASE MATRIX 测试
   {
     //Create
-    PASE_MATRIX pase_A = PASE_Matrix_create((void*)parcsr_A, 1); 
-    PASE_MATRIX pase_B = PASE_Matrix_create((void*)parcsr_B, 1); 
-    PASE_VECTOR pase_x = PASE_Vector_create((void*)par_x, 1);
-    PASE_VECTOR pase_y = PASE_Vector_create((void*)par_y, 1);
+    PASE_MATRIX pase_A = PASE_Matrix_create((void*)parcsr_A, DATA_FORM_HYPRE); 
+    PASE_MATRIX pase_B = PASE_Matrix_create((void*)parcsr_B, DATA_FORM_HYPRE); 
+    PASE_VECTOR pase_x = PASE_Vector_create((void*)par_x, DATA_FORM_HYPRE);
+    PASE_VECTOR pase_y = PASE_Vector_create((void*)par_y, DATA_FORM_HYPRE);
     PASE_VECTOR pase_z = PASE_Vector_create_by_matrix_and_vector_data_operator(pase_A, pase_x->ops);
     PASE_Printf(MPI_COMM_WORLD, "=============================================================\n");
     PASE_Printf(MPI_COMM_WORLD, "This is a test program for PASE_MATRIX\n");

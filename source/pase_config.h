@@ -26,9 +26,19 @@ typedef double  PASE_SCALAR;
 
 #define PASE_USE_JXPAMG 0
 
+/* 是否使用 MPI */
+#define USE_MPI   
+
+#ifdef USE_MPI  
+#define PASE_USE_MPI 1 
+#else
+#define PASE_USE_MPI 0 
+#endif
+
 //=============================================================================
 typedef enum { CLJP = 1, FALGOUT = 2, PMHIS = 3 } PASE_COARSEN_TYPE;
-typedef enum { PACKAGE_HYPRE = 1, PACKAGE_JXPAMG = 2 } EXTERNAL_PACKAGE;
+//typedef enum { PACKAGE_HYPRE = 1, PACKAGE_JXPAMG = 2 } EXTERNAL_PACKAGE;
+typedef enum { DATA_FORM_USER = -1, DATA_FORM_HYPRE = 1, DATA_FORM_JXPAMG = 2 } DATA_FORM;
 
 //=============================================================================
 #include <stdlib.h>

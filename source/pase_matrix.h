@@ -86,7 +86,7 @@ typedef struct PASE_MATRIX_PRIVATE_ {
   PASE_INT                   global_ncol; // 全局列数
   PASE_MATRIX_DATA_OPERATOR  ops;         // 矩阵运算集合
   PASE_INT                   is_matrix_data_owner; // 是否为矩阵数据属主
-  PASE_INT                   data_form;   // 矩阵数据格式
+  DATA_FORM                  data_form;   // 矩阵数据格式
 } PASE_MATRIX_PRIVATE;
 
 typedef PASE_MATRIX_PRIVATE * PASE_MATRIX;

@@ -1,27 +1,3 @@
-/*
-   parPASE_ver01
-
-Interface:    Linear-Algebraic (IJ)
-
-Compile with: make parPASE_ver01
-
-Sample run:   parPASE_ver01 -block_size 20 -n 100 -max_levels 6 
-
-Description:  This example solves the 2-D Laplacian eigenvalue
-problem with zero boundary conditions on an nxn grid.
-The number of unknowns is N=n^2. The standard 5-point
-stencil is used, and we solve for the interior nodes
-only.
-
-We use the same matrix as in Examples 3 and 5.
-The eigensolver is PASE (Parallels Auxiliary Space Eigen-solver)
-with LOBPCG and AMG preconditioner.
-
-Created:      2017.09.16
-
-Author:       Li Yu (liyu@lsec.cc.ac.cn).
-*/
-
 #include "pase_mg_solver.h"
 #include "pase_multigrid.h"
 #include "pase_config.h"
@@ -95,8 +71,8 @@ PASE_INT main(PASE_INT argc, char *argv[])
   PASE_Printf(MPI_COMM_WORLD, "\n");
 
   //Create
-  PASE_MATRIX pase_A       = PASE_Matrix_create((void*)parcsr_A, 1);
-  PASE_MATRIX pase_B       = PASE_Matrix_create((void*)parcsr_B, 1);
+  PASE_MATRIX pase_A       = PASE_Matrix_create((void*)parcsr_A, DATA_FORM_HYPRE);
+  PASE_MATRIX pase_B       = PASE_Matrix_create((void*)parcsr_B, DATA_FORM_HYPRE);
   PASE_VECTOR pase_x       = PASE_Vector_create_by_matrix_and_vector_data_operator(pase_A, NULL);
 
   PASE_PARAMETER param     = (PASE_PARAMETER) PASE_Malloc(sizeof(PASE_PARAMETER_PRIVATE));

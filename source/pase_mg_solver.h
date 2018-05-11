@@ -78,6 +78,7 @@ typedef struct PASE_MG_SOLVER_PRIVATE_ {
 typedef PASE_MG_SOLVER_PRIVATE * PASE_MG_SOLVER;
 
 PASE_MG_SOLVER PASE_Mg_solver_create(PASE_MATRIX A, PASE_MATRIX B, PASE_PARAMETER param);
+PASE_MG_SOLVER PASE_Mg_solver_create_by_multigrid(PASE_MULTIGRID multigrid, PASE_PARAMETER param);
 PASE_MG_FUNCTION PASE_Mg_function_create(PASE_INT (*get_initial_vector) (void *solver),
     PASE_INT (*direct_solve)       (void *solver),
     PASE_INT (*presmoothing)       (void *solver), 

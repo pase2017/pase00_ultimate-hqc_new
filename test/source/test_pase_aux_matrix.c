@@ -1,25 +1,3 @@
-/*
-   mv
-
-   Compile with: make mv
-
-   Sample run:   ./mv -n 10 
-
-Description:  This example solves the 2-D Laplacian eigenvalue
-problem with zero boundary conditions on an nxn grid.
-The number of unknowns is N=n^2. The standard 5-point
-stencil is used, and we solve for the interior nodes
-only.
-
-We use the same matrix as in Examples 3 and 5.
-The eigensolver is PASE (Parallels Auxiliary Space Eigen-solver)
-with LOBPCG and AMG preconditioner.
-
-Created:      2017.08.26
-
-Author:       Li Yu (liyu@lsec.cc.ac.cn).
-*/
-
 #include "pase_matrix.h"
 #include "pase_vector.h"
 #include "pase_aux_vector.h"
@@ -75,9 +53,9 @@ PASE_INT main (PASE_INT argc, char *argv[])
   //PASE MATRIX 测试
   {
     //Initial: get PASE_MATRIX pase_A_h, pase_B_h, pase_R_hH, pase_P_Hh
-    PASE_MATRIX pase_A_h = PASE_Matrix_create((void*)parcsr_A_h, 1); 
-    PASE_MATRIX pase_B_h = PASE_Matrix_create((void*)parcsr_B_h, 1); 
-    PASE_MATRIX pase_R_hH = PASE_Matrix_create((void*)parcsr_R_hH, 1); 
+    PASE_MATRIX pase_A_h = PASE_Matrix_create((void*)parcsr_A_h, DATA_FORM_HYPRE); 
+    PASE_MATRIX pase_B_h = PASE_Matrix_create((void*)parcsr_B_h, DATA_FORM_HYPRE); 
+    PASE_MATRIX pase_R_hH = PASE_Matrix_create((void*)parcsr_R_hH, DATA_FORM_HYPRE); 
     PASE_MATRIX pase_P_Hh = PASE_Matrix_transpose(pase_R_hH);
     PASE_INT idx_block = 0;
     PASE_VECTOR *pase_x_h = (PASE_VECTOR*)PASE_Malloc(block_size*sizeof(PASE_VECTOR));

@@ -14,7 +14,7 @@ typedef struct PASE_PARAMETER_PRIVATE_ {
   PASE_INT min_coarse_size;
   
   /* 外部软件包, 用于提供实际的矩阵和向量的数据结构与操作 */
-  PASE_INT external_package; // 1: HYPRE
+  PASE_INT  data_form; // 1: HYPRE  2: JXPAMG
   
   /* mg_solver parameter */
   PASE_INT  cycle_type;

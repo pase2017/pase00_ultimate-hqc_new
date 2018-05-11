@@ -17,6 +17,10 @@ PASE_Multigrid_get_amg_array_hypre
   HYPRE_Solver amg_solver;
   HYPRE_BoomerAMGCreate(&amg_solver);
 
+  PASE_INT amg_print_level  = 1;
+  PASE_INT amg_coarsen_type = 6;
+  PASE_INT amg_relax_type   = 6;
+
   /* Set some parameters (See Reference Manual for more parameters) */
   HYPRE_BoomerAMGSetPrintLevel(amg_solver, 1);         /* print solve info + parameters */
   //HYPRE_BoomerAMGSetInterpType(amg_solver, 0 );
@@ -55,9 +59,11 @@ PASE_Multigrid_get_amg_array_hypre
   *num_level = (amg_levels < param->max_level)? amg_levels : param->max_level;
   PASE_INT i   = 0;
   PASE_INT N_H = hypre_ParCSRMatrixGlobalNumRows(A_hypre[*num_level-1]);
+  //printf("N_H = %d, min_coarse_size = %d\n", N_H, param->min_coarse_size);
   while( N_H < param->min_coarse_size) {
     *num_level = *num_level - 1;
     N_H = hypre_ParCSRMatrixGlobalNumRows(A_hypre[*num_level-1]);
+    //printf("N_H = %d, min_coarse_size = %d\n", N_H, param->min_coarse_size);
   }
   PASE_Printf(MPI_COMM_WORLD, "The number of levels of AMG   = %d\n", amg_levels);
   PASE_Printf(MPI_COMM_WORLD, "The number of levels for PASE = %d\n", *num_level);

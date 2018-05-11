@@ -367,21 +367,7 @@ Updatedim_x(PASE_INT start, PASE_INT end, PASE_INT *dim_x, PASE_REAL *approx_eva
 void 
 VecsMatrixVecsForRayleighRitz(PASE_AUX_MATRIX A, PASE_AUX_VECTOR *V, PASE_REAL *AA, PASE_INT start, PASE_INT dim, PASE_AUX_VECTOR tmp, PASE_REAL *time_inner)
 {
-#if 0
-  clock_t start_t, end_t;
-  PASE_INT i = 0;
-  PASE_INT j = 0;
-  for(i=start; i<dim; ++i) {
-    PASE_Aux_matrix_multiply_aux_vector(A, V[i], tmp); 
-    for(j = 0; j < i+1; ++j) {
-      start_t = clock();
-      PASE_Aux_vector_inner_product(V[j], tmp, AA+i*dim+j); 
-      end_t = clock();
-      *time_inner += ((double)(end_t-start_t))/1000000;
-      AA[j*dim+i] = AA[i*dim+j];
-    }
-  }
-#else
+#if PASE_USE_HYPRE && PASE_USE_MPI
   PASE_INT i = 0;
   PASE_INT j = 0;
   PASE_INT k = 0;
@@ -438,7 +424,20 @@ VecsMatrixVecsForRayleighRitz(PASE_AUX_MATRIX A, PASE_AUX_VECTOR *V, PASE_REAL *
   PASE_Free(block_tmp2);
   PASE_Free(inner_product_tmp);
   //PASE_Free(requests);
-
+#else 
+  clock_t start_t, end_t;
+  PASE_INT i = 0;
+  PASE_INT j = 0;
+  for(i=start; i<dim; ++i) {
+    PASE_Aux_matrix_multiply_aux_vector(A, V[i], tmp); 
+    for(j = 0; j < i+1; ++j) {
+      start_t = clock();
+      PASE_Aux_vector_inner_product(V[j], tmp, AA+i*dim+j); 
+      end_t = clock();
+      *time_inner += ((double)(end_t-start_t))/1000000;
+      AA[j*dim+i] = AA[i*dim+j];
+    }
+  }
 #endif
 }
 
@@ -522,50 +521,7 @@ GCG_Orthogonal(PASE_AUX_VECTOR *V, PASE_AUX_MATRIX A, PASE_AUX_MATRIX M, PASE_IN
     }
   } else {
 
-#if 0
-    for(i = 0; i < start; ++i) {
-      PASE_Aux_matrix_multiply_aux_vector(B, V[i], V_tmp[i]); 
-    }
-    for(i = start; i < (*end); ++i) {
-      if(i == 0) {
-	//计算 V[0]^T*A*V[0]
-	PASE_Aux_vector_inner_product_general(V[0], V[0], B, &dd);
-	dd = sqrt(dd);
-	if(dd > 10*EPS) {
-	  PASE_Aux_vector_scale(1.0/dd, V[0]); 
-	  Ind[n_nonzero++] = 0;
-	  PASE_Aux_matrix_multiply_aux_vector(B, V[0], V_tmp[0]); 
-	}
-      } else {
-	PASE_Aux_vector_inner_product_general(V[i], V[i], B, &vout);
-	vout = sqrt(vout);
-	do {
-	  vin = vout;
-	  for(j = 0; j < start; ++j) {
-	    //计算 V[i]= V[i]-(V[i]^T*V[j])_B*V[j]
-	    PASE_Aux_vector_inner_product(V[i], V_tmp[j], &tmp); 
-	    PASE_Aux_vector_axpy(-tmp, V[j], V[i]); 
-	  }
-	  for(j = 0; j < n_nonzero; ++j) {
-	    //计算 V[i]= V[i]-(V[i]^T*V[Ind[j]])_B*V[Ind[j]]
-	    PASE_Aux_vector_inner_product(V[i], V_tmp[start+j], &tmp); 
-	    PASE_Aux_vector_axpy(-tmp, V[Ind[j]], V[i]); 
-	  }
-	  PASE_Aux_vector_inner_product_general(V[i], V[i], B, &vout);
-	  vout = sqrt(vout);
-	  //PASE_Printf(MPI_COMM_WORLD, "i = %d, vin = %e, vout = %e\n", i, vin, vout);
-	} while(vout/vin < REORTH_TOL);
-	if(vout > 10*EPS) {
-	  PASE_Aux_vector_scale(1.0/vout, V[i]); 
-	  PASE_Aux_matrix_multiply_aux_vector(B, V[i], V_tmp[start+n_nonzero]); 
-	  Ind[n_nonzero++] = i;
-	} else {
-	  PASE_Printf(MPI_COMM_WORLD, "In GCG_Orthogonal, there is a zero vector! i = %d, start = %d, end: %d\n", i, start, *end);
-	  Nonzero_Vec[n_zero++] = V[i];
-	}
-      }
-    }
-#else
+#if PASE_USE_HYPRE && PASE_USE_MPI
     MPI_Status status;
     MPI_Request request; 
     //MPI_Request *requests = (MPI_Request*)PASE_Malloc((*end)*sizeof(MPI_Request));
@@ -701,6 +657,50 @@ GCG_Orthogonal(PASE_AUX_VECTOR *V, PASE_AUX_MATRIX A, PASE_AUX_MATRIX M, PASE_IN
     PASE_Free(block_tmp2);
     PASE_Free(inner_product);
     PASE_Free(inner_product_tmp);
+
+#else
+    for(i = 0; i < start; ++i) {
+      PASE_Aux_matrix_multiply_aux_vector(B, V[i], V_tmp[i]); 
+    }
+    for(i = start; i < (*end); ++i) {
+      if(i == 0) {
+	//计算 V[0]^T*A*V[0]
+	PASE_Aux_vector_inner_product_general(V[0], V[0], B, &dd);
+	dd = sqrt(dd);
+	if(dd > 10*EPS) {
+	  PASE_Aux_vector_scale(1.0/dd, V[0]); 
+	  Ind[n_nonzero++] = 0;
+	  PASE_Aux_matrix_multiply_aux_vector(B, V[0], V_tmp[0]); 
+	}
+      } else {
+	PASE_Aux_vector_inner_product_general(V[i], V[i], B, &vout);
+	vout = sqrt(vout);
+	do {
+	  vin = vout;
+	  for(j = 0; j < start; ++j) {
+	    //计算 V[i]= V[i]-(V[i]^T*V[j])_B*V[j]
+	    PASE_Aux_vector_inner_product(V[i], V_tmp[j], &tmp); 
+	    PASE_Aux_vector_axpy(-tmp, V[j], V[i]); 
+	  }
+	  for(j = 0; j < n_nonzero; ++j) {
+	    //计算 V[i]= V[i]-(V[i]^T*V[Ind[j]])_B*V[Ind[j]]
+	    PASE_Aux_vector_inner_product(V[i], V_tmp[start+j], &tmp); 
+	    PASE_Aux_vector_axpy(-tmp, V[Ind[j]], V[i]); 
+	  }
+	  PASE_Aux_vector_inner_product_general(V[i], V[i], B, &vout);
+	  vout = sqrt(vout);
+	  //PASE_Printf(MPI_COMM_WORLD, "i = %d, vin = %e, vout = %e\n", i, vin, vout);
+	} while(vout/vin < REORTH_TOL);
+	if(vout > 10*EPS) {
+	  PASE_Aux_vector_scale(1.0/vout, V[i]); 
+	  PASE_Aux_matrix_multiply_aux_vector(B, V[i], V_tmp[start+n_nonzero]); 
+	  Ind[n_nonzero++] = i;
+	} else {
+	  PASE_Printf(MPI_COMM_WORLD, "In GCG_Orthogonal, there is a zero vector! i = %d, start = %d, end: %d\n", i, start, *end);
+	  Nonzero_Vec[n_zero++] = V[i];
+	}
+      }
+    }
 #endif
   }
   //接下来要把V的所有非零列向量存储在地址表格中靠前位置
