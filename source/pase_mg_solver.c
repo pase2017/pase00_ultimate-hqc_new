@@ -69,7 +69,9 @@ PASE_Mg_solver_create_by_multigrid(PASE_MULTIGRID multigrid, PASE_PARAMETER para
   solver->atol                      = 1e-8;
   solver->r_norm                    = NULL;
   solver->nconv                     = 0;
+  solver->lock_type                 = 2;
   solver->nlock                     = 0;
+  solver->multi_start               = 0;
   solver->ncycl                     = 0;
   solver->max_cycle                 = 200;
 
@@ -717,6 +719,9 @@ PASE_Mg_error_estimate(PASE_MG_SOLVER solver)
 
   if(NULL == solver->r_norm) {
     solver->r_norm = (PASE_REAL*)PASE_Malloc(block_size*sizeof(PASE_REAL));
+    for(i = 0; i < block_size; i++) {
+      solver->r_norm[i] = -1.0;
+    }
   }
 
   for(i = nconv; i < block_size; ++i) {
@@ -739,9 +744,10 @@ PASE_Mg_error_estimate(PASE_MG_SOLVER solver)
       flag = 1;
     }
   }
+  solver->multi_start = solver->nconv;
   //检查第一个为收敛的特征值与最后一个刚收敛的特征值是否有可能是重特征值，为保证之后的排序问题，需让重特征值同时在收敛的集合或未收敛的集合.
-  while(solver->nconv > nconv && solver->nconv < block_size && check_multi[solver->nconv-1] < 1e-8) {
-    solver->nconv--;
+  while(solver->multi_start > 0 && solver->multi_start < block_size && check_multi[solver->multi_start-1] < 1e-8) {
+    solver->multi_start--;
   }
   PASE_Free(check_multi);
   PASE_Vector_destroy(r);
@@ -854,9 +860,13 @@ PASE_INT
 PASE_Mg_direct_solve(PASE_MG_SOLVER solver)
 {
   clock_t start, end;
-  if(solver->max_direct_iter> 0) {
+  if(0 < solver->max_direct_iter) {
     start = clock();
     solver->function->direct_solve(solver);
+    
+    if(2 == solver->lock_type) {
+      PASE_Mg_reorder_aux(solver);
+    }
     end   = clock();
     solver->direct_solve_time += ((double)(end-start))/CLK_TCK;
     if(solver->print_level > 1) {
@@ -1371,11 +1381,80 @@ PASE_Linear_solve_by_cg_aux(PASE_AUX_MATRIX aux_A, PASE_AUX_VECTOR aux_b, PASE_A
  * @param param       输入参数
  */
 PASE_INT
-PASE_EigenSolver(PASE_MATRIX A, PASE_MATRIX B, PASE_SCALAR *eval, PASE_VECTOR *evec, PASE_INT block_size, PASE_PARAMETER param)
+PASE_Eigensolver(PASE_MATRIX A, PASE_MATRIX B, PASE_SCALAR *eval, PASE_VECTOR *evec, PASE_INT block_size, PASE_PARAMETER param)
 {
-  PASE_INT i              = 0;
-  PASE_INT max_block_size = ((2*block_size)<(block_size+5))?(2*block_size):(block_size+5);
-  PASE_MG_SOLVER solver   = PASE_Mg_solver_create(A, B, param);
+  PASE_INT       i              = 0;
+  PASE_INT       max_block_size = ((2*block_size)<(block_size+5))?(2*block_size):(block_size+5);
+  PASE_MG_SOLVER solver         = PASE_Mg_solver_create(A, B, param);
+
+  PASE_Mg_set_cycle_type(solver, param->cycle_type);
+  PASE_Mg_set_block_size(solver, block_size);
+  PASE_Mg_set_max_block_size(solver, max_block_size);
+  PASE_Mg_set_max_cycle(solver, param->max_cycle);
+  PASE_Mg_set_max_pre_iteration(solver, param->max_pre_iter);
+  PASE_Mg_set_max_post_iteration(solver, param->max_post_iter);
+  PASE_Mg_set_atol(solver, param->atol);
+  PASE_Mg_set_rtol(solver, param->rtol);
+  PASE_Mg_set_print_level(solver, param->print_level);
+
+  solver->u = (PASE_VECTOR*)PASE_Malloc(max_block_size*sizeof(PASE_VECTOR));
+  if(NULL != evec) {
+    for(i = 0; i < block_size; ++i) {
+      solver->u[i] = evec[i];
+    }
+    for(i = block_size; i < max_block_size; ++i) {
+      solver->u[i] = PASE_Vector_create_by_vector(solver->u[0]);
+    }
+    solver->is_u_owner = PASE_NO;
+  }
+  PASE_Mg_set_up(solver, A, B, evec[0], param);
+  PASE_Mg_solve(solver);
+  PASE_Mg_solver_destroy(solver);
+  return 0;
+}
+
+PASE_INT
+PASE_Eigensolver_default(void *A_data, void *B_data, PASE_SCALAR *eval, void **evec_data, PASE_INT block_size, PASE_PARAMETER param)
+{
+  DATA_FORM      data_form      = param->data_form;
+  PASE_MATRIX    A              = PASE_Matrix_create(A_data, data_form);
+  PASE_MATRIX    B              = PASE_Matrix_create(B_data, data_form);
+  PASE_INT       i              = 0;
+  PASE_INT       max_block_size = ((2*block_size)<(block_size+5))?(2*block_size):(block_size+5);
+  PASE_MG_SOLVER solver         = PASE_Mg_solver_create(A, B, param);
+
+  PASE_Mg_set_cycle_type(solver, param->cycle_type);
+  PASE_Mg_set_block_size(solver, block_size);
+  PASE_Mg_set_max_block_size(solver, max_block_size);
+  PASE_Mg_set_max_cycle(solver, param->max_cycle);
+  PASE_Mg_set_max_pre_iteration(solver, param->max_pre_iter);
+  PASE_Mg_set_max_post_iteration(solver, param->max_post_iter);
+  PASE_Mg_set_atol(solver, param->atol);
+  PASE_Mg_set_rtol(solver, param->rtol);
+  PASE_Mg_set_print_level(solver, param->print_level);
+
+  solver->u = (PASE_VECTOR*)PASE_Malloc(max_block_size*sizeof(PASE_VECTOR));
+  if(NULL != evec) {
+    for(i = 0; i < block_size; ++i) {
+      solver->u[i] = PASE_Vector_create(evec_data[i], data_form);
+    }
+    for(i = block_size; i < max_block_size; ++i) {
+      solver->u[i] = PASE_Vector_create_by_vector(solver->u[0]);
+    }
+    solver->is_u_owner = PASE_YES;
+  }
+  PASE_Mg_set_up(solver, A, B, evec[0], param);
+  PASE_Mg_solve(solver);
+  PASE_Mg_solver_destroy(solver);
+  return 0;
+}
+
+PASE_INT
+PASE_Eigensolver_user(PASE_MULTIGRID multigrid, PASE_SCALAR *eval, PASE_VECTOR *evec, PASE_INT block_size, PASE_PARAMETER param)
+{
+  PASE_INT       i              = 0;
+  PASE_INT       max_block_size = ((2*block_size)<(block_size+5))?(2*block_size):(block_size+5);
+  PASE_MG_SOLVER solver         = PASE_Mg_solver_create_by_multigrid(multigrid, param);
 
   PASE_Mg_set_cycle_type(solver, param->cycle_type);
   PASE_Mg_set_block_size(solver, block_size);
@@ -1678,6 +1757,58 @@ PASE_Mg_print_eigenvalue_of_current_level(PASE_MG_SOLVER solver)
       PASE_Printf(MPI_COMM_WORLD, "%d-th eig=%.8e\n", i, solver->eigenvalues[i]);
     }
   }
+  return 0;
+}
+
+PASE_INT
+PASE_Mg_reorder_aux(PASE_MG_SOLVER solver)
+{
+  PASE_INT    i         = 0;
+  PASE_INT    j         = 0;
+  PASE_INT    k         = 0;
+  PASE_SCALAR inner     = 0.0;
+  PASE_SCALAR max_inner = 0.0;
+
+  PASE_INT         cur_level   = solver->idx_cycle_level[solver->max_cycle_level];
+  PASE_INT         multi_start = solver->multi_start;
+  PASE_INT         block_size  = solver->block_size;
+  PASE_INT         nconv       = solver->nconv;
+  PASE_INT         idx         = 0;
+  PASE_AUX_VECTOR *aux_u       = solver->aux_u[cur_level];
+  PASE_AUX_MATRIX  B_H         = solver->multigrid->aux_B[cur_level];
+  PASE_AUX_VECTOR *aux_u_tmp   = (PASE_AUX_VECTOR*) PASE_Malloc(block_size*sizeof(PASE_AUX_VECTOR));
+  PASE_Printf(MPI_COMM_WORLD, "multi_start = %d, nconv = %d, block_size = %d\n", multi_start, nconv, block_size);
+  for(i = 0; i < block_size; ++i) {
+    aux_u_tmp[i] = aux_u[i];
+  }
+  for(i = multi_start; i < nconv; ++i) {
+    max_inner = 0.0;
+    for(j = multi_start; j < block_size; ++j) {
+      PASE_Vector_inner_product(B_H->vec[i], aux_u[j]->vec, &inner);
+      for(k = 0; k < block_size; ++k) {
+        inner += aux_u[j]->block[k] * B_H->block[i][k];
+      }
+
+      inner = fabs(inner);
+      if(max_inner < inner) {
+        max_inner = inner;
+        idx       = j;
+      }
+    }
+    aux_u[i]       = aux_u_tmp[idx];
+    aux_u_tmp[idx] = NULL;
+  }
+  idx = multi_start;
+  for(i = nconv; i < block_size; ++i) {
+    while(NULL == aux_u_tmp[idx]) {
+      idx ++;
+    }
+    aux_u[i] = aux_u_tmp[idx];
+    idx ++;
+  }
+
+  PASE_Free(aux_u_tmp);
+
   return 0;
 }
 

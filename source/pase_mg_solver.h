@@ -35,7 +35,10 @@ typedef struct PASE_MG_SOLVER_PRIVATE_ {
   PASE_REAL    atol;
   PASE_REAL   *r_norm;
   PASE_INT     nconv;
+  PASE_INT     lock_type; 
   PASE_INT     nlock;
+  PASE_INT     multi_start;
+  PASE_INT    *idx_lock;
   PASE_INT     max_cycle;
   PASE_INT     ncycl;
   PASE_INT     print_level; 
@@ -144,9 +147,12 @@ PASE_INT PASE_Mg_precondition_for_gcg(void *mg_solver);
  * @param block_size
  * @param param
  */
-PASE_INT PASE_EigenSolver(PASE_MATRIX A, PASE_MATRIX B, PASE_SCALAR *eval, PASE_VECTOR *evec, PASE_INT block_size, PASE_PARAMETER param);
+PASE_INT PASE_Eigensolver(PASE_MATRIX A, PASE_MATRIX B, PASE_SCALAR *eval, PASE_VECTOR *evec, PASE_INT block_size, PASE_PARAMETER param);
+PASE_INT PASE_Eigensolver_default(void *A_data, void *B_data, PASE_SCALAR *eval, void **evec_data, PASE_INT block_size, PASE_PARAMETER param);
+PASE_INT PASE_Eigensolver_user(PASE_MULTIGRID multigrid, PASE_SCALAR *eval, PASE_VECTOR *evec, PASE_INT block_size, PASE_PARAMETER param);
 
 PASE_INT PASE_Mg_print(PASE_MG_SOLVER solver);
 PASE_INT PASE_Mg_print_eigenvalue_of_current_level(PASE_MG_SOLVER solver);
+PASE_INT PASE_Mg_reorder_aux(PASE_MG_SOLVER solver);
 
 #endif

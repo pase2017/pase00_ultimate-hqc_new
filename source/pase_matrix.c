@@ -50,7 +50,7 @@ PASE_Matrix_data_operator_assign
 
 
 #undef  __FUNCT__
-#define __FUNCT__ "PASE_Matrix_operator_data_create"
+#define __FUNCT__ "PASE_Matrix_data_operator_create"
 /**
  * @brief 依据指定格式生成矩阵运算集合
  */
