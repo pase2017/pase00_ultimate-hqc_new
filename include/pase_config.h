@@ -44,6 +44,8 @@ typedef enum { DATA_FORM_USER = -1, DATA_FORM_HYPRE = 1, DATA_FORM_JXPAMG = 2 } 
 #include <stdlib.h>
 
 #define PASE_Malloc  malloc
+#define PASE_Realloc realloc
+#define PASE_Calloc  calloc
 #define PASE_Free(a) { free(a); a = NULL; }
 
 //=============================================================================

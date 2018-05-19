@@ -217,7 +217,7 @@ PASE_Mg_set_up(PASE_MG_SOLVER solver, PASE_MATRIX A, PASE_MATRIX B, PASE_VECTOR 
   clock_t start, end;
   start = clock();
   PASE_INT i = 0;
-  PASE_Multigrid_set_up(solver->multigrid, A, B, param);
+  PASE_Multigrid_set_up(solver->multigrid, param);
   solver->nleve = solver->multigrid->actual_level;
   if(NULL == solver->eigenvalues) {
     solver->eigenvalues = (PASE_SCALAR*)PASE_Malloc(solver->max_block_size*sizeof(PASE_SCALAR));
@@ -1276,7 +1276,7 @@ PASE_Linear_solve_by_cg(PASE_MATRIX A, PASE_VECTOR b, PASE_VECTOR x, PASE_REAL t
   if(rnorm/bnorm < tol) {
     return 0;
   }
-  for(iter=0; iter<max_iter; iter++) {
+  for(iter = 0; iter < max_iter; ++iter) {
     if(iter>0) {
       beta = rho / rho_1; 
       PASE_Vector_scale(beta, p);
@@ -1409,6 +1409,10 @@ PASE_Eigensolver(PASE_MATRIX A, PASE_MATRIX B, PASE_SCALAR *eval, PASE_VECTOR *e
   }
   PASE_Mg_set_up(solver, A, B, evec[0], param);
   PASE_Mg_solve(solver);
+  for(i = 0; i < block_size; ++i) {
+    eval[i] = solver->eigenvalues[i];
+  }
+
   PASE_Mg_solver_destroy(solver);
   return 0;
 }
@@ -1429,12 +1433,13 @@ PASE_Eigensolver_default(void *A_data, void *B_data, PASE_SCALAR *eval, void **e
   PASE_Mg_set_max_cycle(solver, param->max_cycle);
   PASE_Mg_set_max_pre_iteration(solver, param->max_pre_iter);
   PASE_Mg_set_max_post_iteration(solver, param->max_post_iter);
+  PASE_Mg_set_max_direct_iteration(solver, param->max_direct_iter);
   PASE_Mg_set_atol(solver, param->atol);
   PASE_Mg_set_rtol(solver, param->rtol);
   PASE_Mg_set_print_level(solver, param->print_level);
 
-  solver->u = (PASE_VECTOR*)PASE_Malloc(max_block_size*sizeof(PASE_VECTOR));
-  if(NULL != evec) {
+  solver->u = (PASE_VECTOR*)PASE_Calloc(max_block_size, sizeof(PASE_VECTOR));
+  if(NULL != evec_data) {
     for(i = 0; i < block_size; ++i) {
       solver->u[i] = PASE_Vector_create(evec_data[i], data_form);
     }
@@ -1443,9 +1448,15 @@ PASE_Eigensolver_default(void *A_data, void *B_data, PASE_SCALAR *eval, void **e
     }
     solver->is_u_owner = PASE_YES;
   }
-  PASE_Mg_set_up(solver, A, B, evec[0], param);
+  PASE_Mg_set_up(solver, A, B, solver->u[0], param);
   PASE_Mg_solve(solver);
+  for(i = 0; i < block_size; ++i) {
+    eval[i] = solver->eigenvalues[i];
+  }
+
   PASE_Mg_solver_destroy(solver);
+  PASE_Matrix_destroy(A);
+  PASE_Matrix_destroy(B);
   return 0;
 }
 
@@ -1462,6 +1473,7 @@ PASE_Eigensolver_user(PASE_MULTIGRID multigrid, PASE_SCALAR *eval, PASE_VECTOR *
   PASE_Mg_set_max_cycle(solver, param->max_cycle);
   PASE_Mg_set_max_pre_iteration(solver, param->max_pre_iter);
   PASE_Mg_set_max_post_iteration(solver, param->max_post_iter);
+  PASE_Mg_set_max_direct_iteration(solver, param->max_direct_iter);
   PASE_Mg_set_atol(solver, param->atol);
   PASE_Mg_set_rtol(solver, param->rtol);
   PASE_Mg_set_print_level(solver, param->print_level);
@@ -1476,8 +1488,12 @@ PASE_Eigensolver_user(PASE_MULTIGRID multigrid, PASE_SCALAR *eval, PASE_VECTOR *
     }
     solver->is_u_owner = PASE_NO;
   }
-  PASE_Mg_set_up(solver, A, B, evec[0], param);
+  PASE_Mg_set_up(solver, multigrid->A[0], multigrid->B[0], evec[0], param);
   PASE_Mg_solve(solver);
+  for(i = 0; i < block_size; ++i) {
+    eval[i] = solver->eigenvalues[i];
+  }
+
   PASE_Mg_solver_destroy(solver);
   return 0;
 }

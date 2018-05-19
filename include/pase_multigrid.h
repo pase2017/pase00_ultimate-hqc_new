@@ -72,7 +72,7 @@ PASE_MULTIGRID PASE_Multigrid_create(PASE_MATRIX A, PASE_MATRIX B, PASE_PARAMETE
  * @param B          输入参数
  * @param param      输入参数, 包含 AMG 分层的各个参数
  */
-void PASE_Multigrid_set_up(PASE_MULTIGRID multigrid, PASE_MATRIX A,  PASE_MATRIX B, PASE_PARAMETER param);
+void PASE_Multigrid_set_up(PASE_MULTIGRID multigrid, PASE_PARAMETER param);
 
 /**
  * @brief 销毁 PASE_MULTIGRID

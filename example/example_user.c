@@ -1,6 +1,9 @@
 #include "pase_mg_solver.h"
 #include "pase_multigrid.h"
 #include "pase_config.h"
+#include "pase_matrix_hypre.h"
+#include "pase_vector_hypre.h"
+#include "pase_multigrid_hypre.h"
 
 #include "HYPRE_seq_mv.h"
 #include "HYPRE.h"
@@ -43,10 +46,10 @@ PASE_INT main(PASE_INT argc, char *argv[])
   param->rtol            = 1e-6;
   param->print_level     = 1;
   param->max_level       = 20;
-  GetCommandLineInfo(argc, argv, &n, &block_size, &atol, &max_pre_iter, &max_post_iter, &max_direct_iter, &max_level);
+  GetCommandLineInfo(argc, argv, &n, &(param->block_size), &(param->atol), &(param->max_pre_iter), &(param->max_post_iter), &(param->max_direct_iter), &(param->max_level));
   //PASE_INT  min_coarse_size = block_size * 30;
   param->min_coarse_size = 4000;
-  param->max_block_size  = ((2*block_size)<(block_size+5))?(2*block_size):(block_size+5);
+  param->max_block_size  = ((2*param->block_size)<(param->block_size+5))?(2*param->block_size):(param->block_size+5);
   PASE_Printf(MPI_COMM_WORLD, "The dimension of the eigenvalue problem = %d\n", n*n);
   PrintParameter(param);
 
@@ -57,7 +60,7 @@ PASE_INT main(PASE_INT argc, char *argv[])
   HYPRE_IJMatrixGetObject(A, (void**) &parcsr_A);
   HYPRE_IJMatrixGetObject(B, (void**) &parcsr_B);
 
-  PASE_MATRIX_DATA_OPETATOR 
+  PASE_MATRIX_DATA_OPERATOR 
     ops_matrix = PASE_Matrix_data_operator_assign(PASE_Matrix_create_by_matrix_hypre,
                                                   PASE_Matrix_destroy_hypre,
                                                   PASE_Matrix_transpose_hypre,
@@ -77,21 +80,21 @@ PASE_INT main(PASE_INT argc, char *argv[])
 
 
   /* Create vector */
-  HYPRE_ParVector *evec         = (HYPRE_ParVector*) PASE_Malloc(param->block_size*sizeof(HYPRE_ParVector));
+  HYPRE_ParVector *parcsr_evec  = (HYPRE_ParVector*) PASE_Malloc(param->block_size*sizeof(HYPRE_ParVector));
   PASE_INT         i            = 0;
   MPI_Comm         comm         = hypre_ParCSRMatrixComm(parcsr_A);
   PASE_INT         global_size  = hypre_ParCSRMatrixGlobalNumRows(parcsr_A);
   PASE_INT        *partitioning = NULL;
   HYPRE_ParCSRMatrixGetRowPartitioning(parcsr_A,  &partitioning);
-  for(i = 0; i < block_size; ++i) {
-    evec[i]= hypre_ParVectorCreate(comm,  global_size,  partitioning);
-    HYPRE_ParVectorInitialize(evec[i]);
-    hypre_ParVectorSetPartitioningOwner(evec[i], 0); 
+  for(i = 0; i < param->block_size; ++i) {
+    parcsr_evec[i]= hypre_ParVectorCreate(comm,  global_size,  partitioning);
+    HYPRE_ParVectorInitialize(parcsr_evec[i]);
+    hypre_ParVectorSetPartitioningOwner(parcsr_evec[i], 0); 
   }
-  hypre_ParVectorSetPartitioningOwner(evec[0], 1); 
+  hypre_ParVectorSetPartitioningOwner(parcsr_evec[0], 1); 
 
   PASE_VECTOR_DATA_OPERATOR
-    ops_vector = PASE_Vector_data_operator_create(PASE_Vector_data_create_by_vector_hypre,
+    ops_vector = PASE_Vector_data_operator_assign(PASE_Vector_data_create_by_vector_hypre,
                                                   PASE_Vector_data_create_by_matrix_hypre,
                                                   PASE_Vector_data_copy_hypre,
                                                   PASE_Vector_data_destroy_hypre,
@@ -101,36 +104,38 @@ PASE_INT main(PASE_INT argc, char *argv[])
                                                   PASE_Vector_data_axpy_hypre,
                                                   PASE_Vector_data_scale_hypre,
                                                   PASE_Vector_data_get_global_nrow_hypre);
-  PASE_VECTOR pase_x       = PASE_Vector_create_by_matrix_and_vector_data_operator(pase_A, NULL);
-  for(i = 0; i < block_size; ++i) {
-    PASE_Vector_assign(evec[i], ops_vector);
+  PASE_VECTOR *evec = (PASE_VECTOR*) PASE_Malloc(param->block_size*sizeof(PASE_VECTOR));
+  for(i = 0; i < param->block_size; ++i) {
+    evec[i] = PASE_Vector_assign(parcsr_evec[i], ops_vector);
   }
   PASE_Vector_data_operator_destroy(ops_vector);
 
-  PASE_REAL *eigenvalues = (PASE_REAL*)PASE_Malloc(block_size*sizeof(PASE_REAL));
+  PASE_REAL *eigenvalues = (PASE_REAL*)PASE_Malloc(param->block_size*sizeof(PASE_REAL));
 
   /* Create multigrid */
   PASE_MULTIGRID_OPERATOR 
     ops_multigrid = PASE_Multigrid_operator_assign(PASE_Multigrid_get_amg_array_hypre,
                                                    PASE_Multigrid_destroy_amg_data_hypre);
-  PASE_MULTIGRID multigrid = PASE_Multigrid_create(A, B, param, ops_multigrid);
+  PASE_MULTIGRID multigrid = PASE_Multigrid_create(pase_A, pase_B, param, ops_multigrid);
   PASE_Multigrid_operator_destroy(ops_multigrid);
 
   /* solve */
-  PASE_Eigensolver_usr(multigrid, eval, evec, block_size, param);
+  PASE_Eigensolver_user(multigrid, eigenvalues, evec, param->block_size, param);
 
   /* Destroy */
-  PASE_Free(param);
   PASE_Matrix_destroy(pase_A);
   PASE_Matrix_destroy(pase_B);
-  for(i = 0; i < block_size; ++i) {
+  for(i = 0; i < param->block_size; ++i) {
     PASE_Vector_destroy(evec[i]);
+    HYPRE_ParVectorDestroy(parcsr_evec[i]);
   }
-  PASE_Free(evec);
+  PASE_Free(parcsr_evec);
   PASE_Free(eigenvalues);
+  PASE_Free(evec);
   //PASE_Free(exact_eigenvalues);
   HYPRE_IJMatrixDestroy(A);
   HYPRE_IJMatrixDestroy(B);
+  PASE_Free(param);
 
   MPI_Finalize();
   return(0);
@@ -312,15 +317,15 @@ void PrintParameter(PASE_PARAMETER param)
     PASE_Printf(MPI_COMM_WORLD, "=============================================================\n" );
     PASE_Printf(MPI_COMM_WORLD, "\n");
     PASE_Printf(MPI_COMM_WORLD, "Set parameters:\n");
-    PASE_Printf(MPI_COMM_WORLD, "cycle type      = %d\n", cycle_type);
-    PASE_Printf(MPI_COMM_WORLD, "block size      = %d\n", block_size);
-    PASE_Printf(MPI_COMM_WORLD, "max block size  = %d\n", max_block_size);
-    PASE_Printf(MPI_COMM_WORLD, "max pre iter    = %d\n", max_pre_iter);
-    PASE_Printf(MPI_COMM_WORLD, "max post iter   = %d\n", max_post_iter);
-    PASE_Printf(MPI_COMM_WORLD, "max direct iter = %d\n", max_direct_iter);
-    PASE_Printf(MPI_COMM_WORLD, "atol            = %e\n", atol);
-    PASE_Printf(MPI_COMM_WORLD, "max cycle       = %d\n", max_cycle);
-    PASE_Printf(MPI_COMM_WORLD, "max level       = %d\n", max_level);
-    PASE_Printf(MPI_COMM_WORLD, "min coarse size = %d\n", min_coarse_size);
+    PASE_Printf(MPI_COMM_WORLD, "cycle type      = %d\n", param->cycle_type);
+    PASE_Printf(MPI_COMM_WORLD, "block size      = %d\n", param->block_size);
+    PASE_Printf(MPI_COMM_WORLD, "max block size  = %d\n", param->max_block_size);
+    PASE_Printf(MPI_COMM_WORLD, "max pre iter    = %d\n", param->max_pre_iter);
+    PASE_Printf(MPI_COMM_WORLD, "max post iter   = %d\n", param->max_post_iter);
+    PASE_Printf(MPI_COMM_WORLD, "max direct iter = %d\n", param->max_direct_iter);
+    PASE_Printf(MPI_COMM_WORLD, "atol            = %e\n", param->atol);
+    PASE_Printf(MPI_COMM_WORLD, "max cycle       = %d\n", param->max_cycle);
+    PASE_Printf(MPI_COMM_WORLD, "max level       = %d\n", param->max_level);
+    PASE_Printf(MPI_COMM_WORLD, "min coarse size = %d\n", param->min_coarse_size);
     PASE_Printf(MPI_COMM_WORLD, "\n");
 }

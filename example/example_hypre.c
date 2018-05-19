@@ -13,8 +13,8 @@
 #include "HYPRE_lobpcg.h"
 #include "lobpcg.h"
 
+void GetCommandLineInfo(PASE_INT argc, char **argv, PASE_INT *n, PASE_INT *block_size, PASE_REAL *atol, PASE_INT *max_pre_iter, PASE_INT *max_post_iter, PASE_INT *max_direct_iter, PASE_INT *max_level);
 void GetEigenProblem(HYPRE_IJMatrix *A, HYPRE_IJMatrix *B, PASE_INT n);
-void GetCommandLineInfo(PASE_INT argc, char **argv, PASE_INT *n, PASE_INT *block_size, PASE_REAL *atol, PASE_INT *nsmooth);
 void PrintParameter(PASE_PARAMETER param);
 
 PASE_INT main(PASE_INT argc, char *argv[])
@@ -27,19 +27,21 @@ PASE_INT main(PASE_INT argc, char *argv[])
 
   //set parameters
   PASE_PARAMETER param   = (PASE_PARAMETER) PASE_Malloc(sizeof(PASE_PARAMETER_PRIVATE));
+  PASE_INT  n            = 200;
   param->data_form       = DATA_FORM_HYPRE;
   param->cycle_type      = 0;
   param->block_size      = 5;
-  param->max_cycle       = 50;
-  param->max_pre_iter    = 1;
-  param->max_post_iter   = 1;
+  param->max_cycle       = 100;
+  param->max_pre_iter    = 0;
+  param->max_post_iter   = 2;
+  param->max_direct_iter = 3;
   param->atol            = 1e-8;
   param->rtol            = 1e-6;
   param->print_level     = 1;
-  param->max_level       = 6;
-  PASE_INT  n            = 200;
-  GetCommandLineInfo(argc, argv, &n, &(param->block_size), &(param->atol), &(param->max_pre_iter));
-  param->min_coarse_size = param->block_size * 30;
+  param->max_level       = 20;
+  GetCommandLineInfo(argc, argv, &n, &(param->block_size), &(param->atol), &(param->max_pre_iter), &(param->max_post_iter), &(param->max_direct_iter), &(param->max_level));
+  param->min_coarse_size = 4000;
+  param->max_block_size  = ((2*param->block_size)<(param->block_size+5))?(2*param->block_size):(param->block_size+5);
   //param->min_coarse_size = 500;
   PASE_Printf(MPI_COMM_WORLD, "The dimension of the eigenvalue problem = %d\n", n*n);
   PrintParameter(param);
@@ -58,7 +60,7 @@ PASE_INT main(PASE_INT argc, char *argv[])
   PASE_INT         global_size  = hypre_ParCSRMatrixGlobalNumRows(parcsr_A);
   PASE_INT        *partitioning = NULL;
   HYPRE_ParCSRMatrixGetRowPartitioning(parcsr_A,  &partitioning);
-  for(i = 0; i < block_size; ++i) {
+  for(i = 0; i < param->block_size; ++i) {
     evec[i]= hypre_ParVectorCreate(comm,  global_size,  partitioning);
     HYPRE_ParVectorInitialize(evec[i]);
     hypre_ParVectorSetPartitioningOwner(evec[i], 0); 
@@ -66,7 +68,7 @@ PASE_INT main(PASE_INT argc, char *argv[])
   hypre_ParVectorSetPartitioningOwner(evec[0], 1); 
 
   //Solve
-  PASE_EigenSolver_default((void*)parcsr_A, (void*)parcsr_B, eval, evec, param->block_size, param);
+  PASE_Eigensolver_default((void*)parcsr_A, (void*)parcsr_B, eval, (void**)evec, param->block_size, param);
 
   //Destroy
   for(i = 0; i < param->block_size; ++i) {
@@ -75,8 +77,6 @@ PASE_INT main(PASE_INT argc, char *argv[])
   PASE_Free(evec);
   PASE_Free(eval);
   PASE_Free(param);
-  PASE_Matrix_destroy(pase_A);
-  PASE_Matrix_destroy(pase_B);
   HYPRE_IJMatrixDestroy(A);
   HYPRE_IJMatrixDestroy(B);
 
@@ -202,58 +202,57 @@ void GetEigenProblem(HYPRE_IJMatrix *A, HYPRE_IJMatrix *B, PASE_INT n)
   HYPRE_IJMatrixAssemble(*B);
 }
 
-void GetCommandLineInfo(PASE_INT argc, char **argv, PASE_INT *n, PASE_INT *block_size, PASE_REAL *atol, PASE_INT *nsmooth)
+void GetCommandLineInfo(PASE_INT argc, char **argv, PASE_INT *n, PASE_INT *block_size, PASE_REAL *atol, PASE_INT *max_pre_iter, PASE_INT *max_post_iter, PASE_INT *max_direct_iter, PASE_INT *max_level)
 {
   PASE_INT arg_index = 0;
   PASE_INT print_usage = 0;
   PASE_INT myid;
 
   MPI_Comm_rank(MPI_COMM_WORLD, &myid);
-  while (arg_index < argc)
-  {
-    if ( strcmp(argv[arg_index], "-n") == 0 )
-    {
+  while(arg_index < argc) {
+    if(strcmp(argv[arg_index], "-n") == 0) {
       arg_index++;
       *n = atoi(argv[arg_index++]);
-    }
-    else if ( strcmp(argv[arg_index], "-block_size") == 0 )
-    {
+    } else if(strcmp(argv[arg_index], "-block_size") == 0 ) {
       arg_index++;
       *block_size = atoi(argv[arg_index++]);
-    }
-    else if ( strcmp(argv[arg_index], "-atol") == 0 )
-    {
+    } else if(strcmp(argv[arg_index], "-atol") == 0) {
       arg_index++;
       *atol= pow(10, atoi(argv[arg_index++]));
-    }
-    else if ( strcmp(argv[arg_index], "-nsmooth") == 0 )
-    {
+    } else if(strcmp(argv[arg_index], "-max_pre_iter") == 0) {
       arg_index++;
-      *nsmooth= atoi(argv[arg_index++]);
-    }
-    else if ( strcmp(argv[arg_index], "-help") == 0 )
-    {
+      *max_pre_iter = atoi(argv[arg_index++]);
+    } else if(strcmp(argv[arg_index], "-max_post_iter") == 0) {
+      arg_index++;
+      *max_post_iter = atoi(argv[arg_index++]);
+    } else if(strcmp(argv[arg_index], "-max_direct_iter") == 0) {
+      arg_index++;
+      *max_direct_iter = atoi(argv[arg_index++]);
+    } else if(strcmp(argv[arg_index], "-max_levels") == 0) {
+      arg_index++;
+      *max_level = atoi(argv[arg_index++]);
+    } else if(strcmp(argv[arg_index], "-help") == 0) {
       print_usage = 1;
       break;
-    }
-    else
-    {
+    } else {
       arg_index++;
     }
   }
 
-  if(print_usage)
-  {
+  if(print_usage) {
     PASE_Printf(MPI_COMM_WORLD, "\n");
     PASE_Printf(MPI_COMM_WORLD, "Usage: %s [<options>]\n", argv[0]);
     PASE_Printf(MPI_COMM_WORLD, "\n");
-    PASE_Printf(MPI_COMM_WORLD, "  -n <n>              : problem size in each direction (default: 33)\n");
-    PASE_Printf(MPI_COMM_WORLD, "  -block_size <n>      : eigenproblem block size (default: 3)\n");
-    PASE_Printf(MPI_COMM_WORLD, "  -max_levels <n>      : max levels of AMG (default: 5)\n");
+    PASE_Printf(MPI_COMM_WORLD, "  -n <n>               : problem size in each direction (default: 200)\n");
+    PASE_Printf(MPI_COMM_WORLD, "  -block_size <n>      : eigenproblem block size (default: 5)\n");
+    PASE_Printf(MPI_COMM_WORLD, "  -max_pre_iter <n>    : (default: 0)\n");
+    PASE_Printf(MPI_COMM_WORLD, "  -max_post_iter <n>   : (default: 1)\n");
+    PASE_Printf(MPI_COMM_WORLD, "  -max_levels <n>      : max levels of AMG (default: 10)\n");
     PASE_Printf(MPI_COMM_WORLD, "\n");
     exit(-1);
   }
 }
+
 
 void PrintParameter(PASE_PARAMETER param)
 {
@@ -262,11 +261,15 @@ void PrintParameter(PASE_PARAMETER param)
     PASE_Printf(MPI_COMM_WORLD, "=============================================================\n" );
     PASE_Printf(MPI_COMM_WORLD, "\n");
     PASE_Printf(MPI_COMM_WORLD, "Set parameters:\n");
+    PASE_Printf(MPI_COMM_WORLD, "cycle type      = %d\n", param->cycle_type);
     PASE_Printf(MPI_COMM_WORLD, "block size      = %d\n", param->block_size);
+    PASE_Printf(MPI_COMM_WORLD, "max block size  = %d\n", param->max_block_size);
     PASE_Printf(MPI_COMM_WORLD, "max pre iter    = %d\n", param->max_pre_iter);
+    PASE_Printf(MPI_COMM_WORLD, "max post iter   = %d\n", param->max_post_iter);
+    PASE_Printf(MPI_COMM_WORLD, "max direct iter = %d\n", param->max_direct_iter);
     PASE_Printf(MPI_COMM_WORLD, "atol            = %e\n", param->atol);
     PASE_Printf(MPI_COMM_WORLD, "max cycle       = %d\n", param->max_cycle);
+    PASE_Printf(MPI_COMM_WORLD, "max level       = %d\n", param->max_level);
     PASE_Printf(MPI_COMM_WORLD, "min coarse size = %d\n", param->min_coarse_size);
     PASE_Printf(MPI_COMM_WORLD, "\n");
 }
-

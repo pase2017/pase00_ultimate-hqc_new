@@ -1,0 +1,5 @@
+include_directories(${PASE_SOURCE_DIR}/include)
+file(GLOB_RECURSE LIB_SRC *.c)
+set(LIB_PASE "pase")
+add_library(${LIB_PASE} STATIC ${LIB_SRC})
+set(LIBRARY_OUTPUT_PATH ${PASE_SOURCE_DIR}/lib)

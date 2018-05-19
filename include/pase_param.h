@@ -19,9 +19,11 @@ typedef struct PASE_PARAMETER_PRIVATE_ {
   /* mg_solver parameter */
   PASE_INT  cycle_type;
   PASE_INT  block_size;
+  PASE_INT  max_block_size;
   PASE_INT  max_cycle;
   PASE_INT  max_pre_iter;
   PASE_INT  max_post_iter;
+  PASE_INT  max_direct_iter;
   PASE_INT  print_level;
   PASE_REAL atol;
   PASE_REAL rtol;
