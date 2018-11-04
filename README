@@ -1,4 +1,4 @@
-最新的完整版分支： hqc_new
+* 最新的完整版分支： hqc_new *
 
 1. cd build
 2. cmake ../
